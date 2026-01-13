@@ -4,7 +4,7 @@ type FormInputProps = {
   label: string;
   type?: string;
   value: string;
-  onChange: (value: string) => void;  // value directly
+  onChange: (value: string) => void; 
 };
 
 export function FormInput({ label, type = 'text', value, onChange }: FormInputProps) {
