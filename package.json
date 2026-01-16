@@ -1,5 +1,3 @@
-
-
 {
   "name": "blog-app",
   "version": "0.1.0",
@@ -12,8 +10,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.16",
     "axios": "^1.13.2",
+    "lucide-react": "^0.562.0",
     "next": "16.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
