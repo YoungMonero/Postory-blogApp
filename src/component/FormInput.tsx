@@ -1,5 +1,3 @@
-// src/component/FormInput.tsx
-
 type FormInputProps = {
   label: string;
   type?: string;
