@@ -1,32 +1,25 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/router';
 
-import { login } from '../services/auth';
+import { login as loginApi } from '../services/auth';
+import { useAuth } from '../hooks/useAuth';
 import { FormInput } from '../component/FormInput';
-
 import { Button } from '../component/Button';
-
 import { LoginDto } from '../types/auth';
 
 export default function Login() {
-  const [form, setForm] = useState<LoginDto>({
-    email: '',
-    password: '',
-  });
+  const [form, setForm] = useState<LoginDto>({ email: '', password: '' });
+  const router = useRouter();
+  const auth = useAuth();
 
   const mutation = useMutation({
-    mutationFn: login,
+    mutationFn: loginApi,
     onSuccess: (data) => {
-      alert(`Logged in! Token: ${data.accessToken}`);
-    },
-    onError: (err: any) => {
-      alert(err.response?.data?.message || 'Error');
+      auth.login(data.accessToken, data.userName);
+      router.push('/'); // ✅ redirect to home
     },
   });
-
-  const handleChange = (key: keyof LoginDto, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,14 +34,14 @@ export default function Login() {
         <FormInput
           label="Email"
           value={form.email}
-          onChange={(val) => handleChange('email', val)}
+          onChange={(val) => setForm({ ...form, email: val })}
         />
 
         <FormInput
           label="Password"
           type="password"
           value={form.password}
-          onChange={(val) => handleChange('password', val)}
+          onChange={(val) => setForm({ ...form, password: val })}
         />
 
         <Button type="submit" disabled={mutation.isPending}>
