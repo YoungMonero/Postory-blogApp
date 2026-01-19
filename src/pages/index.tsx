@@ -27,7 +27,6 @@ export default function Home() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
 
-  // 👉 Redirect logged-in users to dashboard
   useEffect(() => {
     if (isAuthenticated) {
       router.replace('/dashboard');
@@ -60,7 +59,6 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero */}
       <section className="pt-32 pb-20 px-6 text-center">
         <h1 className="text-7xl md:text-7xl font-bold mb-6">
           <div>Create And Discover Beautiful</div>
@@ -111,7 +109,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="py-24 px-6 text-center">
         <h2 className="text-4xl font-bold mb-4">
           Ready to Start Blogging?
@@ -128,10 +125,9 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* Footer */}
       <footer className="py-8 px-6 border-t text-sm text-muted-foreground flex justify-between">
         <span>Postory Blog</span>
-        <span>© 2024 Capstone Project</span>
+        <span>© 2026 Capstone Project</span>
       </footer>
     </div>
 
