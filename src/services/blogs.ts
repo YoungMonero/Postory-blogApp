@@ -1,4 +1,5 @@
 // src/services/blogs.ts
+// import { Blog, CreateBlogDto } from '@/types/blogs';
 import { Blog, CreateBlogDto } from '@/types/blogs';
 
 const API_URL = 'http://localhost:4000';
