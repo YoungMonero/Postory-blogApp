@@ -8,7 +8,7 @@ export default function Register() {
   const [form, setForm] = useState({
     email: '',
     password: '',
-    userName: '',
+    username: '',
   });
 
   const router = useRouter();
@@ -31,8 +31,8 @@ export default function Register() {
     <form onSubmit={handleSubmit}>
       <input placeholder="Email" onChange={e => setForm({ ...form, email: e.target.value })} />
       <input placeholder="Password" type="password" onChange={e => setForm({ ...form, password: e.target.value })} />
-      <input placeholder="Username" onChange={e => setForm({ ...form, userName: e.target.value })} />
+      <input placeholder="Username" onChange={e => setForm({ ...form, username: e.target.value })} />
       <button type="submit">Register</button>
     </form>
   );
-}
+} 

@@ -1,4 +1,3 @@
-// src/hooks/useAuth.ts
 import { createContext, useContext, useEffect, useState } from 'react';
 
 interface AuthContextType {
@@ -14,7 +13,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
 
-  // Load from localStorage on refresh
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUserName = localStorage.getItem('userName');
