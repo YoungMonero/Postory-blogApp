@@ -49,7 +49,7 @@ export default function LandingPage() {
               >
                 Log in
               </Link>
-              <Link href="/login">
+              <Link href="/register">
                 <Button variant="black" size="lg" className="rounded-full px-6">
                   Get Started
                 </Button>
@@ -86,7 +86,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/login">
+            <Link href="/register">
               <Button
                 variant="black"
                 size="lg"

@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { registerUser } from '../services/auth';
 import { useAuth } from '../hooks/useAuth';
-import { Button } from '../components/ui/Button';
+import { Button } from '@/src/component/ui/button';
 
 export default function Register() {
   const [form, setForm] = useState({
