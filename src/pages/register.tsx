@@ -1,77 +1,4 @@
 
-// import { useState } from 'react';
-// import { useMutation } from '@tanstack/react-query';
-// import { useRouter } from 'next/router';
-// import { registerUser } from '../services/auth';
-// import { useAuth } from '../hooks/useAuth';
-
-// export default function Register() {
-//   const [form, setForm] = useState({
-//     email: '',
-//     password: '',
-//     username: '',
-//   });
-
-//   const router = useRouter();
-//   const auth = useAuth();
-
-//   const mutation = useMutation({
-//     mutationFn: registerUser,
-//     onSuccess: (data) => {
-//       auth.login(data.accessToken, data.username);
-//       router.push('/');
-//     },
-//   });
-
-//   const handleSubmit = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     mutation.mutate(form);
-//   };
-
-//   return (
-//     <div className="max-w-md mx-auto mt-20 p-6 border rounded shadow">
-//       <h1 className="text-2xl font-bold mb-4">Register</h1>
-
-//       <form onSubmit={handleSubmit} className="space-y-4">
-//         <input
-//           className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-//           placeholder="Email"
-//           value={form.email}
-//           onChange={(e) =>
-//             setForm({ ...form, email: e.target.value })
-//           }
-//         />
-
-//         <input
-//           className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-//           placeholder="Password"
-//           type="password"
-//           value={form.password}
-//           onChange={(e) =>
-//             setForm({ ...form, password: e.target.value })
-//           }
-//         />
-
-//         <input
-//           className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-//           placeholder="Username"
-//           value={form.username}
-//           onChange={(e) =>
-//             setForm({ ...form, username: e.target.value })
-//           }
-//         />
-
-//         <button
-//           type="submit"
-//           disabled={mutation.isPending}
-//           className="w-full bg-black text-white py-2 rounded hover:bg-gray-800 disabled:opacity-50"
-//         >
-//           {mutation.isPending ? 'Registering...' : 'Register'}
-//         </button>
-//       </form>
-//     </div>
-//   );
-// }
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
@@ -105,8 +32,11 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
-      <div className="w-full max-w-[440px] bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans relative overflow-hidden">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
+      <div className="w-full max-w-[500px] bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200 mb-6">
             B
