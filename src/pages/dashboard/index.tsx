@@ -1,11 +1,9 @@
-
-import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { getToken } from '@/src/services/auth-storage';
 import { getMyBlog } from '@/src/services/blogs';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { Blog } from '@/src/types/blogs';
+import { DashboardLayout } from '@/src/component/DashboardLayout';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -20,103 +18,69 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  const {
-    data: blog,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
+  // --- Your Categories Data & Logic (Unchanged) ---
+  const getCategoryColor = (cat: string | undefined) => {
+    switch(cat?.toLowerCase()) {
+      case 'coding': return 'bg-purple-100 text-purple-700 hover:bg-purple-200';
+      case 'style': return 'bg-blue-100 text-blue-700 hover:bg-blue-200';
+      case 'food': return 'bg-green-100 text-green-700 hover:bg-green-200';
+      case 'culture': return 'bg-orange-100 text-orange-700 hover:bg-orange-200';
+      case 'travel': return 'bg-rose-100 text-rose-700 hover:bg-rose-200';
+      case 'fashion': return 'bg-pink-100 text-pink-700 hover:bg-pink-200';
+      default: return 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+    }
+  };
+
+const categories = [
+    { name: 'Fashion', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=100&q=80', color: 'bg-pink-50' },
+    { name: 'Food', image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=100&q=80', color: 'bg-green-50' },
+    { name: 'Coding', image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=100&q=80', color: 'bg-purple-50' },
+    { name: 'Style', image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=100&q=80', color: 'bg-blue-50' }, 
+    { name: 'Travel', image: 'https://images.unsplash.com/photo-1541849546-216549ae216d?auto=format&fit=crop&w=100&q=80', color: 'bg-rose-50' },
+    { name: 'Culture', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=100&q=80', color: 'bg-orange-50' },
+  ];
+
+  const { data: blog, isLoading, isError } = useQuery({
     queryKey: ['my-blog'],
-    queryFn: async () => {
-      const result = await getMyBlog(token as string);
-      console.log('Fetched blog:', result);
-      return result;
-    },
+    queryFn: () => getMyBlog(token as string),
     enabled: !!token,
   });
 
-  if (!token) return <p>Loading...</p>;
-  if (isLoading) return <p>Loading...</p>;
-
-  //  Handle errors gracefully
-  if (isError) {
+  if (!token || isLoading) {
     return (
-      <div className="max-w-4xl mx-auto mt-10">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <p className="text-red-600">
-          Error: {(error as any)?.message || 'Something went wrong while fetching your blog'}
-        </p>
-      </div>
+      <DashboardLayout>
+        <p className="text-gray-500">Loading...</p>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-10">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-
-      {!blog ? (
-        <Link
-          href="/dashboard/create-blog"
-          className="inline-block bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Create Blog
-        </Link>
-      ) : (
-        <div className="border p-6 rounded-lg shadow-sm space-y-4">
-          <h2 className="text-2xl font-semibold">{blog.title}</h2>
-          <p className="text-gray-700">{blog.excerpt || blog.description}</p>
-
-          {blog.coverImage && (
-            <img
-              src={blog.coverImage}
-              alt={blog.title}
-              className="w-full h-64 object-cover rounded-md"
-            />
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            {blog.tags?.map((tag: string) => (
-              <span
-                key={tag}
-                className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm"
+    <DashboardLayout>
+      <div className="space-y-12">
+        
+        {/* Top Categories Section (Added exactly as sent) */}
+        <section className="mb-16 w-full max-w-8xl">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-5 max-w-8xl">
+            {categories.map((cat) => (
+              <button 
+                key={cat.name} 
+                className={`flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-1 hover:shadow-md ${cat.color}`}
               >
-                #{tag}
-              </span>
+                <div className=" w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm">
+                  <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                </div>
+                <span className="font-semibold text-gray-800 text-sm">{cat.name}</span>
+              </button>
             ))}
           </div>
+        </section>
 
-          <p>Status: <strong>{blog.status}</strong></p>
-          {blog.publishedAt && (
-            <p>
-              Published: {new Date(blog.publishedAt).toLocaleDateString()}{" "}
-              {new Date(blog.publishedAt).toLocaleTimeString()}
-            </p>
-          )}
-
-          {blog.createdAt && (
-            <p className="text-sm text-gray-500">
-              Created: {new Date(blog.createdAt).toLocaleDateString()}{" "}
-              {new Date(blog.createdAt).toLocaleTimeString()}
-            </p>
-          )}
-          {blog.updatedAt && (
-            <p className="text-sm text-gray-500">
-              Last Updated: {new Date(blog.updatedAt).toLocaleDateString()}{" "}
-              {new Date(blog.updatedAt).toLocaleTimeString()}
-            </p>
-          )}
-
-          <p>SEO Title: {blog.metaTitle}</p>
-          <p>SEO Description: {blog.metaDescription}</p>
-
-          <p className="text-sm text-gray-500">
-            Public URL:{" "}
-            <Link href={`/${blog.slug}`} className="text-blue-600 underline">
-              /{blog.slug}
-            </Link>
-          </p>
+       
+        <div className="max-w-4xl mx-auto">
+          
         </div>
-      )}
-    </div>
+
+      </div>
+    </DashboardLayout>
   );
 }

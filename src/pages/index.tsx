@@ -65,12 +65,12 @@ export default function LandingPage() {
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-600 font-medium text-sm mb-8 border border-indigo-100">
+          {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-600 font-medium text-sm mb-8 border border-indigo-100">
             <Zap size={16} fill="currentColor" />
             <span className="tracking-wide">
               The modern blogging platform for teams
             </span>
-          </div>
+          </div> */}
 
           <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight mb-8 leading-tight max-w-6xl mx-auto">
             Create and Discover Beautiful Stories with{" "}
