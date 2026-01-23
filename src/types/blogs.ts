@@ -2,6 +2,7 @@ export interface CreateBlogDto {
   title: string;
   slug: string;
   description: string;
+  tenantId: string;
 }
 
 export interface Blog {
