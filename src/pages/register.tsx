@@ -20,9 +20,9 @@ export default function Register() {
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: (data) => {
-      // ✅ Log user in immediately and redirect to homepage/dashboard
+
       auth.login(data.accessToken, data.username);
-      router.push('/'); // or router.push('/dashboard')
+      router.push('/'); 
     },
   });
 

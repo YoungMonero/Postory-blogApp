@@ -21,7 +21,7 @@ interface LayoutProps {
 }
 
 export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
-    // ✅ Pulling the live userName from your auth hook
+
     const { userName, logout, token } = useAuth();
     const router = useRouter();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
