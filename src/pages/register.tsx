@@ -105,8 +105,11 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
-      <div className="w-full max-w-[440px] bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans relative overflow-hidden">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
+      <div className="w-full max-w-[500px] bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200 mb-6">
             B

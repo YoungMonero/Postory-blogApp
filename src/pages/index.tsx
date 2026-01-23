@@ -34,9 +34,7 @@ export default function LandingPage() {
               <a href="#how-it-works" className="text-gray-600 hover:text-primary font-medium transition-colors">
                 How it works
               </a>
-              <a href="#examples" className="text-gray-600 hover:text-primary font-medium transition-colors">
-                Examples
-              </a>
+            
               <a href="#testimonials" className="text-gray-600 hover:text-primary font-medium transition-colors">
                 Testimonials
               </a>
@@ -74,7 +72,7 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight mb-8 leading-tight max-w-5xl mx-auto">
+          <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight mb-8 leading-tight max-w-6xl mx-auto">
             Create and Discover Beautiful Stories with{" "}
             <span className="text-primary">Unlimited Creative Ideas</span>
           </h1>
