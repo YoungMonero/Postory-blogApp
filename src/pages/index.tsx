@@ -1,136 +1,375 @@
-// pages/index.tsx
-import { useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { Sparkles, ArrowRight, Zap, Shield, Globe } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import Link from "next/link";
+import { Button } from "@/src/component/ui/button";
+import {
+  Zap,
+  Layout,
+  Search,
+  PenTool,
+  ArrowRight,
+  UserPlus,
+  FileEdit,
+  Upload,
+} from "lucide-react";
 
-const features = [
-  {
-    icon: Zap,
-    title: 'Lightning Fast',
-    description: 'Optimized for speed with modern web technologies.',
-  },
-  {
-    icon: Shield,
-    title: 'Multi-Tenant',
-    description: 'Each blog is fully isolated and secure.',
-  },
-  {
-    icon: Globe,
-    title: 'SEO Optimized',
-    description: 'Built-in SEO to help your content rank higher.',
-  },
-];
-
-export default function Home() {
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/dashboard');
-    }
-  }, [isAuthenticated, router]);
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background border-b">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
+    <div className="min-h-screen bg-white font-sans text-gray-900">
+      {/* Navigation */}
+      <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200">
+                B
+              </div>
+              <span className="font-bold text-2xl tracking-tight text-gray-900">
+                BlogForge
+              </span>
             </div>
-            <span className="text-xl font-semibold">Postory</span>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-medium">
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              className="px-4 py-2 bg-accent text-accent-foreground rounded"
-            >
-              Get Started
-            </Link>
+            <div className="hidden md:flex items-center space-x-8">
+              <a href="#features" className="text-gray-600 hover:text-primary font-medium transition-colors">
+                Features
+              </a>
+              <a href="#how-it-works" className="text-gray-600 hover:text-primary font-medium transition-colors">
+                How it works
+              </a>
+              <a href="#examples" className="text-gray-600 hover:text-primary font-medium transition-colors">
+                Examples
+              </a>
+              <a href="#testimonials" className="text-gray-600 hover:text-primary font-medium transition-colors">
+                Testimonials
+              </a>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/login"
+                className="text-gray-900 font-medium hover:text-primary transition-colors"
+              >
+                Log in
+              </Link>
+              <Link href="/register">
+                <Button variant="black" size="lg" className="rounded-full px-6">
+                  Get Started
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </nav>
 
-      <section className="pt-32 pb-20 px-6 text-center">
-        <h1 className="text-7xl md:text-7xl font-bold mb-6">
-          <div>Create And Discover Beautiful</div>
-          <div className="text-accent font-normal mt-5" >Stories With unlimited Creative Ideas</div>
-        </h1>
+      {/* Hero Section */}
+      <div className="pt-32 pb-20 relative overflow-hidden">
+        {/* Background blobs */}
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
 
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-          A modern multi-tenant blogging platform built for creators and teams.
-        </p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-600 font-medium text-sm mb-8 border border-indigo-100">
+            <Zap size={16} fill="currentColor" />
+            <span className="tracking-wide">
+              The modern blogging platform for teams
+            </span>
+          </div>
 
-        <div className="flex justify-center gap-4">
-          <Link
-            href="/register"
-            className="flex items-center gap-2 px-6 py-3 bg-accent text-accent-foreground rounded"
-          >
-            Start Your Blog
-            <ArrowRight className="w-5 h-5" />
-          </Link>
+          <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight mb-8 leading-tight max-w-5xl mx-auto">
+            Create and Discover Beautiful Stories with{" "}
+            <span className="text-primary">Unlimited Creative Ideas</span>
+          </h1>
 
-          <Link
-            href="/login"
-            className="px-6 py-3 border rounded"
-          >
-            Login
-          </Link>
-        </div>
-      </section>
+          <p className="text-xl md:text-2xl text-gray-500 max-w-3xl mx-auto mb-10 leading-relaxed">
+            Create beautiful, SEO-optimized blogs in minutes. Multi-tenant
+            architecture means your team can manage multiple publications from
+            one dashboard.
+          </p>
 
-      {/* Features */}
-      <section className="py-20 px-6 bg-muted/30">
-        <div className="container mx-auto grid md:grid-cols-3 gap-8">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="bg-card p-8 rounded-2xl shadow"
-            >
-              <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
-                <feature.icon className="w-6 h-6 text-accent" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">
-                {feature.title}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/register">
+              <Button
+                variant="black"
+                size="lg"
+                className="rounded-full px-8 py-4 text-lg h-auto shadow-xl shadow-gray-200 hover:shadow-2xl hover:-translate-y-1 transition-all"
+              >
+                Start Writing Free <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+
+            <Link href="/blog/tech-chronicles/getting-started-with-nextjs">
+              <Button
+                variant="secondary"
+                size="lg"
+                className="rounded-full px-8 py-4 text-lg h-auto bg-white border-2 border-gray-100 text-gray-700 hover:border-gray-200 hover:bg-gray-50"
+              >
+                View Demo Blog
+              </Button>
+            </Link>
+          </div>
+
+          <div className="mt-20">
+            <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-8">
+              Trusted by writers and teams worldwide
+            </p>
+            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-20 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
+              <h3 className="text-2xl font-bold font-serif text-gray-800">
+                TechCrunch
               </h3>
-              <p className="text-muted-foreground">
-                {feature.description}
+              <h3 className="text-2xl font-bold font-serif text-gray-800">
+                Forbes
+              </h3>
+              <h3 className="text-2xl font-bold font-serif text-gray-800 tracking-tighter">
+                WIRED
+              </h3>
+              <h3 className="text-2xl font-bold font-sans text-gray-800 font-black italic">
+                The Verge
+              </h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Features Grid */}
+      <div id="features" className="py-24 bg-white relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-6">
+              Everything you need to publish
+            </h2>
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto">
+              Powerful features designed for writers, marketers, and developer
+              teams who care about quality.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            {[
+              {
+                icon: UserPlus,
+                title: "Multi-Tenant Blogs",
+                description:
+                  "Manage multiple publications and team blogs from a single dashboard. Each blog gets its own custom URL and branding.",
+                bg: "bg-purple-100",
+                text: "text-purple-600",
+              },
+              {
+                icon: Search,
+                title: "SEO-Ready Posts",
+                description:
+                  "Every post is optimized for search engines with semantic HTML, meta tags, and structured data out of the box.",
+                bg: "bg-blue-100",
+                text: "text-blue-600",
+              },
+              {
+                icon: PenTool,
+                title: "Rich Text Editor",
+                description:
+                  "Write with a distraction-free Medium-like editor. Support for images, embeds, code blocks, and more.",
+                bg: "bg-pink-100",
+                text: "text-pink-600",
+              },
+            ].map((feature, i) => (
+              <div
+                key={i}
+                className="p-8 rounded-3xl bg-white border border-gray-100 shadow-xl shadow-gray-200/50 hover:shadow-2xl hover:shadow-gray-200/60 transition-all hover:-translate-y-1"
+              >
+                <div
+                  className={`w-14 h-14 ${feature.bg} ${feature.text} rounded-2xl flex items-center justify-center mb-6`}
+                >
+                  <feature.icon size={28} />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed text-lg">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div id="how-it-works" className="py-32 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-6">
+              From idea to published in minutes
+            </h2>
+            <p className="text-xl text-gray-500">
+              Getting started is as simple as four steps.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+            <div className="hidden md:block absolute top-12 left-[12%] right-[12%] h-0.5 bg-indigo-100 -z-0 border-t-2 border-dashed border-indigo-200" />
+
+            {[
+              {
+                step: "01",
+                title: "Sign Up",
+                desc: "Create your account in seconds. No credit card required.",
+                icon: UserPlus,
+              },
+              {
+                step: "02",
+                title: "Create Blog",
+                desc: "Set up your blog with a custom URL and branding.",
+                icon: Layout,
+              },
+              {
+                step: "03",
+                title: "Write",
+                desc: "Craft your content with our beautiful rich text editor.",
+                icon: FileEdit,
+              },
+              {
+                step: "04",
+                title: "Publish",
+                desc: "Share your work with the world in one click.",
+                icon: Upload,
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="relative flex flex-col items-center text-center group z-10"
+              >
+                <div className="w-24 h-24 bg-white rounded-3xl shadow-lg border border-indigo-50 flex flex-col items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-300">
+                  <span className="text-xs font-bold text-indigo-400 bg-indigo-50 px-2 py-1 rounded-full mb-1">
+                    {item.step}
+                  </span>
+                  <item.icon className="text-primary w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  {item.title}
+                </h3>
+                <p className="text-gray-500 leading-relaxed max-w-[200px]">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Testimonials */}
+      <div id="testimonials" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[
+              {
+                name: "Sarah Chen",
+                role: "Content Director, TechFlow Inc.",
+                image: "https://i.pravatar.cc/150?u=sarah",
+                quote:
+                  "BlogForge has completely transformed how our content team operates. The multi-tenant feature is a game-changer for managing our different brand blogs.",
+              },
+              {
+                name: "Marcus Williams",
+                role: "Head of Marketing, StartupHub",
+                image: "https://i.pravatar.cc/150?u=marcus",
+                quote:
+                  "The SEO features out of the box are incredible. We saw a 40% increase in organic traffic within the first month of migrating to BlogForge.",
+              },
+            ].map((testimonial, i) => (
+              <div
+                key={i}
+                className="bg-gray-50 p-10 rounded-3xl border border-gray-100"
+              >
+                <div className="flex text-yellow-400 mb-6">
+                  {"★★★★★".split("").map((s, i) => (
+                    <span key={i} className="text-xl">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xl text-gray-800 font-medium leading-relaxed mb-8">
+                  "{testimonial.quote}"
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-indigo-200 rounded-full overflow-hidden">
+                    <img
+                      src={testimonial.image}
+                      alt={testimonial.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <div className="font-bold text-gray-900">
+                      {testimonial.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {testimonial.role}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-white pt-16 pb-8 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-16">
+            <div className="col-span-2 lg:col-span-2">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-200">
+                  B
+                </div>
+                <span className="font-bold text-xl text-gray-900">
+                  BlogForge
+                </span>
+              </div>
+              <p className="text-gray-500 max-w-xs mb-6">
+                The modern blogging platform for teams and creators. Write,
+                publish, and grow your audience.
               </p>
             </div>
-          ))}
+
+            {[
+              {
+                title: "Product",
+                links: ["Features", "Pricing", "Examples", "Changelog"],
+              },
+              {
+                title: "Resources",
+                links: ["Documentation", "Blog", "API Reference", "Support"],
+              },
+              {
+                title: "Company",
+                links: ["About", "Careers", "Contact", "Privacy"],
+              },
+            ].map((section, i) => (
+              <div key={i}>
+                <h4 className="font-bold text-gray-900 mb-4 uppercase text-xs tracking-wider">
+                  {section.title}
+                </h4>
+                <ul className="space-y-3 text-sm text-gray-500">
+                  {section.links.map((link, j) => (
+                    <li key={j}>
+                      <a href="#" className="hover:text-primary transition-colors">
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
+            <p>&copy; 2026 BlogForge. All rights reserved.</p>
+            <div className="flex gap-1">
+              <span>Made with</span>
+              <span className="text-red-400">♥</span>
+              <span>for creators everywhere</span>
+            </div>
+          </div>
         </div>
-      </section>
-
-      <section className="py-24 px-6 text-center">
-        <h2 className="text-4xl font-bold mb-4">
-          Ready to Start Blogging?
-        </h2>
-        <p className="text-muted-foreground mb-8">
-          Create your free account and publish today.
-        </p>
-        <Link
-          href="/register"
-          className="inline-flex items-center gap-2 px-8 py-3 bg-accent text-accent-foreground rounded"
-        >
-          Create Free Account
-          <ArrowRight className="w-5 h-5" />
-        </Link>
-      </section>
-
-      <footer className="py-8 px-6 border-t text-sm text-muted-foreground flex justify-between">
-        <span>Postory Blog</span>
-        <span>© 2026 Capstone Project</span>
       </footer>
     </div>
-
-    
   );
 }
