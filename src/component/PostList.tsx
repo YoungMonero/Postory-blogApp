@@ -1,16 +1,14 @@
-// src/components/PostsList.tsx
 'use client';
 
 import React, { useEffect, useCallback } from 'react';
 import { usePosts } from '@/src/hooks/usePosts';
 import { Post } from '@/src/types/posts';
-import { useAuth } from '@/src/hooks/useAuth'; // Assuming you have auth context
+import { useAuth } from '@/src/hooks/useAuth'; 
 
 const PostsList: React.FC = () => {
   const { posts, loading, error, fetchPosts, deleteExistingPost } = usePosts();
-  const { token } = useAuth(); // Get token from auth context
+  const { token } = useAuth(); 
 
-  // Memoize the fetchPosts call to avoid infinite re-renders
   const loadPosts = useCallback(async () => {
     await fetchPosts({ 
       limit: 10, 

@@ -19,7 +19,7 @@ export default function CreateBlogPage() {
     }
   }, [router]);
 
-  // ✅ Check if blog already exists
+
   const { data: existingBlog, isLoading } = useQuery({
     queryKey: ['my-blog'],
     queryFn: () => getMyBlog(token as string),
@@ -28,7 +28,7 @@ export default function CreateBlogPage() {
 
   useEffect(() => {
     if (existingBlog) {
-      // ✅ Redirect if blog already exists
+   exists
       router.push('/dashboard');
     }
   }, [existingBlog, router]);
@@ -42,7 +42,7 @@ export default function CreateBlogPage() {
   const mutation = useMutation({
     mutationFn: (data: CreateBlogDto) => createBlog(data, token as string),
     onSuccess: (newBlog) => {
-      // ✅ Update cache so Dashboard sees the new blog immediately
+
       queryClient.setQueryData(['my-blog'], newBlog);
       router.push('/dashboard');
     },

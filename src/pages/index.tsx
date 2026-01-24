@@ -14,7 +14,7 @@ import {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
-      {/* Navigation */}
+ 
       <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
@@ -57,20 +57,14 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <div className="pt-32 pb-20 relative overflow-hidden">
-        {/* Background blobs */}
+
         <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
         <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
-          {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-600 font-medium text-sm mb-8 border border-indigo-100">
-            <Zap size={16} fill="currentColor" />
-            <span className="tracking-wide">
-              The modern blogging platform for teams
-            </span>
-          </div> */}
+         
 
           <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight mb-8 leading-tight max-w-6xl mx-auto">
             Create and Discover Beautiful Stories with{" "}
@@ -127,7 +121,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Features Grid */}
+
       <div id="features" className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
@@ -188,7 +182,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* How it works */}
+
       <div id="how-it-works" className="py-32 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
@@ -251,7 +245,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Testimonials */}
+
       <div id="testimonials" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
