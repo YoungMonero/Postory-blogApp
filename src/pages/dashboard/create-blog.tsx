@@ -33,10 +33,12 @@ export default function CreateBlogPage() {
     }
   }, [existingBlog, router]);
 
-  // ✅ Fixed: Using 'title' and 'description' to match your interface
+  // ✅ Fixed: Using 'title' instead of 'name' to match your interface
   const [form, setForm] = useState<CreateBlogDto>({
     title: '',
+    slug: '',
     description: '',
+    tenantId: '', // Added to match interface requirement
   });
 
   const mutation = useMutation({
@@ -103,7 +105,24 @@ export default function CreateBlogPage() {
             />
           </div>
 
-
+          <div className="space-y-1.5">
+            <label className="block text-sm font-semibold text-gray-900">URL Slug</label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-gray-400 text-sm">wordoo.com/</span>
+              <input
+                type="text"
+                value={form.slug}
+                onChange={(e) => setForm({ 
+                  ...form, 
+                  slug: e.target.value.toLowerCase().replace(/\s+/g, '-') 
+                })}
+                placeholder="my-blog"
+                className="w-full pl-[95px] pr-3 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                required
+              />
+            </div>
+            <p className="text-[10px] text-gray-400">Lowercases, numbers, and hyphens only.</p>
+          </div>
 
           <div className="space-y-1.5">
             <label className="block text-sm font-semibold text-gray-900">About the Blog</label>
