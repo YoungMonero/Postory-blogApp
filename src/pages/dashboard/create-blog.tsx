@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
 import { createBlog, getMyBlog } from '@/src/services/blogs';
 import { getToken } from '@/src/services/auth-storage';
+import { CreateBlogDto } from '@/src/types/blogs';
 import { Button } from '@/src/component/ui/button';
 
 export default function CreateBlogPage() {
@@ -13,13 +14,13 @@ export default function CreateBlogPage() {
   useEffect(() => {
     const t = getToken();
     if (!t) {
-        router.push('/login');
+      router.push('/login');
     } else {
-        setToken(t);
+      setToken(t);
     }
   }, [router]);
 
-  // Check if blog exists (Backend logic allows only ONE)
+  // Check if blog already exists
   const { data: existingBlog, isLoading } = useQuery({
     queryKey: ['my-blog'],
     queryFn: () => getMyBlog(token as string),
@@ -32,20 +33,21 @@ export default function CreateBlogPage() {
     }
   }, [existingBlog, router]);
 
-  // ✅ Based on your DTO, we only need these two!
-  const [form, setForm] = useState({
+  // ✅ Fixed: Using 'title' and 'description' to match your interface
+  const [form, setForm] = useState<CreateBlogDto>({
     title: '',
     description: '',
   });
 
   const mutation = useMutation({
-    mutationFn: (data: { title: string; description?: string }) => createBlog(data, token as string),
+    mutationFn: (data: CreateBlogDto) => createBlog(data, token as string),
     onSuccess: (newBlog) => {
-      queryClient.setQueryData(['my-blog'], newBlog);
-      router.push('/dashboard');
+      queryClient.invalidateQueries({ queryKey: ['my-blog'] });
+      // Redirect to the newly created blog
+      router.push(`/${newBlog.slug}`);
     },
     onError: (err: any) => {
-        // Error handling is in the UI
+      // Error handled in UI below
     },
   });
 
@@ -56,32 +58,37 @@ export default function CreateBlogPage() {
 
   if (!token || isLoading || existingBlog) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
+        <div className="flex flex-col items-center gap-3">
+            <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-400 font-medium tracking-tight">Checking Wordoo profile...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans relative overflow-hidden py-10 px-4">
-      {/* Background Blobs */}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans relative overflow-hidden py-12 px-4">
+      {/* Premium Background Blobs */}
       <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
       <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
       <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
 
-      <div className="w-full max-w-[500px] bg-white rounded-2xl shadow-sm border border-gray-100 p-10 relative z-10">
+      <div className="w-full max-w-[550px] bg-white rounded-2xl shadow-sm border border-gray-100 p-10 relative z-10">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200 mb-6">
+          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-100 mb-6">
             W
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Create your blog</h1>
-          <p className="text-gray-500 text-sm">Set up your profile to start writing.</p>
+          <p className="text-gray-500 text-sm text-center">
+            Set up your public profile to start sharing your stories.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {mutation.isError && (
             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center font-medium">
-              {(mutation.error as any)?.response?.data?.message || 'Failed to create blog'}
+              {(mutation.error as any)?.message || 'Failed to create blog. Please try again.'}
             </div>
           )}
 
@@ -89,33 +96,43 @@ export default function CreateBlogPage() {
             <label className="block text-sm font-semibold text-gray-900">Blog Title</label>
             <input
               type="text"
-              value={form.title}
+              value={form.title} 
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              placeholder="e.g. My Tech Insights"
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
+              placeholder="e.g. The Tech Journal"
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all text-gray-900 placeholder:text-gray-400"
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-gray-900">Description</label>
+            <label className="block text-sm font-semibold text-gray-900">About the Blog</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="What will you write about?"
-              rows={4}
-              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all resize-none"
+              placeholder="What will you be writing about?"
+              rows={3}
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all text-gray-900 placeholder:text-gray-400 resize-none"
               required
             />
           </div>
 
           <Button
             type="submit"
-            className="w-full py-2.5 bg-gray-900 hover:bg-black text-white font-semibold rounded-lg shadow-md transition-all"
+            className="w-full py-2.5 bg-gray-900 hover:bg-black text-white rounded-lg transition-colors font-semibold shadow-md"
             isLoading={mutation.isPending}
           >
-            Launch Blog
+            {mutation.isPending ? 'Launching Blog...' : 'Launch My Blog'}
           </Button>
+
+          <div className="text-center mt-6">
+            <button 
+              type="button"
+              onClick={() => router.push('/dashboard')}
+              className="text-sm text-gray-500 hover:text-indigo-600 font-medium transition-colors"
+            >
+              Cancel and go back
+            </button>
+          </div>
         </form>
       </div>
     </div>

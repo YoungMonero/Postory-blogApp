@@ -1,4 +1,3 @@
-// src/pages/login.tsx
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
@@ -6,12 +5,12 @@ import Link from 'next/link';
 
 import { login as loginApi } from '../services/auth';
 import { LoginDto } from '../types/auth';
-import { useAuth } from '../hooks/useAuth'; // ✅ Added
+import { useAuth } from '../hooks/useAuth';
 import { Button } from '@/src/component/ui/button';
 
 export default function Login() {
   const router = useRouter();
-  const auth = useAuth(); // ✅ Added
+  const auth = useAuth(); 
 
   const [form, setForm] = useState<LoginDto>({
     email: '',
@@ -21,7 +20,7 @@ export default function Login() {
   const mutation = useMutation({
     mutationFn: loginApi,
     onSuccess: (data) => {
-      // ✅ Functionality change: Use auth.login for cookie support
+
       auth.login(data.accessToken, data.userName || 'User'); 
       router.push('/dashboard');
     },

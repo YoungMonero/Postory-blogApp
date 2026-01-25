@@ -1,24 +1,26 @@
 import { useRouter } from 'next/router';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { getMyBlog } from '@/src/services/blogs';
+import { useAuth } from '@/src/hooks/useAuth';
+import PostList from '@/src/component/PostList';
 
 export default function BlogChannelView() {
   const router = useRouter();
-  const { slug } = router.query;
+  const { token } = useAuth();
 
   const { data: blog, isLoading, error } = useQuery({
-    queryKey: ['blog', slug],
+    queryKey: ['my-blog'],
     queryFn: async () => {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-      const { data } = await axios.get(`${baseUrl}/blogs/slug/${slug}`);
-      return data;
+      if (!token) return null;
+      const blogData = await getMyBlog(token);
+      return blogData;
     },
-    enabled: !!slug, 
+    enabled: !!token, 
     retry: false
   });
 
-  if (isLoading || !slug) {
+  if (isLoading || !token) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -26,19 +28,19 @@ export default function BlogChannelView() {
     );
   }
 
-  if (error) {
+  if (error || !blog) {
     return (
       <div className="min-h-screen flex items-center justify-center flex-col gap-4">
         <p className="text-gray-500 font-medium">Channel not found or has been removed.</p>
+        <p className="text-gray-400 text-sm">Error: {error?.message || 'No data available'}</p>
         <button onClick={() => router.push('/')} className="text-indigo-600 underline text-sm">
-          Return to Feed
+          Return to Home
         </button>
       </div>
     );
   }
 
-  const blogData = blog?.blog ? blog.blog : blog;
-  if (!blogData) return null;
+  const blogData = blog;
 
   return (
     <div className="min-h-screen bg-white">
@@ -92,6 +94,12 @@ export default function BlogChannelView() {
             ))}
           </div>
         )}
+
+        {/* Posts Section */}
+        <div className="mt-16 border-t border-gray-200 pt-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-8">Posts</h2>
+          <PostList />
+        </div>
       </article>
     </div>
   );

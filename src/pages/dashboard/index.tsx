@@ -18,7 +18,7 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  // --- Your Categories Data & Logic (Unchanged) ---
+
   const getCategoryColor = (cat: string | undefined) => {
     switch(cat?.toLowerCase()) {
       case 'coding': return 'bg-purple-100 text-purple-700 hover:bg-purple-200';
