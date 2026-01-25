@@ -1,24 +1,26 @@
 import { useRouter } from 'next/router';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { getMyBlog } from '@/src/services/blogs';
+import { useAuth } from '@/src/hooks/useAuth';
 import PostList from '@/src/component/PostList';
 
 export default function BlogChannelView() {
   const router = useRouter();
-  const { slug } = router.query;
+  const { token } = useAuth();
 
   const { data: blog, isLoading, error } = useQuery({
-    queryKey: ['blog', slug],
+    queryKey: ['my-blog'],
     queryFn: async () => {
-      if (!slug) return null;
-      const blogData = await getPublicBlogBySlug(slug as string);
+      if (!token) return null;
+      const blogData = await getMyBlog(token);
       return blogData;
     },
-    enabled: !!slug, 
+    enabled: !!token, 
     retry: false
   });
 
-  if (isLoading || !slug) {
+  if (isLoading || !token) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>

@@ -17,35 +17,6 @@ export async function getMyBlog(token: string): Promise<Blog | null> {
 }
 
 
-export async function getBlogBySlug(slug: string, token: string): Promise<Blog | null> {
-
-  const res = await fetch(`${API_URL}/tenants/slug/${slug}`, {
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json' 
-    },
-  });
-
-  if (!res.ok) return null;
-
-  const data = await res.json();
-  return data?.blog ?? null; 
-}
-
-// export async function getPublicBlogBySlug(slug: string): Promise<Blog | null> {
-//   const res = await fetch(`${API_URL}/tenants/slug/${slug}`, {
-//     headers: { 
-//       'Content-Type': 'application/json' 
-//     },
-//   });
-
-//   if (!res.ok) return null;
-
-//   const data = await res.json();
-//   return data?.blog ?? null; 
-// }
-
-
 export async function createBlog(data: CreateBlogDto, token: string): Promise<Blog> {
   const res = await fetch(`${API_URL}/blogs`, {
     method: 'POST',
