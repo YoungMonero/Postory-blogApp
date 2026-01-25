@@ -21,23 +21,41 @@ interface LayoutProps {
 }
 
 export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
-
     const { userName, logout, token } = useAuth();
     const router = useRouter();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // Fetch blog info to decide between "View" or "Create"
     const { data: blog } = useQuery({
         queryKey: ['my-blog-status'],
         queryFn: () => getMyBlog(token as string),
         enabled: !!token,
     });
 
+    // Gatekeeper: Redirect if not logged in
+    useEffect(() => {
+        if (!token) {
+            router.push('/login');
+        }
+    }, [token, router]);
+
     const handleLogout = () => {
         logout();
         router.push('/login');
     };
 
+    const handleWriteClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        // Redirect logic based on blog ownership
+        if (blog) {
+            router.push('/dashboard/create-post');
+        } else {
+            router.push('/dashboard/create-blog');
+        }
+    };
+
+    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -55,19 +73,14 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
             <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 z-50">
                 <div className="max-w-[1450px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
 
-                    {/* Logo & Search */}
+                    {/* Left: Wordoo Branding */}
                     <div className="flex items-center gap-8 flex-1">
-                        <Link href="/dashboard" className="flex items-center gap-2">
-
-                            {/* The Text - Styled like a premium tech brand */}
+                        <Link href="/dashboard" className="flex items-center gap-2 group">
                             <span className="text-2xl font-[900] text-gray-900 tracking-[-0.05em] flex items-center">
                                 WORD
                                 <span className="relative flex items-center text-primary tracking-[-0.02em] ml-0.5">
                                     o
-                                    {/* This creates a slight overlap between the two 'o's for a custom-font look */}
                                     <span className="-ml-1.5 transition-transform group-hover:translate-x-0.5 duration-300">o</span>
-
-                                    {/* A small dot under the OO to give it a 'premium' trademark feel */}
                                     <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
                                 </span>
                             </span>
@@ -79,33 +92,33 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                             </div>
                             <input
                                 type="text"
-                                placeholder="Search"
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-full bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm transition-all"
+                                placeholder="Search Wordoo..."
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-100 rounded-full bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm transition-all"
                             />
                         </div>
                     </div>
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-4">
-                        <Link href="/dashboard/create-blog">
-                            <Button variant="ghost" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                                <PenSquare size={20} />
-                                <span className="hidden sm:inline">Write</span>
-                            </Button>
-                        </Link>
+                        <Button 
+                            variant="ghost" 
+                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900" 
+                            onClick={handleWriteClick}
+                        >
+                            <PenSquare size={20} />
+                            <span className="hidden sm:inline">Write</span>
+                        </Button>
 
                         <button className="text-gray-500 hover:text-gray-900 p-2 relative">
                             <Bell size={20} />
                             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
                         </button>
 
-                        {/* Profile Dropdown Section */}
                         <div className="relative ml-2" ref={dropdownRef}>
                             <button
                                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                                 className="flex items-center gap-2 focus:outline-none p-1 rounded-full hover:bg-gray-50 transition-colors"
                             >
-                                {/* ✅ Dynamic Avatar Initial */}
                                 <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-50 shadow-sm">
                                     {userName ? userName.charAt(0).toUpperCase() : 'U'}
                                 </div>
@@ -115,11 +128,10 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                             {isDropdownOpen && (
                                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                                     <div className="px-4 py-3 border-b border-gray-50">
-                                        {/* ✅ Real Logged-in Username */}
                                         <p className="text-sm font-semibold text-gray-900 truncate uppercase tracking-tight">
                                             {userName || 'Account'}
                                         </p>
-                                        <p className="text-xs text-gray-500 truncate">Member Profile</p>
+                                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-0.5">Wordoo Member</p>
                                     </div>
 
                                     <div className="py-2">
