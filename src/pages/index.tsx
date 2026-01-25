@@ -14,17 +14,29 @@ import {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
- 
+
       <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200">
-                B
-              </div>
-              <span className="font-bold text-2xl tracking-tight text-gray-900">
-                BlogForge
+
+              <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
+                WORD
+                <span className="relative flex items-center text-indigo-600 ml-0.5">
+                  o
+                  <span className="-ml-1.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
+                    o
+                  </span>
+
+                  {/* Brand accent dot */}
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
+                     bg-indigo-500 rounded-full 
+                     opacity-0 group-hover:opacity-100 
+                     transition-all duration-300 ease-out">
+                  </span>
+                </span>
               </span>
+
             </div>
 
             <div className="hidden md:flex items-center space-x-8">
@@ -34,7 +46,7 @@ export default function LandingPage() {
               <a href="#how-it-works" className="text-gray-600 hover:text-primary font-medium transition-colors">
                 How it works
               </a>
-            
+
               <a href="#testimonials" className="text-gray-600 hover:text-primary font-medium transition-colors">
                 Testimonials
               </a>
@@ -64,7 +76,7 @@ export default function LandingPage() {
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
-         
+
 
           <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight mb-8 leading-tight max-w-6xl mx-auto">
             Create and Discover Beautiful Stories with{" "}
