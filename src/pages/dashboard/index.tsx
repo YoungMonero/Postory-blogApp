@@ -58,7 +58,7 @@ const categories = [
     <DashboardLayout>
       <div className="space-y-12">
         
-        {/* Top Categories Section (Added exactly as sent) */}
+
         <section className="mb-16 w-full max-w-8xl">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-5 max-w-8xl">
             {categories.map((cat) => (

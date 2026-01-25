@@ -16,7 +16,6 @@ export async function getMyBlog(token: string): Promise<Blog | null> {
   return data?.blog ?? null;
 }
 
-
 export async function createBlog(data: CreateBlogDto, token: string): Promise<Blog> {
   const res = await fetch(`${API_URL}/blogs`, {
     method: 'POST',
@@ -31,6 +30,5 @@ export async function createBlog(data: CreateBlogDto, token: string): Promise<Bl
     const error = await res.json().catch(() => ({}));
     throw new Error(error.message || 'Failed to create blog');
   }
-
   return res.json();
 }

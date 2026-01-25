@@ -99,7 +99,7 @@ const PostsList: React.FC = () => {
               key={post._id} 
               post={post} 
               onDelete={() => handleDeletePost(post._id)}
-              canDelete={token !== null} // Only show delete if logged in
+              canDelete={token !== null} 
             />
           ))}
         </div>
@@ -116,8 +116,8 @@ interface PostCardProps {
 
 const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
   const handleDelete = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent link navigation
-    e.stopPropagation(); // Prevent event bubbling
+    e.preventDefault(); 
+    e.stopPropagation(); 
     onDelete();
   };
 
@@ -130,7 +130,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
             alt={post.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             onError={(e) => {
-              // Fallback if image fails to load
+            
               const target = e.target as HTMLImageElement;
               target.src = 'https://via.placeholder.com/400x200?text=No+Image';
             }}
