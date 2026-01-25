@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
 import { createBlog, getMyBlog } from '@/src/services/blogs';
 import { getToken } from '@/src/services/auth-storage';
-import { CreateBlogDto } from '@/src/types/blogs';
+import { Button } from '@/src/component/ui/button';
 
 export default function CreateBlogPage() {
   const router = useRouter();
@@ -13,13 +13,13 @@ export default function CreateBlogPage() {
   useEffect(() => {
     const t = getToken();
     if (!t) {
-      router.push('/login');
+        router.push('/login');
     } else {
-      setToken(t);
+        setToken(t);
     }
   }, [router]);
 
-  // ✅ Check if blog already exists
+  // Check if blog exists (Backend logic allows only ONE)
   const { data: existingBlog, isLoading } = useQuery({
     queryKey: ['my-blog'],
     queryFn: () => getMyBlog(token as string),
@@ -28,26 +28,24 @@ export default function CreateBlogPage() {
 
   useEffect(() => {
     if (existingBlog) {
-      // ✅ Redirect if blog already exists
       router.push('/dashboard');
     }
   }, [existingBlog, router]);
 
-  const [form, setForm] = useState<CreateBlogDto>({
+  // ✅ Based on your DTO, we only need these two!
+  const [form, setForm] = useState({
     title: '',
     description: '',
-    content: '',
   });
 
   const mutation = useMutation({
-    mutationFn: (data: CreateBlogDto) => createBlog(data, token as string),
+    mutationFn: (data: { title: string; description?: string }) => createBlog(data, token as string),
     onSuccess: (newBlog) => {
-      // ✅ Update cache so Dashboard sees the new blog immediately
       queryClient.setQueryData(['my-blog'], newBlog);
       router.push('/dashboard');
     },
     onError: (err: any) => {
-      alert(err.message || 'Failed to create blog');
+        // Error handling is in the UI
     },
   });
 
@@ -56,54 +54,70 @@ export default function CreateBlogPage() {
     mutation.mutate(form);
   };
 
-  if (!token || isLoading || existingBlog) return <p>Loading...</p>;
+  if (!token || isLoading || existingBlog) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6 border rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Create Blog</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans relative overflow-hidden py-10 px-4">
+      {/* Background Blobs */}
+      <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
+      <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
+      <div className="absolute -bottom-8 left-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          name="title"
-          className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-          placeholder="Title"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-          required
-        />
+      <div className="w-full max-w-[500px] bg-white rounded-2xl shadow-sm border border-gray-100 p-10 relative z-10">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200 mb-6">
+            W
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Create your blog</h1>
+          <p className="text-gray-500 text-sm">Set up your profile to start writing.</p>
+        </div>
 
-        <textarea
-          name="description"
-          className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-          placeholder="Description"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          required
-        />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {mutation.isError && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center font-medium">
+              {(mutation.error as any)?.response?.data?.message || 'Failed to create blog'}
+            </div>
+          )}
 
-        <textarea
-          name="content"
-          className="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
-          placeholder="Content"
-          value={form.content}
-          onChange={(e) => setForm({ ...form, content: e.target.value })}
-          required
-        />
+          <div className="space-y-1.5">
+            <label className="block text-sm font-semibold text-gray-900">Blog Title</label>
+            <input
+              type="text"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="e.g. My Tech Insights"
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all"
+              required
+            />
+          </div>
 
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          {mutation.isPending ? 'Creating Blog...' : 'Create Blog'}
-        </button>
-      </form>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-semibold text-gray-900">Description</label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="What will you write about?"
+              rows={4}
+              className="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all resize-none"
+              required
+            />
+          </div>
 
-      {mutation.isError && (
-        <p className="mt-4 text-red-600 text-sm">
-          {(mutation.error as any)?.message || 'Failed to create blog. Please try again.'}
-        </p>
-      )}
+          <Button
+            type="submit"
+            className="w-full py-2.5 bg-gray-900 hover:bg-black text-white font-semibold rounded-lg shadow-md transition-all"
+            isLoading={mutation.isPending}
+          >
+            Launch Blog
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
