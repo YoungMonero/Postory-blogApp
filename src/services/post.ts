@@ -7,7 +7,7 @@ import {
   ErrorResponse
 } from '@/src/types/posts';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 
 const api = axios.create({
@@ -45,7 +45,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        // Attempt to refresh token
+
         const refreshResponse = await axios.post<{ accessToken: string }>(
           `${API_URL}/auth/refresh`,
           {},
@@ -73,9 +73,6 @@ api.interceptors.response.use(
   }
 );
 
-/**
- * Get public posts with pagination and filtering
- */
 export async function getPublicPosts(
   options?: {
     page?: number;
@@ -110,9 +107,7 @@ export async function getPublicPosts(
   }
 }
 
-/**
- * Get a single post by ID or slug
- */
+
 export async function getPostById(
   identifier: string
 ): Promise<ApiResponse<Post>> {
@@ -130,9 +125,7 @@ export async function getPostById(
   }
 }
 
-/**
- * Create a new post with proper TypeScript typing
- */
+
 export async function createPost(
   postData: CreatePostDto,
   token?: string
@@ -152,7 +145,7 @@ export async function createPost(
   } catch (error) {
     const axiosError = error as AxiosError<ErrorResponse & { details?: any }>;
     
-    // Handle validation errors
+
     if (axiosError.response?.status === 422) {
       const validationErrors = axiosError.response.data.details;
       throw {
@@ -169,9 +162,7 @@ export async function createPost(
   }
 }
 
-/**
- * Update an existing post
- */
+
 export async function updatePost(
   postId: string,
   updateData: Partial<CreatePostDto>,
@@ -195,9 +186,7 @@ export async function updatePost(
   }
 }
 
-/**
- * Delete a post
- */
+
 export async function deletePost(
   postId: string,
   token: string
@@ -219,9 +208,7 @@ export async function deletePost(
   }
 }
 
-/**
- * Get posts by user
- */
+
 export async function getUserPosts(
   userId: string,
   token?: string
@@ -247,30 +234,30 @@ export async function getUserPosts(
   }
 }
 
-// Utility function to generate slug from title
+
 export function generateSlug(title: string): string {
   return title
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '') // Remove special characters
-    .replace(/\s+/g, '-')     // Replace spaces with hyphens
-    .replace(/--+/g, '-')     // Replace multiple hyphens with single
+    .replace(/[^\w\s-]/g, '') 
+    .replace(/\s+/g, '-')     
+    .replace(/--+/g, '-')    
     .trim();
 }
 
-// Add this function to your post.ts service
+
 export async function uploadPostThumbnail(
   file: File,
   token: string
 ): Promise<{ url: string; publicId: string }> {
   try {
     const formData = new FormData();
-    formData.append('thumbnail', file);
+    formData.append('file', file);
     
     const response = await api.post<{
       success: boolean;
       data: { url: string; publicId: string };
       message: string;
-    }>('/posts/upload-thumbnail', formData, {
+    }>('/posts', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
         Authorization: `Bearer ${token}`
@@ -287,5 +274,4 @@ export async function uploadPostThumbnail(
   }
 }
 
-// Export the typed api instance
 export { api };

@@ -5,7 +5,7 @@ import { generateSlug } from '@/src/services/post';
 
 interface CreatePostFormProps {
   token: string | null;
-  onSuccess?: () => void; // Callback for successful post creation
+  onSuccess?: () => void;
 }
 
 const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => {
@@ -29,13 +29,13 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
     const { name, value } = e.target;
     setFormData((prev: CreatePostDto) => ({ ...prev, [name]: value }));
     
-    // Auto-generate slug when title changes
+
     if (name === 'title') {
       const slug = generateSlug(value);
       setFormData((prev: CreatePostDto) => ({ ...prev, slug }));
     }
     
-    // Auto-generate excerpt if content changes and excerpt is empty
+
     if (name === 'content' && !formData.excerpt) {
       const excerpt = value.substring(0, 200).replace(/<[^>]*>/g, '').trim();
       setFormData((prev: CreatePostDto) => ({ ...prev, excerpt }));
@@ -85,7 +85,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
       
       setFile(selectedFile);
       
-      // Create a local preview URL
+
       const previewUrl = URL.createObjectURL(selectedFile);
       setFormData((prev: CreatePostDto) => ({ ...prev, thumbnail: previewUrl }));
     }
@@ -109,15 +109,42 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
       return;
     }
     
-    // Prepare final form data
-    const finalFormData: CreatePostDto = {
-      ...formData,
-      tags: formData.tags || [],
-      excerpt: formData.excerpt || formData.content.substring(0, 200).replace(/<[^>]*>/g, '').trim(),
-      seoDescription: formData.seoDescription || formData.content.substring(0, 160).replace(/<[^>]*>/g, '').trim(),
-    };
+    setUploading(true);
     
     try {
+      let thumbnailUrl = formData.thumbnail && formData.thumbnail.startsWith('http') ? formData.thumbnail : '';
+      
+      // If file is selected, upload it to backend
+      if (file) {
+        const fileFormData = new FormData();
+        fileFormData.append('file', file);
+        
+        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/uploads`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: fileFormData,
+        });
+        
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          thumbnailUrl = uploadData.url || uploadData.data?.url || '';
+        } else {
+          console.warn('File upload failed, proceeding without thumbnail');
+        }
+      }
+      
+      // Prepare final form data
+      const finalFormData: CreatePostDto = {
+        ...formData,
+        thumbnail: thumbnailUrl,
+        tags: formData.tags || [],
+        // Auto-generate excerpt if empty, ensure it's at least 10 characters
+        excerpt: formData.excerpt || formData.content.substring(0, 200).replace(/<[^>]*>/g, '').trim().substring(0, 500),
+        seoDescription: formData.seoDescription || formData.content.substring(0, 160).replace(/<[^>]*>/g, '').trim(),
+      };
+      
       const result = await createNewPost(finalFormData, token);
       
       if (result) {
@@ -145,7 +172,9 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
       }
     } catch (error: any) {
       console.error('Error creating post:', error);
-      alert(`Error: ${error.message || 'Failed to create post'}`);
+      alert(`Error: ${error?.message || 'Failed to create post'}`);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -219,7 +248,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
       {/* Thumbnail Upload */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Thumbnail Image
+          Thumbnail Image (optional)
         </label>
         <div className="space-y-3">
           <input
@@ -227,6 +256,19 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
             accept="image/*"
             onChange={handleFileChange}
             className="w-full p-2 border border-gray-300 rounded-md"
+          />
+          <p className="text-xs text-gray-500">
+            Note: File uploads are for preview only. To use a thumbnail, please provide a valid image URL in the field below.
+          </p>
+          
+          {/* Thumbnail URL Input */}
+          <input
+            type="url"
+            name="thumbnail"
+            placeholder="https://example.com/image.jpg"
+            value={formData.thumbnail && !formData.thumbnail.startsWith('blob') ? formData.thumbnail : ''}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md text-sm"
           />
           
           {/* Thumbnail Preview */}
@@ -355,16 +397,16 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
       <div className="pt-4 border-t border-gray-200">
         <button 
           type="submit" 
-          disabled={loading || !token}
+          disabled={loading || uploading || !token}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed"
         >
-          {loading ? (
+          {loading || uploading ? (
             <span className="flex items-center justify-center">
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Creating Post...
+              {uploading ? 'Uploading...' : 'Creating Post...'}
             </span>
           ) : 'Create Post'}
         </button>
