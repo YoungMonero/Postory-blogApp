@@ -150,7 +150,7 @@ export async function createPost(
     
     return response.data;
   } catch (error) {
-    const axiosError = error as AxiosError<ErrorResponse>;
+    const axiosError = error as AxiosError<ErrorResponse & { details?: any }>;
     
     // Handle validation errors
     if (axiosError.response?.status === 422) {
@@ -255,6 +255,36 @@ export function generateSlug(title: string): string {
     .replace(/\s+/g, '-')     // Replace spaces with hyphens
     .replace(/--+/g, '-')     // Replace multiple hyphens with single
     .trim();
+}
+
+// Add this function to your post.ts service
+export async function uploadPostThumbnail(
+  file: File,
+  token: string
+): Promise<{ url: string; publicId: string }> {
+  try {
+    const formData = new FormData();
+    formData.append('thumbnail', file);
+    
+    const response = await api.post<{
+      success: boolean;
+      data: { url: string; publicId: string };
+      message: string;
+    }>('/posts/upload-thumbnail', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${token}`
+      }
+    });
+    
+    return response.data.data;
+  } catch (error) {
+    const axiosError = error as AxiosError<ErrorResponse>;
+    throw {
+      message: axiosError.response?.data?.message || 'Failed to upload thumbnail',
+      statusCode: axiosError.response?.status || 500,
+    };
+  }
 }
 
 // Export the typed api instance

@@ -88,7 +88,7 @@ export default function CreateBlogPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {mutation.isError && (
             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center font-medium">
-              {(mutation.error as any)?.message || 'Failed to create blog. Try a different slug.'}
+              {(mutation.error as any)?.message || 'Failed to create blog. Please try again.'}
             </div>
           )}
 
@@ -96,7 +96,7 @@ export default function CreateBlogPage() {
             <label className="block text-sm font-semibold text-gray-900">Blog Title</label>
             <input
               type="text"
-              value={form.title} // ✅ Matches Interface
+              value={form.title} 
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="e.g. The Tech Journal"
               className="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 outline-none transition-all text-gray-900 placeholder:text-gray-400"

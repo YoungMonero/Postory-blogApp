@@ -1,36 +1,46 @@
-// src/types/posts.ts
-export interface CreatePostDto {
-  title: string;
-  content: string;
-  slug?: string; // Make optional, can generate on backend
-  status?: 'draft' | 'published' | 'archived'; // Use union type
-  thumbnail?: string; // Optional
-  tags?: string[]; // Consider adding tags
-}
-
 export interface Post {
-  _id: string; // Changed from number to string (MongoDB)
+  _id: string;
   title: string;
   content: string;
   slug: string;
-  status: 'draft' | 'published' | 'archived';
+  status: 'draft' | 'published';
+  author?: string | { name: string; email?: string };
   thumbnail?: string;
-  tenantId?: string | number;
-  authorId: string | number;
-  author?: { // Consider adding author details
-    id: string | number;
-    name: string;
-    email?: string;
-  };
-  publishedAt?: string | null;
+  tags?: string[];
+  excerpt?: string;
+  seoDescription?: string;
   createdAt: string;
   updatedAt: string;
-  tags?: string[];
   likes?: number;
   views?: number;
 }
 
-export interface ApiResponse<T> {
+export interface CreatePostDto {
+  title: string;
+  content: string;
+  slug?: string;
+  status: 'draft' | 'published';
+  thumbnail?: string;
+  tags?: string[];
+  excerpt?: string;
+  seoDescription?: string;
+}
+
+export interface ErrorResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
+export interface CreatePostResponse {
+  success: boolean;
+  message: string;
+  data: Post; 
+  seoDescription?: string;
+  excerpt?: string;
+}
+
+export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   message?: string;
@@ -41,16 +51,4 @@ export interface ApiResponse<T> {
     limit: number;
     totalPages: number;
   };
-}
-
-export interface CreatePostResponse {
-  post: Post;
-  message: string;
-}
-
-export interface ErrorResponse {
-  message: string;
-  statusCode: number;
-  error?: string;
-  details?: Record<string, string[]>;
 }

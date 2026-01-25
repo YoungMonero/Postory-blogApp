@@ -70,11 +70,16 @@ export function usePosts(): UsePostsReturn {
     
     try {
       const response: CreatePostResponse = await createPost(postData, token);
-      const newPost = response.post;
       
-      setPosts(prev => [newPost, ...prev]);
-      
-      return newPost;
+      // Handle the backend response structure
+      if (response.success && response.data) {
+        const newPost = response.data;
+        setPosts(prev => [newPost, ...prev]);
+        return newPost;
+      } else {
+        setError(response.message || 'Failed to create post');
+        return null;
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to create post');
       return null;

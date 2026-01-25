@@ -225,9 +225,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
             {post.author ? (
               <>
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                  {post.author.name.charAt(0).toUpperCase()}
+                  {typeof post.author === 'string' ? post.author.charAt(0).toUpperCase() : post.author.name.charAt(0).toUpperCase()}
                 </div>
-                <span>{post.author.name}</span>
+                <span>{typeof post.author === 'string' ? post.author : post.author.name}</span>
               </>
             ) : (
               <span>By Anonymous</span>
