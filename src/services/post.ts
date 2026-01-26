@@ -94,7 +94,6 @@ export async function getPostById(
 
 
 export async function getTenantPublicPosts(
-  tenantSlug: string,
   options?: {
     page?: number;
     limit?: number;
@@ -103,13 +102,11 @@ export async function getTenantPublicPosts(
   try {
     const params = new URLSearchParams();
 
-    console.log('')
-
     if (options?.page) params.append('page', options.page.toString());
     if (options?.limit) params.append('limit', options.limit.toString());
 
     const response = await api.get<ApiResponse<Post[]>>(
-      `/public/${tenantSlug}${params.toString() ? `?${params.toString()}` : ''}`
+      `/public${params.toString() ? `?${params.toString()}` : ''}`
     );
 
     return response.data;
@@ -119,16 +116,12 @@ export async function getTenantPublicPosts(
       success: false,
       message:
         axiosError.response?.data?.message ||
-        'Failed to fetch tenant posts',
+        'Failed to fetch public posts',
       error: axiosError.message,
       statusCode: axiosError.response?.status || 500,
     };
   }
 }
-
-
-
-
 
 
 

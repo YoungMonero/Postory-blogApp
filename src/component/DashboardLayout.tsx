@@ -42,12 +42,12 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
 
     const handleLogout = () => {
         logout();
-        router.push('/login');
+        router.push('/');
     };
 
     const handleWriteClick = (e: React.MouseEvent) => {
         e.preventDefault();
-        // Redirect logic based on blog ownership
+  
         if (blog) {
             router.push('/dashboard/create-post');
         } else {
