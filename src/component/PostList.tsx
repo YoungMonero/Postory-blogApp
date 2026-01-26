@@ -3,20 +3,21 @@
 import React, { useEffect, useCallback } from 'react';
 import { usePosts } from '@/src/hooks/usePosts';
 import { Post } from '@/src/types/posts';
-import { useAuth } from '@/src/hooks/useAuth'; 
+import { useAuth } from '@/src/hooks/useAuth';
+ 
 
 const PostsList: React.FC = () => {
   const { posts, loading, error, fetchPosts, deleteExistingPost } = usePosts();
   const { token } = useAuth(); 
 
-  const loadPosts = useCallback(async () => {
-    await fetchPosts({ 
-      limit: 10, 
-      status: 'published',
-      sortBy: 'createdAt',
-      sortOrder: 'desc'
-    });
-  }, [fetchPosts]);
+ const loadPosts = useCallback(async () => {
+  await fetchPosts('polog', {   // 👈 tenantSlug first
+    limit: 10,
+    status: 'published',
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  });
+}, [fetchPosts]);
 
   useEffect(() => {
     loadPosts();
