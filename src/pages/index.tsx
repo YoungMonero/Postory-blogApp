@@ -14,17 +14,29 @@ import {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
-      {/* Navigation */}
+
       <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200">
-                B
-              </div>
-              <span className="font-bold text-2xl tracking-tight text-gray-900">
-                BlogForge
+
+              <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
+                WORD
+                <span className="relative flex items-center text-indigo-600 ml-0.5">
+                  o
+                  <span className="-ml-1.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
+                    o
+                  </span>
+
+                  {/* Brand accent dot */}
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
+                     bg-indigo-500 rounded-full 
+                     opacity-0 group-hover:opacity-100 
+                     transition-all duration-300 ease-out">
+                  </span>
+                </span>
               </span>
+
             </div>
 
             <div className="hidden md:flex items-center space-x-8">
@@ -34,7 +46,7 @@ export default function LandingPage() {
               <a href="#how-it-works" className="text-gray-600 hover:text-primary font-medium transition-colors">
                 How it works
               </a>
-            
+
               <a href="#testimonials" className="text-gray-600 hover:text-primary font-medium transition-colors">
                 Testimonials
               </a>
@@ -57,20 +69,14 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <div className="pt-32 pb-20 relative overflow-hidden">
-        {/* Background blobs */}
+
         <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
         <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
-          {/* <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 text-indigo-600 font-medium text-sm mb-8 border border-indigo-100">
-            <Zap size={16} fill="currentColor" />
-            <span className="tracking-wide">
-              The modern blogging platform for teams
-            </span>
-          </div> */}
+
 
           <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight mb-8 leading-tight max-w-6xl mx-auto">
             Create and Discover Beautiful Stories with{" "}
@@ -127,7 +133,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Features Grid */}
+
       <div id="features" className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
@@ -188,7 +194,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* How it works */}
+
       <div id="how-it-works" className="py-32 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
@@ -251,7 +257,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Testimonials */}
+
       <div id="testimonials" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -261,7 +267,7 @@ export default function LandingPage() {
                 role: "Content Director, TechFlow Inc.",
                 image: "https://i.pravatar.cc/150?u=sarah",
                 quote:
-                  "BlogForge has completely transformed how our content team operates. The multi-tenant feature is a game-changer for managing our different brand blogs.",
+                  "Wordoo has completely transformed how our content team operates. The multi-tenant feature is a game-changer for managing our different brand blogs.",
               },
               {
                 name: "Marcus Williams",
@@ -313,14 +319,22 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-16">
             <div className="col-span-2 lg:col-span-2">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-200">
-                  B
-                </div>
-                <span className="font-bold text-xl text-gray-900">
-                  BlogForge
-                </span>
-              </div>
+                            <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
+                                WORD
+                                <span className="relative flex items-center text-indigo-600 ml-0.5">
+                                    o
+                                    <span className="-ml-1.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
+                                        o
+                                    </span>
+
+                                    {/* Brand accent dot */}
+                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
+                     bg-indigo-500 rounded-full 
+                     opacity-0 group-hover:opacity-100 
+                     transition-all duration-300 ease-out">
+                                    </span>
+                                </span>
+                            </span>
               <p className="text-gray-500 max-w-xs mb-6">
                 The modern blogging platform for teams and creators. Write,
                 publish, and grow your audience.
