@@ -76,14 +76,23 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                     {/* Left: Wordoo Branding */}
                     <div className="flex items-center gap-8 flex-1">
                         <Link href="/dashboard" className="flex items-center gap-2 group">
-                            <span className="text-2xl font-[900] text-gray-900 tracking-[-0.05em] flex items-center">
+                            <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
                                 WORD
-                                <span className="relative flex items-center text-primary tracking-[-0.02em] ml-0.5">
+                                <span className="relative flex items-center text-indigo-600 ml-0.5">
                                     o
-                                    <span className="-ml-1.5 transition-transform group-hover:translate-x-0.5 duration-300">o</span>
-                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-300 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                                    <span className="-ml-1.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
+                                        o
+                                    </span>
+
+                                    {/* Brand accent dot */}
+                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
+                     bg-indigo-500 rounded-full 
+                     opacity-0 group-hover:opacity-100 
+                     transition-all duration-300 ease-out">
+                                    </span>
                                 </span>
                             </span>
+
                         </Link>
 
                         <div className="relative max-w-md w-full hidden md:block">
@@ -100,9 +109,9 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
 
                     {/* Right: Actions */}
                     <div className="flex items-center gap-4">
-                        <Button 
-                            variant="ghost" 
-                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900" 
+                        <Button
+                            variant="ghost"
+                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
                             onClick={handleWriteClick}
                         >
                             <PenSquare size={20} />
