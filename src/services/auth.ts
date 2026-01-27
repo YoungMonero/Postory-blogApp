@@ -1,5 +1,4 @@
 // src/services/auth.ts
-// THE THE HHDFFHVGHGG
 export interface RegisterInput {
   email: string;
   password: string;
