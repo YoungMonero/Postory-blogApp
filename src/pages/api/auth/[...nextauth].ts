@@ -1,11 +1,36 @@
 import NextAuth from "next-auth";
-import EmailProvider from "next-auth/providers/email";
+import CredentialsProvider from "next-auth/providers/credentials";
 
 export default NextAuth({
   providers: [
-    EmailProvider({
-      server: process.env.EMAIL_SERVER,
-      from: process.env.EMAIL_FROM,
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: credentials?.email,
+              password: credentials?.password
+            })
+          });
+
+          if (!res.ok) {
+            return null;
+          }
+
+          const user = await res.json();
+          return user;
+        } catch (error) {
+          console.error('Auth error:', error);
+          return null;
+        }
+      }
     }),
   ],
 
