@@ -18,8 +18,10 @@ export default function CreatePostPage() {
         <DashboardLayout>
             <CreatePostForm 
                 token={token} 
-                onSuccess={() => router.push('/dashboard')} 
+                onSuccess={() => router.push("/posts")} 
             />
         </DashboardLayout>
     );
 }
+
+ 

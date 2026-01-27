@@ -33,7 +33,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
         enabled: !!token,
     });
 
-    // Gatekeeper: Redirect if not logged in
+
     useEffect(() => {
         if (!token) {
             router.push('/login');
@@ -42,12 +42,12 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
 
     const handleLogout = () => {
         logout();
-        router.push('/login');
+        router.push('/');
     };
 
     const handleWriteClick = (e: React.MouseEvent) => {
         e.preventDefault();
-        // Redirect logic based on blog ownership
+  
         if (blog) {
             router.push('/dashboard/create-post');
         } else {
@@ -55,7 +55,6 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
         }
     };
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -107,7 +106,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                         </div>
                     </div>
 
-                    {/* Right: Actions */}
+
                     <div className="flex items-center gap-4">
                         <Button
                             variant="ghost"
