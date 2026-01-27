@@ -54,7 +54,7 @@ export default function BlogChannelView() {
       {/* 1. Simple Top Nav */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
               WORD
               <span className="relative flex items-center text-indigo-600 ml-0.5">
