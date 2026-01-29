@@ -187,7 +187,6 @@ export default function BlogChannelView() {
       <div className="max-w-[1200px] mx-auto px-4 md:px-10">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between pb-6 border-b border-gray-100">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6 -mt-10 md:-mt-8 relative z-10">
-            {/* Profile is now shown above; no initial placeholder needed here */}
             <div className="mt-2 md:mt-10">
               <h1 className="text-3xl font-black text-gray-900 mb-1 flex items-center gap-2">
                 {blogData?.title}
