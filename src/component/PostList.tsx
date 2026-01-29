@@ -11,8 +11,7 @@ const PostsList: React.FC = () => {
   const { token } = useAuth(); 
 
  const loadPosts = useCallback(async () => {
-  await fetchPosts('polog', {   // 👈 tenantSlug first
-    limit: 10,
+  await fetchPosts('polog', { 
     status: 'published',
     sortBy: 'createdAt',
     sortOrder: 'desc',
@@ -190,7 +189,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
         </h2>
         
         <p className="text-gray-600 mb-4 line-clamp-3">
-          {post.content.replace(/<[^>]*>/g, '')} {/* Remove HTML tags if any */}
+          {post.content.replace(/<[^>]*>/g, '')} 
         </p>
         
         {post.tags && post.tags.length > 0 && (
@@ -236,7 +235,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
           </div>
         </div>
         
-        {/* Post stats */}
+    
         <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
           <div className="flex items-center space-x-4">
             {(post.likes || post.likes === 0) && (

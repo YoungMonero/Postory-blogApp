@@ -76,16 +76,16 @@ api.interceptors.response.use(
 /* ===================== POSTS ===================== */
 
 export async function getPostById(
-  identifier: string
+  id: string
 ): Promise<ApiResponse<Post>> {
   try {
-    const response = await api.get<ApiResponse<Post>>(`/posts/${identifier}`);
+    const response = await api.get<ApiResponse<Post>>(`/posts/${id}`);
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError<ErrorResponse>;
     throw {
       success: false,
-      message: axiosError.response?.data?.message || 'Post not found',
+      message: axiosError.response?.data?.message || 'user Post not found refresh the page if it persists',
       error: axiosError.message,
       statusCode: axiosError.response?.status || 404,
     };
@@ -184,6 +184,7 @@ export async function updatePost(
   }
 }
 
+
 export async function deletePost(
   postId: string,
   token: string
@@ -206,31 +207,28 @@ export async function deletePost(
   }
 }
 
+/* ===================== get user all POSTS ===================== */
+
 export async function getUserPosts(
-  userId: string,
-  token?: string
+  token: string
 ): Promise<ApiResponse<Post[]>> {
   try {
-    const config = token
-      ? { headers: { Authorization: `Bearer ${token}` } }
-      : {};
-
-    const response = await api.get<ApiResponse<Post[]>>(
-      `/users/${userId}/posts`,
-      config
-    );
+    const response = await api.get<ApiResponse<Post[]>>('posts', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError<ErrorResponse>;
-    throw {
-      success: false,
-      message:
-        axiosError.response?.data?.message || 'Failed to fetch user posts',
-      error: axiosError.message,
-    };
+
+    throw new Error(
+      axiosError.response?.data?.message || 'Failed to fetch posts'
+    );
   }
 }
+
 
 export function generateSlug(title: string): string {
   return title
