@@ -1,4 +1,5 @@
 // src/services/auth.ts
+import { api } from './api';
 export interface RegisterInput {
   email: string;
   password: string;
@@ -12,7 +13,8 @@ export interface LoginDto {
 }
 
 export async function registerUser(data: RegisterInput) {
-  const res = await fetch('http://localhost:4000/auth/register', {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const res = await fetch(`${apiUrl}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
