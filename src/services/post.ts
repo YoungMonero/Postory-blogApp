@@ -73,22 +73,16 @@ api.interceptors.response.use(
   }
 );
 
-/* ===================== POSTS ===================== */
 
-export async function getPostById(
-  id: string
-): Promise<ApiResponse<Post>> {
+
+export async function getPublicPostDetail(slug: string): Promise<ApiResponse<Post>> {
   try {
-    const response = await api.get<ApiResponse<Post>>(`/posts/${id}`);
+   
+    const response = await api.get<ApiResponse<Post>>(`/public/post/${slug}`);
     return response.data;
   } catch (error) {
-    const axiosError = error as AxiosError<ErrorResponse>;
-    throw {
-      success: false,
-      message: axiosError.response?.data?.message || 'user Post not found refresh the page if it persists',
-      error: axiosError.message,
-      statusCode: axiosError.response?.status || 404,
-    };
+    console.error("Public Fetch Error:", error);
+    throw error;
   }
 }
 
@@ -108,6 +102,7 @@ export async function getTenantPublicPosts(
     const response = await api.get<ApiResponse<Post[]>>(
       `/public${params.toString() ? `?${params.toString()}` : ''}`
     );
+    console.log(response.data)
 
     return response.data;
   } catch (error) {

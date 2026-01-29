@@ -1,18 +1,31 @@
 export interface Post {
-  _id: string;
+  id: string; 
+  _id?: string; 
   title: string;
   content: string;
   slug: string;
   status: 'draft' | 'published';
-  author?: string | { name: string; email?: string };
   thumbnail?: string;
-  tags?: string[];
+  thumbnailPublicId?: string;
   excerpt?: string;
+  tags?: string[];
   seoDescription?: string;
+  readingTime?: number;
+  author?: {
+    id: string;
+    username: string;
+    displayName: string;
+    profilePicture?: string;
+    bio?: string;
+  };
+  blog?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  publishedAt?: string;
   createdAt: string;
   updatedAt: string;
-  likes?: number;
-  views?: number;
 }
 
 export interface CreatePostDto {

@@ -238,7 +238,7 @@ export default function BlogChannelView() {
                     </p>
                   </Link>
 
-                  {/* Post Cards */}
+
                   {posts.map((post) => (
                     <div
                       key={post._id}

@@ -40,6 +40,7 @@ export default function DashboardPage() {
     queryFn: () => getTenantPublicPosts({ limit: 10, page: 1 }),
     enabled: !!token,
   });
+  console.log(postsData)
 
   
   
