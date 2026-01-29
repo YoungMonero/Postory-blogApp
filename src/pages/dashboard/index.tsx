@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getToken } from '@/src/services/auth-storage';
 import { getMyBlog } from '@/src/services/blogs';
-import { getTenantPublicPosts } from '@/src/services/post';
+import { getTenantPublicPosts,  } from '@/src/services/post';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/src/component/DashboardLayout';
@@ -42,6 +42,8 @@ export default function DashboardPage() {
   });
   console.log(postsData)
 
+  
+  
 
   useEffect(() => {
     if (postsData?.data?.posts) {
@@ -111,7 +113,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Posts Section */}
+
         <section className="max-w-6xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">All Posts</h2>
