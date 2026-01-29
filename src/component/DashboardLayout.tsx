@@ -145,7 +145,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                                     <div className="py-2">
                                         {blog ? (
                                             <Link
-                                                href={`/${blog.slug}`}
+                                                href={`${blog.slug}`}
                                                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
                                                 onClick={() => setIsDropdownOpen(false)}
                                             >
