@@ -47,8 +47,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
       setFormData(prev => ({ 
         ...prev, 
         content: html,
-        excerpt: prev.excerpt.length < 5 ? plainText.substring(0, 150) : prev.excerpt,
-        seoDescription: prev.seoDescription.length < 5 ? plainText.substring(0, 160) : prev.seoDescription
+        excerpt: (prev.excerpt || '').length < 5 ? plainText.substring(0, 150) : prev.excerpt,
+        seoDescription: (prev.seoDescription || '').length < 5 ? plainText.substring(0, 160) : prev.seoDescription
       }));
     },
   });
@@ -102,7 +102,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
         finalThumbnail = formData.thumbnail;
       }
 
-      let finalSeo = formData.seoDescription.trim();
+      let finalSeo = (formData.seoDescription ?? '').trim();
       if (finalSeo.length < 20) {
         finalSeo = `${formData.title}: ${plainText}`.substring(0, 160);
       }
@@ -113,7 +113,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
         content: latestContent,
         tags: finalTags,
         thumbnail: finalThumbnail || undefined, // FIX: Logic preserved
-        excerpt: formData.excerpt || plainText.substring(0, 150),
+        excerpt: (formData.excerpt && formData.excerpt.length >= 10) ? formData.excerpt : plainText.substring(0, 150).trim() || formData.title,
         seoDescription: finalSeo
       };
 
