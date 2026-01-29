@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getPublicPostDetail } from '@/src/services/post';
 import { Post } from '@/src/types/posts';
+import CommentSection from '@/src/component/CommentSection';
+import { useAuth } from '@/src/hooks/useAuth';
 
 export default function PostDetailPage() {
   const router = useRouter();
   const { id } = router.query; 
+
+  const { token } = useAuth();
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +75,11 @@ export default function PostDetailPage() {
       <div className="mt-16 pt-8 border-t border-gray-100 italic text-gray-400 text-sm text-center">
         Published in {post.blog?.name}
       </div>
+      
+      <CommentSection 
+       postId={post.id || post._id} // Use the database ID
+        token={token} 
+      />
     </main>
   );
 }

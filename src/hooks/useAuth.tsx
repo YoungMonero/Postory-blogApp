@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = (newToken: string, name: string) => {
     setCookieToken(newToken); // ✅ Sets the Cookie for Middleware
     localStorage.setItem('userName', name);
+    
     setToken(newToken);
     setUserName(name);
   };
@@ -35,6 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     clearToken(); // ✅ Clears Cookie
     localStorage.removeItem('userName');
+    localStorage.removeItem('user');
+
     setToken(null);
     setUserName(null);
   };

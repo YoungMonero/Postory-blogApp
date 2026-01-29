@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { commentService } from '@/src/services/comment';
-import { Comment } from '@/src/types/comments';
+import { Comment } from '@/src/types/comment';
 import { MessageSquare, Send, User } from 'lucide-react';
 
 export default function CommentSection({ postId, token }: { postId: string, token: string | null }) {
@@ -11,10 +11,13 @@ export default function CommentSection({ postId, token }: { postId: string, toke
   // Load comments on mount
   useEffect(() => {
     const fetchComments = async () => {
+      if (!postId) return;
       try {
         const data = await commentService.getComments(postId);
         setComments(data);
-      } catch (err) { console.error(err); }
+      } catch (err) { 
+        console.error("Error fetching comments:", err); 
+      }
     };
     fetchComments();
   }, [postId]);
@@ -23,46 +26,65 @@ export default function CommentSection({ postId, token }: { postId: string, toke
     if (!text.trim() || !token) return;
     try {
       const newComment = await commentService.addComment(postId, text);
-      setComments([newComment, ...comments]); // Update list immediately
+      // Backend returns the new comment object, add it to the top of the list
+      setComments([newComment, ...comments]); 
       setText('');
-    } catch (err) { alert("Failed to post comment"); }
+    } catch (err) { 
+      alert("Failed to post comment. Make sure you are logged in."); 
+    }
   };
 
   return (
-    <div className="mt-12 space-y-8">
-      <h3 className="text-xl font-bold flex items-center gap-2">
-        <MessageSquare size={20} /> Discussion
+    <div className="mt-12 space-y-8 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+      <h3 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+        <MessageSquare className="text-indigo-600" /> Discussion
       </h3>
 
       {token ? (
-        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+        <div className="space-y-4">
           <textarea 
             value={text} 
             onChange={(e) => setText(e.target.value)}
-            className="w-full bg-transparent border-none focus:ring-0 text-sm"
-            placeholder="Write a comment..."
+            className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-indigo-500 focus:bg-white rounded-2xl transition-all text-sm outline-none"
+            placeholder="What are your thoughts?"
+            rows={3}
           />
-          <button onClick={handlePost} className="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 ml-auto">
-            Post Comment <Send size={14} />
-          </button>
+          <div className="flex justify-end">
+            <button 
+              onClick={handlePost} 
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all shadow-md shadow-indigo-100"
+            >
+              Post Comment <Send size={16} />
+            </button>
+          </div>
         </div>
       ) : (
-        <p className="text-sm text-gray-500 italic">Please login to comment.</p>
+        <div className="p-6 bg-indigo-50 rounded-2xl border border-indigo-100 text-center">
+          <p className="text-indigo-900 font-bold text-sm">Log in to join the conversation!</p>
+        </div>
       )}
 
-      <div className="space-y-6">
-        {comments.map((c) => (
-          <div key={c._id} className="flex gap-4">
-            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"><User size={16}/></div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm">{c.authorName}</span>
-                <span className="text-[10px] text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
+      <div className="space-y-6 pt-6">
+        {comments.length === 0 ? (
+          <p className="text-gray-400 text-center py-4 italic text-sm">No comments yet.</p>
+        ) : (
+          comments.map((c) => (
+            <div key={c._id} className="flex gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors">
+              <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-black">
+                {c.authorName?.[0] || 'U'}
               </div>
-              <p className="text-gray-600 text-sm mt-1">{c.content}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-bold text-gray-900 text-sm">{c.authorName}</span>
+                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                    {new Date(c.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="text-gray-600 text-sm leading-relaxed">{c.content}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
