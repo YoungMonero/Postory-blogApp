@@ -31,7 +31,6 @@ const PostsList: React.FC = () => {
   const handleDeletePost = async (postId: string) => {
     if (!token) return alert('You must be logged in to delete posts');
     if (window.confirm('Are you sure?')) {
-      // Use the internal MongoDB _id for deletions
       const success = await deleteExistingPost(postId, token);
       if (success) alert('Post deleted');
     }
@@ -55,7 +54,6 @@ const PostsList: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {posts.map((post: Post) => (
           <PostCard 
-            // Use .id (from transform) or ._id (from direct mongo)
             key={post.id || post._id} 
             post={post} 
             // Delete always needs the database ID
