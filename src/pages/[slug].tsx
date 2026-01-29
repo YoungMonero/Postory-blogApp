@@ -1,29 +1,61 @@
+
 import { useRouter } from 'next/router';
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
-import { getMyBlog } from '@/src/services/blogs';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useRef } from 'react';
+import { getMyBlog, uploadBlogImage, updateMyBlogImages } from '@/src/services/blogs';
 import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
-import {
-  Bell, Check, Search, PlusCircle,
-  FileText, Layout, Info
-} from 'lucide-react';
+import { Bell, Check, PlusCircle, Info, Search, Camera } from 'lucide-react';
+
 
 export default function BlogChannelView() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { token } = useAuth();
+
   const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
+
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const profileInputRef = useRef<HTMLInputElement>(null);
+
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [profilePreview, setProfilePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { data: blog, isLoading, error } = useQuery({
     queryKey: ['my-blog'],
-    queryFn: async () => {
-      if (!token) return null;
-      const blogData = await getMyBlog(token);
-      return blogData;
-    },
+    queryFn: async () => (token ? await getMyBlog(token) : null),
     enabled: !!token,
-    retry: false
+    retry: false,
   });
+
+  const handleImageUpload = async (
+    file: File,
+    type: 'coverImage' | 'profileImage'
+  ) => {
+    if (!token) return;
+    setUploading(true);
+
+    try {
+      const previewURL = URL.createObjectURL(file);
+      if (type === 'coverImage') setCoverPreview(previewURL);
+      else setProfilePreview(previewURL);
+
+      // Upload image
+      const uploaded = await uploadBlogImage(file, token);
+
+      // Update blog with new image URL
+      await updateMyBlogImages({ [type]: uploaded.url }, token);
+
+      // Refresh blog data
+      queryClient.invalidateQueries({ queryKey: ['my-blog'] });
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   if (isLoading || !token) {
     return (
@@ -35,12 +67,15 @@ export default function BlogChannelView() {
 
   if (error || !blog) {
     return (
-      <div className="min-h-screen flex items-center justify-center flex-col gap-4 text-center p-6">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center p-6">
         <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-2">
           <Info size={32} />
         </div>
         <p className="text-gray-700 font-bold text-xl">Channel Not Found</p>
-        <button onClick={() => router.push('/')} className="bg-indigo-600 text-white px-6 py-2 rounded-full shadow-md hover:bg-indigo-700 transition">
+        <button
+          onClick={() => router.push('/')}
+          className="bg-indigo-600 text-white px-6 py-2 rounded-full shadow-md hover:bg-indigo-700 transition"
+        >
           Return to Home
         </button>
       </div>
@@ -50,11 +85,11 @@ export default function BlogChannelView() {
   const blogData = blog;
 
   return (
+    
     <div className="min-h-screen bg-white font-sans">
-      {/* 1. Simple Top Nav */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
               WORD
               <span className="relative flex items-center text-indigo-600 ml-0.5">
@@ -64,9 +99,9 @@ export default function BlogChannelView() {
                 </span>
 
                 {/* Brand accent dot */}
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
-                     bg-indigo-500 rounded-full 
-                     opacity-0 group-hover:opacity-100 
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5
+                     bg-indigo-500 rounded-full
+                     opacity-0 group-hover:opacity-100
                      transition-all duration-300 ease-out">
                 </span>
               </span>
@@ -81,26 +116,78 @@ export default function BlogChannelView() {
         </div>
       </nav>
 
-      {/* 2. YouTube Banner */}
-      <div className="w-full h-40 md:h-60 bg-gray-100 relative overflow-hidden">
-        {blogData?.coverImage ? (
-          <img src={blogData.coverImage} className="w-full h-full object-cover" alt="Banner" />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-90" />
-        )}
+
+      <div
+        className={`w-full h-48 md:h-64 relative cursor-pointer group ${
+          uploading ? 'opacity-70 pointer-events-none' : ''
+        }`}
+        onClick={() => coverInputRef.current?.click()}
+      >
+        <img
+          src={coverPreview || blog.coverImage || '/placeholder-cover.jpg'}
+          className="w-full h-full object-cover"
+          alt="Cover"
+        />
+
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+          <Camera className="text-white" />
+        </div>
+
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) =>
+            e.target.files && handleImageUpload(e.target.files[0], 'coverImage')
+          }
+        />
       </div>
 
+
+ <div className="-mt-16 ml-8 relative w-32 h-32 md:w-36 md:h-36">
+        <div
+          onClick={() => profileInputRef.current?.click()}
+          className="group w-full h-full rounded-full overflow-hidden border-4 border-white cursor-pointer shadow-xl relative"
+        >
+          {profilePreview || blog.profileImage ? (
+            <img
+              src={profilePreview || blog.profileImage}
+              className="w-full h-full object-cover"
+              alt="Profile"
+            />
+          ) : (
+            <div className="w-full h-full bg-indigo-50 flex items-center justify-center text-4xl font-black text-indigo-600 uppercase">
+              {blogData?.title?.charAt(0)}
+            </div>
+          )}
+
+          {/* overlay moved INSIDE clickable container */}
+          <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+            <Camera className="text-white" />
+          </div>
+        </div>
+
+        <input
+          ref={profileInputRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) =>
+            e.target.files && handleImageUpload(e.target.files[0], 'profileImage')
+          }
+        />
+      </div>
+
+
+
+
+
+
       <div className="max-w-[1200px] mx-auto px-4 md:px-10">
-        {/* 3. Header Section */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between pb-6 border-b border-gray-100">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6 -mt-10 md:-mt-8 relative z-10">
-            {/* Avatar Circle */}
-            <div className="w-32 h-32 md:w-36 md:h-36 rounded-full bg-white p-1.5 shadow-xl">
-              <div className="w-full h-full rounded-full bg-indigo-50 flex items-center justify-center text-4xl font-black text-indigo-600 border border-indigo-100 uppercase">
-                {blogData?.title?.charAt(0)}
-              </div>
-            </div>
-
+            {/* Profile is now shown above; no initial placeholder needed here */}
             <div className="mt-2 md:mt-10">
               <h1 className="text-3xl font-black text-gray-900 mb-1 flex items-center gap-2">
                 {blogData?.title}
@@ -118,35 +205,35 @@ export default function BlogChannelView() {
               </p>
             </div>
           </div>
-
           <div className="mt-4 md:mt-12 flex gap-3">
             <button className="bg-black text-white px-8 py-2.5 rounded-full font-bold text-sm hover:bg-gray-800 transition shadow-sm flex items-center gap-2">
-              <Bell size={16} /> suscribe
+              <Bell size={16} /> Subscribe
             </button>
           </div>
         </div>
 
-        {/* 4. Tabs Navigation */}
+        {/* Tabs Navigation */}
         <div className="flex items-center gap-8 border-b border-gray-100 mb-8 overflow-x-auto">
           {['Home', 'About'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase() as any)}
-              className={`uppercase text-xs font-bold py-4 border-b-2 transition-all whitespace-nowrap tracking-widest ${activeTab === tab.toLowerCase()
+              className={`uppercase text-xs font-bold py-4 border-b-2 transition-all whitespace-nowrap tracking-widest ${
+                activeTab === tab.toLowerCase()
                   ? 'border-black text-black'
                   : 'border-transparent text-gray-400 hover:text-gray-600'
-                }`}
+              }`}
             >
               {tab}
             </button>
           ))}
         </div>
 
-        {/* 5. Tab Content */}
+        {/* Tab Content (unchanged) */}
         <div className="pb-20">
           {activeTab === 'home' && (
             <div className="flex flex-col items-center justify-center py-20 px-6 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-center">
-              <div className="w-20 h-20  flex items-center justify-center text-indigo-600 mb-6 border border-gray-100">
+              <div className="w-20 h-20 flex items-center justify-center text-indigo-600 mb-6 border border-gray-100">
                 <PlusCircle size={40} strokeWidth={1.5} />
               </div>
               <h2 className="text-2xl font-black text-gray-900 mb-2">Create your first post</h2>
@@ -162,7 +249,6 @@ export default function BlogChannelView() {
               </Link>
             </div>
           )}
-
           {activeTab === 'about' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
               <div className="md:col-span-2 space-y-8">

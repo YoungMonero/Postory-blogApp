@@ -267,7 +267,7 @@ export default function LandingPage() {
                 role: "Content Director, TechFlow Inc.",
                 image: "https://i.pravatar.cc/150?u=sarah",
                 quote:
-                  "BlogForge has completely transformed how our content team operates. The multi-tenant feature is a game-changer for managing our different brand blogs.",
+                  "Wordoo has completely transformed how our content team operates. The multi-tenant feature is a game-changer for managing our different brand blogs.",
               },
               {
                 name: "Marcus Williams",
@@ -319,14 +319,22 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-16">
             <div className="col-span-2 lg:col-span-2">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-200">
-                  B
-                </div>
-                <span className="font-bold text-xl text-gray-900">
-                  BlogForge
-                </span>
-              </div>
+                            <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
+                                WORD
+                                <span className="relative flex items-center text-indigo-600 ml-0.5">
+                                    o
+                                    <span className="-ml-1.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
+                                        o
+                                    </span>
+
+                                    {/* Brand accent dot */}
+                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
+                     bg-indigo-500 rounded-full 
+                     opacity-0 group-hover:opacity-100 
+                     transition-all duration-300 ease-out">
+                                    </span>
+                                </span>
+                            </span>
               <p className="text-gray-500 max-w-xs mb-6">
                 The modern blogging platform for teams and creators. Write,
                 publish, and grow your audience.
