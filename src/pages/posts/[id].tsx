@@ -55,7 +55,7 @@ export default function PostDetailPage() {
     };
 
     fetchPost();
-  }, [id, router.isReady, user]); // Re-run when user object is loaded
+  }, [id, router.isReady, user]); 
 
   const handleLike = async () => {
     const targetId = post?._id || post?.id;
@@ -67,7 +67,6 @@ export default function PostDetailPage() {
     try {
       const result = await commentService.toggleLike(targetId);
       
-      // Update state immediately based on backend response
       setLikesCount(result.likes);
       setIsLiked(result.liked);
     } catch (err) {

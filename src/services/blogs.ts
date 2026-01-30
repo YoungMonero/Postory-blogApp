@@ -1,9 +1,8 @@
 
 import { Blog, CreateBlogDto } from '@/src/types/blogs';
 
-const API_URL = 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-/* ===================== GET MY BLOG ===================== */
 export async function getMyBlog(token: string): Promise<Blog | null> {
   const res = await fetch(`${API_URL}/blogs/me`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -16,7 +15,6 @@ export async function getMyBlog(token: string): Promise<Blog | null> {
   return data?.blog ?? null;
 }
 
-/* ===================== CREATE BLOG ===================== */
 export async function createBlog(data: CreateBlogDto, token: string): Promise<Blog> {
   const res = await fetch(`${API_URL}/blogs`, {
     method: 'POST',
@@ -33,7 +31,6 @@ export async function createBlog(data: CreateBlogDto, token: string): Promise<Bl
   return res.json();
 }
 
-/* ===================== UPLOAD BLOG IMAGE ===================== */
 export async function uploadBlogImage(
   file: File,
   token: string
@@ -46,7 +43,6 @@ export async function uploadBlogImage(
     body: formData,
     headers: {
       Authorization: `Bearer ${token}`,
-      // DO NOT set Content-Type manually
     },
   });
 
@@ -60,7 +56,6 @@ export async function uploadBlogImage(
   return data.data;
 }
 
-/* ===================== UPDATE BLOG IMAGES ===================== */
 export async function updateMyBlogImages(
   data: { coverImage?: string; profileImage?: string },
   token: string
