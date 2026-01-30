@@ -6,6 +6,7 @@ import CommentSection from '@/src/component/CommentSection';
 import { commentService } from '@/src/services/comment';
 import { useAuth } from '@/src/hooks/useAuth';
 import { Heart } from 'lucide-react';
+import { MessageSquare, Share2, ArrowLeft } from 'lucide-react';
 
 export default function PostDetailPage() {
   const router = useRouter();
@@ -18,6 +19,10 @@ export default function PostDetailPage() {
   // State for interactive elements
   const [likesCount, setLikesCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
+
+  const handleBack = () => {
+    router.push('/dashboard');
+  };
 
   useEffect(() => {
     if (!router.isReady || !id) return;
@@ -32,8 +37,7 @@ export default function PostDetailPage() {
           setPost(postData); 
           setLikesCount(postData.likes || 0);
           
-          // CRITICAL FIX: Match the user ID against the likedBy array
-          // We check multiple possible ID fields and convert to String for safety
+
           const currentUserId = user?.id || user?.sub || user?._id;
           
           if (currentUserId && postData.likedBy) {
@@ -75,63 +79,77 @@ export default function PostDetailPage() {
   if (!post) return <div className="p-20 text-center">Post not found.</div>;
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-12">
-      <header className="mb-10 text-center">
-        <h1 className="text-5xl font-black mb-6 text-gray-900 leading-tight">
-          {post.title}
-        </h1>
-        <div className="flex items-center justify-center gap-3 text-gray-600">
-          {post.author?.profilePicture && (
-            <img src={post.author.profilePicture} className="w-10 h-10 rounded-full object-cover" alt="" />
-          )}
-          <span className="font-bold underline decoration-indigo-500">
-            {post.author?.displayName || 'Author'}
-          </span>
-          <span>•</span>
-          <span>{post.readingTime || 5} min read</span>
-        </div>
-      </header>
+    <main className="max-w-3xl mx-auto px-6 py-12">
+<nav className="fixed top-8 left-8 z-50 hidden lg:block">
+        <button
+          onClick={handleBack}
+          className="group flex items-center justify-center w-12 h-12 bg-white border border-gray-100 rounded-full shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300"
+          title="Back to Dashboard"
+        >
+          <ArrowLeft 
+            size={20} 
+            className="text-gray-400 group-hover:text-indigo-600 transition-colors group-hover:-translate-x-1 duration-300" 
+          />
+        </button>
+      </nav>
 
       {post.thumbnail && (
         <div className="mb-12">
           <img
             src={post.thumbnail}
-            className="w-full h-[450px] object-cover rounded-[2rem] shadow-2xl"
+            className="w-full h-[450px] object-cover rounded-[2rem] shadow-sm"
             alt={post.title}
           />
         </div>
       )}
 
       <article
-        className="prose prose-lg lg:prose-xl prose-indigo max-w-none text-gray-800 leading-relaxed"
+        className="prose prose-lg prose-indigo max-w-none text-gray-800 leading-relaxed font-serif"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      {/* Interactive Like Section */}
-      <div className="flex flex-col items-center py-12 border-t border-gray-100 mt-10">
-        <button
-          onClick={handleLike}
-          className={`group flex items-center gap-3 px-8 py-3 rounded-full border-2 transition-all duration-300 ${isLiked
-            ? 'bg-red-50 border-red-200 text-red-500'
-            : 'bg-white border-gray-200 text-gray-400 hover:border-red-100 hover:text-red-400'
+      {/* MODERN INTERACTION BAR */}
+      <div className="sticky bottom-8 left-0 right-0 flex justify-center z-50 mt-12">
+        <div className="flex items-center gap-6 bg-white/80 backdrop-blur-md border border-gray-200 px-6 py-3 rounded-full shadow-xl shadow-gray-200/50">
+          
+          {/* Like Button */}
+          <button
+            onClick={handleLike}
+            className={`flex items-center gap-2 transition-all active:scale-90 ${
+              isLiked ? 'text-red-500' : 'text-gray-500 hover:text-gray-900'
             }`}
-        >
-          <Heart
-            size={24}
-            fill={isLiked ? "currentColor" : "none"}
-            className={isLiked ? "animate-heart-pop" : "group-hover:scale-110 transition-transform"}
-          />
-          <span className="text-lg font-black">{likesCount} Likes</span>
-        </button>
-        <p className="text-gray-400 text-sm mt-3 font-medium">
-          {isLiked ? "You liked this story" : "Click to show appreciation for this story"}
-        </p>
+          >
+            <Heart
+              size={20}
+              fill={isLiked ? "currentColor" : "none"}
+              className={isLiked ? "animate-bounce" : ""}
+            />
+            <span className="text-sm font-bold">{likesCount}</span>
+          </button>
+
+          <div className="w-px h-4 bg-gray-200" />
+
+          {/* Comment Shortcut */}
+          <button 
+            onClick={() => document.getElementById('discussion')?.scrollIntoView({ behavior: 'smooth' })}
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-all"
+          >
+            <MessageSquare size={20} />
+            <span className="text-sm font-bold">Discuss</span>
+          </button>
+
+          <div className="w-px h-4 bg-gray-200" />
+
+          {/* Share Shortcut */}
+          <button className="text-gray-500 hover:text-gray-900 transition-all">
+            <Share2 size={20} />
+          </button>
+        </div>
       </div>
 
-      <CommentSection
-        postId={post._id || post.id}
-        token={token}
-      />
+      <div id="discussion">
+        <CommentSection postId={post._id || post.id} token={token} />
+      </div>
     </main>
   );
 }
