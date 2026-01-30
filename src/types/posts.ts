@@ -11,6 +11,10 @@ export interface Post {
   tags?: string[];
   seoDescription?: string;
   readingTime?: number;
+  likes: number;             
+  likedBy: string[];         
+  commentsCount: number;     
+  views: number;
   author?: {
     id: string;
     username: string;
@@ -26,6 +30,7 @@ export interface Post {
   publishedAt?: string;
   createdAt: string;
   updatedAt: string;
+  
 }
 
 export interface CreatePostDto {
@@ -64,4 +69,6 @@ export interface ApiResponse<T = any> {
     limit: number;
     totalPages: number;
   };
+
+  
 }

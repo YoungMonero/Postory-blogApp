@@ -22,7 +22,7 @@ export default function Register() {
     onSuccess: (data) => {
 
       auth.login(data.accessToken, data.username);
-      router.push('/login'); 
+      router.push('/dashboard'); 
     },
   });
 
