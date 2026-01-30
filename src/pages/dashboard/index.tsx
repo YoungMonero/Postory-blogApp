@@ -94,7 +94,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Main Grid: Content + Sidebars */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-30">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-25">
           
           {/* Left Column: Recent Posts Feed */}
           <div className="lg:col-span-8 space-y-12">
