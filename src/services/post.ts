@@ -18,7 +18,6 @@ const api = axios.create({
 });
 
 
-
 api.interceptors.request.use(
   (config) => {
     const token =
@@ -252,24 +251,31 @@ export function generateSlug(title: string): string {
     .trim();
 }
 
+
+
 export async function uploadPostThumbnail(
   file: File,
   token: string
 ): Promise<{ url: string; publicId: string }> {
   try {
     const formData = new FormData();
-    formData.append('file', file);
+    // 1. MUST match the name in @UseInterceptors(FileInterceptor('thumbnail'))
+    formData.append('thumbnail', file); 
 
     const response = await api.post<{
       success: boolean;
       data: { url: string; publicId: string };
       message: string;
-    }>('/posts', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    }>(
+      '/posts/thumbnail', // 2. Updated to the dedicated endpoint
+      formData, 
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     return response.data.data;
   } catch (error) {
@@ -282,5 +288,4 @@ export async function uploadPostThumbnail(
     };
   }
 }
-
 export { api };

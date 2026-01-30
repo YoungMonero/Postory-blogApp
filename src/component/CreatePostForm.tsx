@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { CreatePostDto } from '@/src/types/posts';
@@ -6,7 +6,7 @@ import { usePosts } from '@/src/hooks/usePosts';
 import { generateSlug } from '@/src/services/post';
 import { 
   ArrowLeft, Globe, Settings, Image as ImageIcon, 
-  Tag, FileText, CheckCircle, Bold, Italic, 
+  Tag, CheckCircle, Bold, Italic, 
   List, Heading1, Heading2, Quote, Save, Eye
 } from 'lucide-react';
 
@@ -20,12 +20,14 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>(''); // Clean state for UI preview
   
   const [formData, setFormData] = useState<CreatePostDto>({
     title: '',
     content: '',
     status: 'draft',
     thumbnail: '',
+    thumbnailPublicId: '',
     slug: '',
     tags: ['General'],
     excerpt: '',
@@ -47,8 +49,9 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
       setFormData(prev => ({ 
         ...prev, 
         content: html,
-        excerpt: (prev.excerpt || '').length < 5 ? plainText.substring(0, 150) : prev.excerpt,
-        seoDescription: (prev.seoDescription || '').length < 5 ? plainText.substring(0, 160) : prev.seoDescription
+        // Only auto-fill if the user hasn't typed much in these fields yet
+        excerpt: (prev.excerpt || '').length < 10 ? plainText.substring(0, 150) : prev.excerpt,
+        seoDescription: (prev.seoDescription || '').length < 10 ? plainText.substring(0, 160) : prev.seoDescription
       }));
     },
   });
@@ -62,20 +65,21 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) {
-      const selectedFile = e.target.files[0];
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      // Clean up old preview URL to prevent memory leaks
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      
+      const newPreview = URL.createObjectURL(selectedFile);
       setFile(selectedFile);
-      setFormData(prev => ({ ...prev, thumbnail: URL.createObjectURL(selectedFile) }));
+      setPreviewUrl(newPreview);
+      setFormData(prev => ({ ...prev, thumbnail: newPreview }));
     }
   };
 
   const handleSubmit = async (publishStatus: 'draft' | 'published') => {
     if (!token) return alert('Please log in');
 
-    const finalTags = formData.tags && formData.tags.length > 0 
-  ? formData.tags 
-  : ['General'];
-    
     const latestContent = editor?.getHTML() || "";
     const plainText = editor?.getText() || "";
 
@@ -84,22 +88,27 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
 
     setUploading(true);
     try {
-      let finalThumbnail = "";
+      let finalThumbnail = formData.thumbnail;
+      let finalPublicId = formData.thumbnailPublicId;
 
       if (file) {
         const fileFormData = new FormData();
-        fileFormData.append('file', file);
-        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/uploads`, {
+        fileFormData.append('thumbnail', file); 
+
+        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/thumbnail`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: fileFormData,
         });
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          finalThumbnail = uploadData.url || uploadData.data?.url;
+
+        if (!uploadRes.ok) {
+          const errorData = await uploadRes.json();
+          throw new Error(errorData.message || 'Thumbnail upload failed');
         }
-      } else if (formData.thumbnail && formData.thumbnail.startsWith('http')) {
-        finalThumbnail = formData.thumbnail;
+
+        const uploadData = await uploadRes.json();
+        finalThumbnail = uploadData.data.url;
+        finalPublicId = uploadData.data.publicId;
       }
 
       let finalSeo = (formData.seoDescription ?? '').trim();
@@ -111,9 +120,11 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
         ...formData, 
         status: publishStatus,
         content: latestContent,
-        tags: finalTags,
-        thumbnail: finalThumbnail || undefined, // FIX: Logic preserved
-        excerpt: (formData.excerpt && formData.excerpt.length >= 10) ? formData.excerpt : plainText.substring(0, 150).trim() || formData.title,
+        thumbnail: finalThumbnail,
+        thumbnailPublicId: finalPublicId,
+        excerpt: (formData.excerpt && formData.excerpt.length >= 10) 
+          ? formData.excerpt 
+          : plainText.substring(0, 150).trim() || formData.title,
         seoDescription: finalSeo
       };
 
@@ -123,22 +134,35 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
         setLastSaved(new Date());
         if (publishStatus === 'published') {
             alert("Success! Post is live.");
-            setFormData({ title: '', content: '', status: 'draft', thumbnail: '', slug: '', tags: [], excerpt: '', seoDescription: '' });
+            // Reset everything properly
+            setFormData({ 
+              title: '', content: '', status: 'draft', thumbnail: '', 
+              thumbnailPublicId: '', slug: '', tags: ['General'], 
+              excerpt: '', seoDescription: '' 
+            });
             editor?.commands.setContent('');
             setFile(null);
+            setPreviewUrl('');
             if (onSuccess) onSuccess();
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Publishing Error:", err);
+      alert(err.message || "An error occurred while saving the post");
     } finally {
       setUploading(false);
     }
   };
 
+  // Clean up ObjectURL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-      {/* Restored Header with full Save/Publish logic */}
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <button className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
@@ -156,15 +180,18 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
         
         <div className="flex items-center gap-3">
           <button 
+            type="button"
             onClick={() => handleSubmit('draft')} 
+            disabled={loading || uploading}
             className="hidden sm:flex text-sm font-semibold text-gray-600 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
           >
             Save Draft
           </button>
           <button 
+            type="button"
             onClick={() => handleSubmit('published')} 
             disabled={loading || uploading} 
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition-all active:scale-95"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition-all active:scale-95 disabled:opacity-50"
           >
             {formData.status === 'published' ? 'Update' : 'Publish'}
             {formData.status === 'published' ? <CheckCircle size={16} /> : <Globe size={16} />}
@@ -174,12 +201,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
 
       <div className="flex-1 max-w-[1600px] mx-auto w-full p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
-          
-          {/* Main Editor Card */}
           <div className="lg:col-span-8 flex flex-col gap-6">
              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[calc(100vh-200px)]">
-                
-                {/* Cover Image Area */}
                 <div className="relative group bg-gray-50 border-b border-gray-100 min-h-[60px]">
                     {formData.thumbnail ? (
                         <div className="relative aspect-[21/9] w-full overflow-hidden">
@@ -187,7 +210,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
                             <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <label className="bg-white text-gray-900 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer hover:bg-gray-50 transition-colors">
                                     Change Cover
-                                    <input type="file" className="hidden" onChange={handleFileChange} />
+                                    <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                                 </label>
                             </div>
                         </div>
@@ -196,7 +219,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
                           <label className="flex items-center gap-2 text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-md hover:bg-gray-100 transition-all text-sm font-medium cursor-pointer">
                              <ImageIcon size={16} />
                              Add Cover Image
-                             <input type="file" className="hidden" onChange={handleFileChange} />
+                             <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                           </label>
                        </div>
                     )}
@@ -213,7 +236,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
                     />
                 </div>
 
-                {/* Full Restored Toolbar */}
                 <div className="flex items-center gap-1 border-y border-gray-100 px-6 py-2 bg-white sticky top-0 z-20">
                     <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} active={editor?.isActive('heading', { level: 1 })} icon={<Heading1 size={18}/>} />
                     <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} active={editor?.isActive('heading', { level: 2 })} icon={<Heading2 size={18}/>} />
@@ -228,7 +250,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
              </div>
           </div>
 
-          {/* Sidebar Settings */}
           <aside className="lg:col-span-4 space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-6">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2 pb-3 border-b border-gray-100">
@@ -236,7 +257,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
                     Post Settings
                 </h3>
 
-                {/* Restored Full Category List */}
                 <div className="space-y-3">
                     <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <Tag size={14} /> Category
@@ -281,19 +301,18 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
                         className="w-full rounded-lg border-gray-200 text-sm p-3 bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-indigo-500 transition-all" 
                         placeholder="Meta description for search results..." 
                     />
-                    <p className={`text-[10px] font-bold text-right ${formData.seoDescription.length < 20 ? 'text-red-400' : 'text-green-500'}`}>
-                        {formData.seoDescription.length} / Min 20 chars
+                    <p className={`text-[10px] font-bold text-right ${(formData.seoDescription?.length || 0) < 20 ? 'text-red-400' : 'text-green-500'}`}>
+                        {formData.seoDescription?.length || 0} / Min 20 chars
                     </p>
                 </div>
             </div>
 
-            {/* Restored Preview Card Mockup */}
             <div className="bg-indigo-50 rounded-xl border border-indigo-100 p-5">
                 <h4 className="font-bold text-indigo-900 mb-2">Ready to share?</h4>
                 <p className="text-sm text-indigo-700 mb-4">
                     Your post is currently a <strong>draft</strong>.
                 </p>
-                <button className="w-full bg-white text-indigo-600 hover:bg-indigo-50 border-indigo-200 border py-2 px-4 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
+                <button type="button" className="w-full bg-white text-indigo-600 hover:bg-indigo-50 border-indigo-200 border py-2 px-4 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
                     <Eye size={16} /> Preview Post
                 </button>
             </div>
