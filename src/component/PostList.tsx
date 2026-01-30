@@ -5,6 +5,8 @@ import { usePosts } from '@/src/hooks/usePosts';
 import { Post } from '@/src/types/posts';
 import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
+// Added icons for the card changes
+import { Heart, MessageCircle, Eye } from 'lucide-react';
 
 interface PostCardProps {
   post: Post;
@@ -17,7 +19,6 @@ const PostsList: React.FC = () => {
   const { token } = useAuth(); 
   
   const loadPosts = useCallback(async () => {
-    // Note: ensure 'polog' matches your tenant slug
     await fetchPosts('polog', {
       limit: 10,
       status: 'published',
@@ -56,7 +57,6 @@ const PostsList: React.FC = () => {
           <PostCard 
             key={post.id || post._id} 
             post={post} 
-            // Delete always needs the database ID
             onDelete={() => handleDeletePost((post.id || post._id) as string)}
             canDelete={token !== null} 
           />
@@ -67,11 +67,14 @@ const PostsList: React.FC = () => {
 };
 
 const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
-  // CRITICAL CHANGE: Use the slug for the URL to match your new public endpoint
-  // Fallback to _id if slug is missing for some reason
   const identifier = post.slug || post.id || post._id;
   const detailHref = `/posts/${identifier}`;
   
+  // Safety check: Ensure likes is always a number
+  const displayLikes = typeof post.likes === 'number' ? post.likes : (post.likedBy?.length || 0);
+  const displayComments = post.commentsCount || 0;
+  const displayViews = post.views || 0;
+
   return (
     <article className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500 flex flex-col h-full">
       <Link href={detailHref}>
@@ -83,10 +86,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-300 font-medium">No Thumbnail</div>
+            <div className="flex items-center justify-center h-full text-gray-300 font-medium bg-gray-50">No Thumbnail</div>
           )}
           <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-indigo-600 shadow-sm">
-            {post.status}
+            {post.status || 'Published'}
           </div>
         </div>
       </Link>
@@ -99,10 +102,34 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
         </h2>
         
         <p className="text-gray-500 text-sm mb-6 line-clamp-3 flex-grow">
-          {post.excerpt || post.content.replace(/<[^>]*>/g, '').substring(0, 120) + '...'}
+          {post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 120) + '...' : 'No content available')}
         </p>
+
+        {/* --- STATS SECTION WITH DEFAULT 0 --- */}
+        <div className="flex items-center gap-4 mb-6 py-3 border-y border-gray-100">
+          {/* Likes */}
+          <div className="flex items-center gap-1.5">
+            <Heart 
+              size={18} 
+              className={displayLikes > 0 ? "text-red-500 fill-red-500" : "text-gray-400"} 
+            />
+            <span className="text-sm font-bold text-gray-700">{displayLikes}</span>
+          </div>
+
+          {/* Comments */}
+          <div className="flex items-center gap-1.5">
+            <MessageCircle size={18} className="text-gray-400" />
+            <span className="text-sm font-bold text-gray-700">{displayComments}</span>
+          </div>
+
+          {/* Views */}
+          <div className="flex items-center gap-1.5 ml-auto">
+            <Eye size={18} className="text-gray-300" />
+            <span className="text-xs text-gray-400">{displayViews}</span>
+          </div>
+        </div>
         
-        <div className="flex justify-between items-center pt-4 border-t border-gray-50 mt-auto">
+        <div className="flex justify-between items-center mt-auto">
           <Link 
             href={detailHref} 
             className="text-indigo-600 font-black text-xs uppercase tracking-tighter hover:translate-x-1 flex items-center transition-all"
@@ -117,7 +144,6 @@ const PostCard: React.FC<PostCardProps> = ({ post, onDelete, canDelete }) => {
                 onDelete();
               }} 
               className="text-gray-300 hover:text-red-500 transition-colors p-2 hover:bg-red-50 rounded-full"
-              title="Delete Post"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

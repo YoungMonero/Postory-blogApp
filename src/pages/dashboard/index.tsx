@@ -6,8 +6,11 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/src/component/DashboardLayout';
 import { Post } from '@/src/types/posts';
+import PopularSidebar from '@/src/component/PopularSidebar';
+import EditorsPick from '@/src/component/EditorsPick';
 
 export default function DashboardPage() {
+
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
 
@@ -228,10 +231,16 @@ export default function DashboardPage() {
                     </a>
                   </div>
                 </article>
+                
               ))}
+
             </div>
           )}
         </section>
+          <div className="lg:col-span-4 space-y-8">
+          <EditorsPick />
+          <PopularSidebar />
+        </div>
       </div>
     </DashboardLayout>
   );
