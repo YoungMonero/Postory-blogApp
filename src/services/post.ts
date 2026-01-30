@@ -72,6 +72,24 @@ api.interceptors.response.use(
   }
 );
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export const getPublicPopular = async () => {
+  const res = await fetch(`${BASE_URL}/public/popular`); 
+  if (!res.ok) throw new Error('Failed to load popular posts');
+  return res.json();
+};
+
+export const getPublicFeatured = async () => {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/featured`);
+    if (!res.ok) throw new Error('Failed to fetch editor picks');
+    return res.json();
+  } catch (error) {
+    console.error("Featured Fetch Error:", error);
+    return { data: [] }; 
+  }
+};
 
 
 export async function getPublicPostDetail(slug: string): Promise<ApiResponse<Post>> {
