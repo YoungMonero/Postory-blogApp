@@ -12,7 +12,6 @@ export const commentService = {
     return response.data;
   },
 
-  // Added the Like route here to match your backend CommentsController
   async toggleLike(postId: string): Promise<{ liked: boolean; likes: number }> {
     const response = await api.post(`/posts/${postId}/like`);
     return response.data;
