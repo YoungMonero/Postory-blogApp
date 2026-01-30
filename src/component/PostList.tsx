@@ -17,7 +17,6 @@ const PostsList: React.FC = () => {
   const { token } = useAuth(); 
   
   const loadPosts = useCallback(async () => {
-    // Note: ensure 'polog' matches your tenant slug
     await fetchPosts('polog', {
       limit: 10,
       status: 'published',
