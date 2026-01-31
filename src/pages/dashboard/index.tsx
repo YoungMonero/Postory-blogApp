@@ -131,7 +131,7 @@ export default function DashboardPage() {
                           {new Date(post.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
                         </span>
                         <span className="text-gray-300">•</span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${getCategoryColor(post.tags?.[0])}`}>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${getCategoryColor(post.tags?.[0] || 'General')}`}>
                           {post.tags?.[0] || 'General'}
                         </span>
                       </div>
