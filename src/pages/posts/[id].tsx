@@ -5,8 +5,7 @@ import { Post } from '@/src/types/posts';
 import CommentSection from '@/src/component/CommentSection';
 import { commentService } from '@/src/services/comment';
 import { useAuth } from '@/src/hooks/useAuth';
-import { Heart } from 'lucide-react';
-import { MessageSquare, Share2, ArrowLeft } from 'lucide-react';
+import { Heart, MessageSquare, Share2, ArrowLeft } from 'lucide-react';
 
 export default function PostDetailPage() {
   const router = useRouter();
@@ -37,7 +36,6 @@ export default function PostDetailPage() {
           setPost(postData); 
           setLikesCount(postData.likes || 0);
           
-
           const currentUserId = user?.id || user?.sub || user?._id;
           
           if (currentUserId && postData.likedBy) {
@@ -66,7 +64,6 @@ export default function PostDetailPage() {
 
     try {
       const result = await commentService.toggleLike(targetId);
-      
       setLikesCount(result.likes);
       setIsLiked(result.liked);
     } catch (err) {
@@ -79,7 +76,8 @@ export default function PostDetailPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
-<nav className="fixed top-8 left-8 z-50 hidden lg:block">
+      {/* 1. FLOATING BACK BUTTON */}
+      <nav className="fixed top-8 left-8 z-50 hidden lg:block">
         <button
           onClick={handleBack}
           className="group flex items-center justify-center w-12 h-12 bg-white border border-gray-100 rounded-full shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300"
@@ -92,6 +90,38 @@ export default function PostDetailPage() {
         </button>
       </nav>
 
+      {/* 2. MOBILE BACK BUTTON */}
+      <button 
+        onClick={handleBack}
+        className="lg:hidden flex items-center gap-2 text-gray-400 mb-8 font-bold text-xs uppercase tracking-widest"
+      >
+        <ArrowLeft size={14} /> Back to Dashboard
+      </button>
+
+      {/* 3. POST HEADER (TITLE & META) */}
+      <header className="mb-10">
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+          {post.title}
+        </h1>
+        
+        <div className="flex items-center gap-4 py-6 border-y border-gray-100">
+          <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-lg uppercase">
+            {post.author?.displayName?.charAt(0) || 'U'}
+          </div>
+          <div>
+            <div className="text-gray-900 font-semibold">{post.author?.displayName || 'Anonymous'}</div>
+            <div className="text-gray-500 text-sm">
+              {new Date(post.createdAt).toLocaleDateString(undefined, { 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+              })} · {Math.ceil(post.content?.length / 1000) || 1} min read
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* 4. THUMBNAIL */}
       {post.thumbnail && (
         <div className="mb-12">
           <img
@@ -102,16 +132,16 @@ export default function PostDetailPage() {
         </div>
       )}
 
+      {/* 5. ARTICLE CONTENT */}
       <article
         className="prose prose-lg prose-indigo max-w-none text-gray-800 leading-relaxed font-serif"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      {/* MODERN INTERACTION BAR */}
+      {/* 6. MODERN INTERACTION BAR */}
       <div className="sticky bottom-8 left-0 right-0 flex justify-center z-50 mt-12">
         <div className="flex items-center gap-6 bg-white/80 backdrop-blur-md border border-gray-200 px-6 py-3 rounded-full shadow-xl shadow-gray-200/50">
           
-          {/* Like Button */}
           <button
             onClick={handleLike}
             className={`flex items-center gap-2 transition-all active:scale-90 ${
@@ -128,7 +158,6 @@ export default function PostDetailPage() {
 
           <div className="w-px h-4 bg-gray-200" />
 
-          {/* Comment Shortcut */}
           <button 
             onClick={() => document.getElementById('discussion')?.scrollIntoView({ behavior: 'smooth' })}
             className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-all"
@@ -139,14 +168,13 @@ export default function PostDetailPage() {
 
           <div className="w-px h-4 bg-gray-200" />
 
-          {/* Share Shortcut */}
           <button className="text-gray-500 hover:text-gray-900 transition-all">
             <Share2 size={20} />
           </button>
         </div>
       </div>
 
-      <div id="discussion">
+      <div id="discussion" className="mt-20">
         <CommentSection postId={post._id || post.id} token={token} />
       </div>
     </main>

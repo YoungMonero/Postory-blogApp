@@ -39,7 +39,7 @@ export default function CommentSection({ postId, token }: { postId: string, toke
     <div className="mt-20 max-w-2xl mx-auto space-y-10 border-t border-gray-100 pt-16">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-black text-gray-900 tracking-tight">
-          Responses ({comments.length})
+          Comments ({comments.length})
         </h3>
       </div>
 
