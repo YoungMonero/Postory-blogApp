@@ -7,7 +7,7 @@ import {
   ErrorResponse
 } from '@/src/types/posts';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -72,6 +72,24 @@ api.interceptors.response.use(
   }
 );
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export const getPublicPopular = async () => {
+  const res = await fetch(`${BASE_URL}/public/popular`); 
+  if (!res.ok) throw new Error('Failed to load popular posts');
+  return res.json();
+};
+
+export const getPublicFeatured = async () => {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/public/featured`);
+    if (!res.ok) throw new Error('Failed to fetch editor picks');
+    return res.json();
+  } catch (error) {
+    console.error("Featured Fetch Error:", error);
+    return { data: [] }; 
+  }
+};
 
 
 export async function getPublicPostDetail(slug: string): Promise<ApiResponse<Post>> {
@@ -201,7 +219,6 @@ export async function deletePost(
   }
 }
 
-/* ===================== get user all POSTS ===================== */
 
 export async function getUserPosts(
   token: string
@@ -241,7 +258,6 @@ export async function uploadPostThumbnail(
 ): Promise<{ url: string; publicId: string }> {
   try {
     const formData = new FormData();
-    // 1. MUST match the name in @UseInterceptors(FileInterceptor('thumbnail'))
     formData.append('thumbnail', file); 
 
     const response = await api.post<{
@@ -249,7 +265,7 @@ export async function uploadPostThumbnail(
       data: { url: string; publicId: string };
       message: string;
     }>(
-      '/posts/thumbnail', // 2. Updated to the dedicated endpoint
+      '/posts/thumbnail',
       formData, 
       {
         headers: {
