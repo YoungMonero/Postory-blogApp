@@ -42,6 +42,7 @@ export interface CreatePostDto {
   tags?: string[];
   excerpt?: string;
   seoDescription?: string;
+  thumbnailPublicId?: string;
 }
 
 export interface ErrorResponse {
