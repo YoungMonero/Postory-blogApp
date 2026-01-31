@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { commentService } from '@/src/services/comment';
 import { Comment } from '@/src/types/comment';
-import { MessageSquare, Send, User } from 'lucide-react';
-
+import { MessageSquare, Send, User, Heart } from 'lucide-react';
+import { format } from 'date-fns';
 export default function CommentSection({ postId, token }: { postId: string, token: string | null }) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState('');
+  
 
   // Load comments on mount
   useEffect(() => {
@@ -35,56 +36,70 @@ export default function CommentSection({ postId, token }: { postId: string, toke
   };
 
   return (
-    <div className="mt-12 space-y-8 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-      <h3 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-        <MessageSquare className="text-indigo-600" /> Discussion
-      </h3>
+    <div className="mt-20 max-w-2xl mx-auto space-y-10 border-t border-gray-100 pt-16">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xl font-black text-gray-900 tracking-tight">
+          Comments ({comments.length})
+        </h3>
+      </div>
 
       {token ? (
-        <div className="space-y-4">
-          <textarea 
-            value={text} 
-            onChange={(e) => setText(e.target.value)}
-            className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-indigo-500 focus:bg-white rounded-2xl transition-all text-sm outline-none"
-            placeholder="What are your thoughts?"
-            rows={3}
-          />
-          <div className="flex justify-end">
-            <button 
-              onClick={handlePost} 
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 transition-all shadow-md shadow-indigo-100"
-            >
-              Post Comment <Send size={16} />
-            </button>
+        <div className="flex gap-4 items-start bg-gray-50 p-4 rounded-2xl border border-gray-100 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
+           <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white shrink-0 font-bold">
+            {/* Replace with actual user initials if available */}
+            <User size={18} />
+          </div>
+          <div className="flex-1 space-y-3">
+            <textarea 
+              value={text} 
+              onChange={(e) => setText(e.target.value)}
+              className="w-full bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-400 text-sm resize-none outline-none"
+              placeholder="What are your thoughts?"
+              rows={2}
+            />
+            <div className="flex justify-end">
+              <button 
+                onClick={handlePost} 
+                disabled={!text.trim()}
+                className="bg-black text-white px-5 py-2 rounded-full text-xs font-bold hover:bg-zinc-800 disabled:opacity-30 transition-all"
+              >
+                Respond
+              </button>
+            </div>
           </div>
         </div>
       ) : (
-        <div className="p-6 bg-indigo-50 rounded-2xl border border-indigo-100 text-center">
-          <p className="text-indigo-900 font-bold text-sm">Log in to join the conversation!</p>
+        <div className="p-4 bg-gray-50 rounded-xl text-center border border-dashed border-gray-200">
+          <p className="text-gray-500 text-sm">Sign in to leave a response</p>
         </div>
       )}
 
-      <div className="space-y-6 pt-6">
-        {comments.length === 0 ? (
-          <p className="text-gray-400 text-center py-4 italic text-sm">No comments yet.</p>
-        ) : (
-          comments.map((c) => (
-            <div key={c._id} className="flex gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-colors">
-              <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-black">
-                {c.authorName?.[0] || 'U'}
+      {/* COMMENT FEED */}
+      <div className="space-y-8">
+        {comments.map((c) => (
+          <div key={c._id} className="group">
+            <div className="flex gap-4">
+              <div className="w-9 h-9 bg-gray-100 text-gray-600 rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+                {c.authorName?.[0]}
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-2">
                   <span className="font-bold text-gray-900 text-sm">{c.authorName}</span>
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                    {new Date(c.createdAt).toLocaleDateString()}
+                  <span className="text-xs text-gray-400">
+                    {format(new Date(c.createdAt), 'MMM d')}
                   </span>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed">{c.content}</p>
+                <p className="text-gray-700 text-[15px] leading-relaxed font-light">{c.content}</p>
+                <div className="pt-2 flex items-center gap-4">
+                    <button className="text-gray-400 hover:text-gray-900 transition-colors">
+                        <Heart size={14} />
+                    </button>
+                    <button className="text-xs font-bold text-gray-400 hover:text-gray-900">Reply</button>
+                </div>
               </div>
             </div>
-          ))
-        )}
+          </div>
+        ))}
       </div>
     </div>
   );
