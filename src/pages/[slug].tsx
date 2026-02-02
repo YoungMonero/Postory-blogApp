@@ -121,7 +121,7 @@ export default function BlogChannelView() {
               onClick={() => profileInputRef.current?.click()}
             >
               <img
-                src={profilePreview || blog?.coverImage || `https://ui-avatars.com/api/?name=${blog?.title}&background=random`}
+                src={profilePreview || blog?.profileImage || `https://ui-avatars.com/api/?name=${blog?.title}&background=random`}
                 className="w-full h-full object-cover rounded-full"
                 alt="Profile"
               />
@@ -129,7 +129,7 @@ export default function BlogChannelView() {
                 <Camera className="text-white" size={24} />
               </div>
             </div>
-            <input ref={profileInputRef} type="file" hidden onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'coverImage')} />
+            <input ref={profileInputRef} type="file" hidden onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'profileImage')} />
           </div>
 
           <div className="flex-1 pt-6">

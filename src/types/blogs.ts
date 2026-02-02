@@ -15,4 +15,5 @@ export interface Blog {
   tenantId: string;
   authorId?: string;     
   createdAt: string;
+  profileImage?: string;
 }
