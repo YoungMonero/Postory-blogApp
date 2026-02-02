@@ -44,7 +44,7 @@ export default function CreateBlogPage() {
     onSuccess: (newBlog) => {
       queryClient.invalidateQueries({ queryKey: ['my-blog'] });
       // Redirect to the newly created blog
-      router.push(`blog/${newBlog.slug}`);
+      router.push(`${newBlog.slug}`);
     },
     onError: (err: any) => {
       // Error handled in UI below
