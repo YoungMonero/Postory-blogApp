@@ -233,7 +233,7 @@ export default function BlogChannelView() {
                 <div className="space-y-4 text-sm">
                   <div className="flex justify-between items-center border-b border-zinc-200 pb-3">
                     <span className="text-xs font-bold text-zinc-400 uppercase">Joined</span>
-                    <span className="text-sm font-black">{format(new Date(blog?.createdAt), 'MMM yyyy')}</span>
+                    <span className="text-sm font-black">{format(new Date(blog?.createdAt || Date.now()), 'MMM yyyy')}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-zinc-400 uppercase">Total Views</span>
