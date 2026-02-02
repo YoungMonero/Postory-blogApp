@@ -5,8 +5,7 @@ import { getMyBlog, uploadBlogImage, updateMyBlogImages } from '@/src/services/b
 import { getUserPosts } from '@/src/services/post';
 import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
-import { Bell, Check, PlusCircle, Camera, Eye, Heart, Share2, Settings } from 'lucide-react';
-import { format } from 'date-fns';
+import { Bell, Check, PlusCircle, Info, Search, Camera } from 'lucide-react';
 
 export default function BlogChannelView() {
   const router = useRouter();
@@ -63,7 +62,37 @@ export default function BlogChannelView() {
   const posts = postsResponse?.data || [];
 
   return (
-    <div className="min-h-screen bg-white">
+    
+    
+    <div className="min-h-screen bg-white font-sans">
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
+              WORD
+              <span className="relative flex items-center text-indigo-600 ml-0.5">
+                o
+                <span className="-ml-1.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
+                  o
+                </span>
+
+                {/* Brand accent dot */}
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5
+                     bg-indigo-500 rounded-full
+                     opacity-0 group-hover:opacity-100
+                     transition-all duration-300 ease-out">
+                </span>
+              </span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-6">
+            <Search className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
+            <div className="w-8 h-8 rounded-full bg-gray-200 border border-gray-100 overflow-hidden">
+              {/* User Profile Thumbnail could go here */}
+            </div>
+          </div>
+        </div>
+      </nav>
 
 
       <div
