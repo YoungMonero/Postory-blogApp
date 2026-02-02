@@ -29,7 +29,7 @@ export function usePosts(): UsePostsReturn {
     setError(null);
 
     try {
-      const response: ApiResponse<Post[]> = await getTenantPublicPosts(tenantSlug, options);
+      const response: ApiResponse<Post[]> = await getTenantPublicPosts(options);
 
       if (response.success && response.data) {
         setPosts(response.data);
