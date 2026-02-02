@@ -5,7 +5,9 @@ import { getMyBlog, uploadBlogImage, updateMyBlogImages } from '@/src/services/b
 import { getUserPosts } from '@/src/services/post';
 import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
-import { Bell, Check, PlusCircle, Info, Search, Camera } from 'lucide-react';
+import { Bell, Check, PlusCircle, Info, Search, Camera, Share2, Settings, Heart, Eye } from 'lucide-react';
+import { format } from 'date-fns';
+
 
 export default function BlogChannelView() {
   const router = useRouter();
