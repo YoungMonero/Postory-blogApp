@@ -10,18 +10,15 @@ import { Heart, MessageSquare, Share2, ArrowLeft } from 'lucide-react';
 export default function PostDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { token, user } = useAuth();
+  const { token, userName } = useAuth(); // userName is a string
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // State for interactive elements
   const [likesCount, setLikesCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
-  const handleBack = () => {
-    router.push('/dashboard');
-  };
+  const handleBack = () => router.push('/dashboard');
 
   useEffect(() => {
     if (!router.isReady || !id) return;
@@ -30,35 +27,32 @@ export default function PostDetailPage() {
       try {
         setLoading(true);
         const response = await getPublicPostDetail(id as string);
-        
-        if (response && response.data) {
+
+        if (response?.data) {
           const postData = response.data;
-          setPost(postData); 
+          setPost(postData);
           setLikesCount(postData.likes || 0);
-          
-          const currentUserId = user?.id || user?.sub || user?._id;
-          
-          if (currentUserId && postData.likedBy) {
-            const hasLiked = postData.likedBy.some(
-              (likedId: string) => String(likedId) === String(currentUserId)
-            );
+
+          // ✅ Compare userName string with likedBy array
+          if (userName && postData.likedBy) {
+            const hasLiked = postData.likedBy.includes(userName);
             setIsLiked(hasLiked);
           }
         }
       } catch (err) {
-        console.error("Failed to load post content", err);
+        console.error('Failed to load post content', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchPost();
-  }, [id, router.isReady, user]); 
+  }, [id, router.isReady, userName]);
 
   const handleLike = async () => {
     const targetId = post?._id || post?.id;
     if (!targetId || !token) {
-      alert("Please log in to like this post");
+      alert('Please log in to like this post');
       return;
     }
 
@@ -67,61 +61,69 @@ export default function PostDetailPage() {
       setLikesCount(result.likes);
       setIsLiked(result.liked);
     } catch (err) {
-      console.error("Like failed:", err);
+      console.error('Like failed:', err);
     }
   };
 
-  if (loading) return <div className="p-20 text-center animate-pulse text-indigo-600 font-bold">Loading Story...</div>;
-  if (!post) return <div className="p-20 text-center">Post not found.</div>;
+  if (loading)
+    return (
+      <div className="p-20 text-center animate-pulse text-indigo-600 font-bold">
+        Loading Story...
+      </div>
+    );
+  if (!post)
+    return <div className="p-20 text-center">Post not found.</div>;
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
-      {/* 1. FLOATING BACK BUTTON */}
+      {/* FLOATING BACK BUTTON */}
       <nav className="fixed top-8 left-8 z-50 hidden lg:block">
         <button
           onClick={handleBack}
           className="group flex items-center justify-center w-12 h-12 bg-white border border-gray-100 rounded-full shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300"
           title="Back to Dashboard"
         >
-          <ArrowLeft 
-            size={20} 
-            className="text-gray-400 group-hover:text-indigo-600 transition-colors group-hover:-translate-x-1 duration-300" 
+          <ArrowLeft
+            size={20}
+            className="text-gray-400 group-hover:text-indigo-600 transition-colors group-hover:-translate-x-1 duration-300"
           />
         </button>
       </nav>
 
-      {/* 2. MOBILE BACK BUTTON */}
-      <button 
+      {/* MOBILE BACK BUTTON */}
+      <button
         onClick={handleBack}
         className="lg:hidden flex items-center gap-2 text-gray-400 mb-8 font-bold text-xs uppercase tracking-widest"
       >
         <ArrowLeft size={14} /> Back to Dashboard
       </button>
 
-      {/* 3. POST HEADER (TITLE & META) */}
+      {/* POST HEADER */}
       <header className="mb-10">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
           {post.title}
         </h1>
-        
         <div className="flex items-center gap-4 py-6 border-y border-gray-100">
           <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-lg uppercase">
             {post.author?.displayName?.charAt(0) || 'U'}
           </div>
           <div>
-            <div className="text-gray-900 font-semibold">{post.author?.displayName || 'Anonymous'}</div>
+            <div className="text-gray-900 font-semibold">
+              {post.author?.displayName || 'Anonymous'}
+            </div>
             <div className="text-gray-500 text-sm">
-              {new Date(post.createdAt).toLocaleDateString(undefined, { 
-                month: 'long', 
-                day: 'numeric', 
-                year: 'numeric' 
-              })} · {Math.ceil(post.content?.length / 1000) || 1} min read
+              {new Date(post.createdAt).toLocaleDateString(undefined, {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+              })}{' '}
+              · {Math.ceil(post.content?.length / 1000) || 1} min read
             </div>
           </div>
         </div>
       </header>
 
-      {/* 4. THUMBNAIL */}
+      {/* THUMBNAIL */}
       {post.thumbnail && (
         <div className="mb-12">
           <img
@@ -132,16 +134,15 @@ export default function PostDetailPage() {
         </div>
       )}
 
-      {/* 5. ARTICLE CONTENT */}
+      {/* ARTICLE CONTENT */}
       <article
         className="prose prose-lg prose-indigo max-w-none text-gray-800 leading-relaxed font-serif"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      {/* 6. MODERN INTERACTION BAR */}
+      {/* INTERACTION BAR */}
       <div className="sticky bottom-8 left-0 right-0 flex justify-center z-50 mt-12">
         <div className="flex items-center gap-6 bg-white/80 backdrop-blur-md border border-gray-200 px-6 py-3 rounded-full shadow-xl shadow-gray-200/50">
-          
           <button
             onClick={handleLike}
             className={`flex items-center gap-2 transition-all active:scale-90 ${
@@ -150,16 +151,20 @@ export default function PostDetailPage() {
           >
             <Heart
               size={20}
-              fill={isLiked ? "currentColor" : "none"}
-              className={isLiked ? "animate-bounce" : ""}
+              fill={isLiked ? 'currentColor' : 'none'}
+              className={isLiked ? 'animate-bounce' : ''}
             />
             <span className="text-sm font-bold">{likesCount}</span>
           </button>
 
           <div className="w-px h-4 bg-gray-200" />
 
-          <button 
-            onClick={() => document.getElementById('discussion')?.scrollIntoView({ behavior: 'smooth' })}
+          <button
+            onClick={() =>
+              document
+                .getElementById('discussion')
+                ?.scrollIntoView({ behavior: 'smooth' })
+            }
             className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-all"
           >
             <MessageSquare size={20} />
@@ -175,6 +180,7 @@ export default function PostDetailPage() {
       </div>
 
       <div id="discussion" className="mt-20">
+        {/* ✅ Post ID works regardless of backend */}
         <CommentSection postId={post._id || post.id} token={token} />
       </div>
     </main>
