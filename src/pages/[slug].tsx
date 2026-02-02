@@ -129,7 +129,7 @@ export default function BlogChannelView() {
                 <Camera className="text-white" size={24} />
               </div>
             </div>
-            <input ref={profileInputRef} type="file" hidden onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'profileImage')} />
+            <input ref={profileInputRef} type="file" hidden onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'coverImage')} />
           </div>
 
           <div className="flex-1 pt-6">
