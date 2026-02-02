@@ -1,5 +1,5 @@
 import React from 'react';
-import ForgotPasswordForm from '@/components/ForgotPasswordForm';
+import ForgotPasswordForm from '@/src/components/ForgotPasswordForm';
 import type { NextPage } from 'next';
 
 const ForgotPasswordPage: NextPage = () => {
