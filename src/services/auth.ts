@@ -1,9 +1,9 @@
 // src/services/auth.ts
-import { api } from './api';
+// import { api } from './api';
 export interface RegisterInput {
   email: string;
   password: string;
- userName: string;
+ username: string;
   
 }
 
