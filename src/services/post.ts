@@ -105,30 +105,23 @@ export async function getPublicPostDetail(slug: string): Promise<ApiResponse<Pos
 
 
 export async function getTenantPublicPosts(
-  options?: {
-    page?: number;
-    limit?: number;
-  }
-): Promise<ApiResponse<Post[]>> {
+  options?: { page?: number; limit?: number }
+): Promise<ApiResponse<{ posts: Post[] }>> { 
   try {
     const params = new URLSearchParams();
-
     if (options?.page) params.append('page', options.page.toString());
     if (options?.limit) params.append('limit', options.limit.toString());
 
-    const response = await api.get<ApiResponse<Post[]>>(
+    const response = await api.get<ApiResponse<{ posts: Post[] }>>(
       `/public${params.toString() ? `?${params.toString()}` : ''}`
     );
-    console.log(response.data)
 
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError<ErrorResponse>;
     throw {
       success: false,
-      message:
-        axiosError.response?.data?.message ||
-        'Failed to fetch public posts',
+      message: axiosError.response?.data?.message || 'Failed to fetch public posts',
       error: axiosError.message,
       statusCode: axiosError.response?.status || 500,
     };
