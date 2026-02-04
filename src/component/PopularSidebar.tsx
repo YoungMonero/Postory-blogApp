@@ -30,6 +30,7 @@ const PopularSidebar: React.FC = () => {
 
   if (loading) return <div className="p-6 text-gray-400 text-xs font-bold animate-pulse">Loading Popular...</div>;
   if (popular.length === 0) return null; 
+  console.log('Popular posts:', popular);
 
   return (
     <aside className="space-y-8">
@@ -42,7 +43,7 @@ const PopularSidebar: React.FC = () => {
         {popular.slice(0, 4).map((post, index) => (
           <div key={post._id} className="group">
             <div className="mb-2">
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getCategoryColor(post.tags?.[0])}`}>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getCategoryColor(post.tags?.[0] || 'General')}`}>
                 {post.tags?.[0] || 'General'}
               </span>
             </div>

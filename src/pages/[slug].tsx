@@ -5,8 +5,9 @@ import { getMyBlog, uploadBlogImage, updateMyBlogImages } from '@/src/services/b
 import { getUserPosts } from '@/src/services/post';
 import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
-import { Bell, Check, PlusCircle, Camera, Eye, Heart, Share2, Settings } from 'lucide-react';
+import { Bell, Check, PlusCircle, Info, Search, Camera, Share2, Settings, Heart, Eye } from 'lucide-react';
 import { format } from 'date-fns';
+
 
 export default function BlogChannelView() {
   const router = useRouter();
@@ -63,10 +64,40 @@ export default function BlogChannelView() {
   const posts = postsResponse?.data || [];
 
   return (
-    <div className="min-h-screen bg-white">
-       
+    
+    
+    <div className="min-h-screen bg-white font-sans">
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
+              WORD
+              <span className="relative flex items-center text-indigo-600 ml-0.5">
+                o
+                <span className="-ml-1.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
+                  o
+                </span>
 
-      <div 
+                {/* Brand accent dot */}
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5
+                     bg-indigo-500 rounded-full
+                     opacity-0 group-hover:opacity-100
+                     transition-all duration-300 ease-out">
+                </span>
+              </span>
+            </span>
+          </Link>
+          <div className="flex items-center gap-6">
+            <Search className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
+            <div className="w-8 h-8 rounded-full bg-gray-200 border border-gray-100 overflow-hidden">
+              {/* User Profile Thumbnail could go here */}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+
+      <div
         className="relative w-full h-[320px] md:h-[450px] bg-gray-100 overflow-hidden group cursor-pointer"
         onClick={() => coverInputRef.current?.click()}
       >
@@ -76,7 +107,7 @@ export default function BlogChannelView() {
           alt="Cover"
         />
         <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-all flex items-center justify-center">
-            <Camera className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={30} />
+          <Camera className="text-white opacity-0 group-hover:opacity-100 transition-opacity" size={30} />
         </div>
         <input ref={coverInputRef} type="file" hidden onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'coverImage')} />
       </div>
@@ -85,7 +116,7 @@ export default function BlogChannelView() {
 
         <div className="relative flex flex-col md:flex-row items-start gap-8 pb-10 border-b border-gray-100">
           <div className="relative -mt-24 z-20">
-            <div 
+            <div
               className="w-40 h-40 md:w-48 md:h-48 rounded-full bg-white p-1.5 shadow-2xl overflow-hidden cursor-pointer group"
               onClick={() => profileInputRef.current?.click()}
             >
@@ -140,17 +171,16 @@ export default function BlogChannelView() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab.toLowerCase() as any)}
-                className={`text-xs font-black py-6 border-b-2 transition-all tracking-[0.2em] uppercase ${
-                  activeTab === tab.toLowerCase() ? 'border-black text-black' : 'border-transparent text-gray-300 hover:text-gray-500'
-                }`}
+                className={`text-xs font-black py-6 border-b-2 transition-all tracking-[0.2em] uppercase ${activeTab === tab.toLowerCase() ? 'border-black text-black' : 'border-transparent text-gray-300 hover:text-gray-500'
+                  }`}
               >
                 {tab}
               </button>
             ))}
           </div>
 
-          <Link 
-            href="/dashboard/create-post" 
+          <Link
+            href="/dashboard/create-post"
             className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest hover:bg-indigo-100 transition-all border border-indigo-100"
           >
             <PlusCircle size={16} /> New Post
@@ -161,9 +191,9 @@ export default function BlogChannelView() {
           {activeTab === 'home' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               {posts.map((post) => (
-                <article 
-                  key={post._id} 
-                  className="group flex flex-col cursor-pointer" 
+                <article
+                  key={post._id}
+                  className="group flex flex-col cursor-pointer"
                   onClick={() => router.push(`/post/${post.slug || post._id}`)}
                 >
                   <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-5 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
@@ -179,8 +209,8 @@ export default function BlogChannelView() {
                       {post.title}
                     </h4>
                     <div className="flex items-center gap-4 pt-2 text-gray-400">
-                        <span className="flex items-center gap-1 text-xs font-bold"><Eye size={14} /> {post.views || 0}</span>
-                        <span className="flex items-center gap-1 text-xs font-bold"><Heart size={14} /> {post.likes || 0}</span>
+                      <span className="flex items-center gap-1 text-xs font-bold"><Eye size={14} /> {post.views || 0}</span>
+                      <span className="flex items-center gap-1 text-xs font-bold"><Heart size={14} /> {post.likes || 0}</span>
                     </div>
                   </div>
                 </article>
@@ -189,27 +219,27 @@ export default function BlogChannelView() {
           )}
 
           {activeTab === 'about' && (
-             <div className="max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-16">
-                <div className="md:col-span-2 space-y-8">
-                    <h3 className="text-2xl font-black text-gray-900 tracking-tight uppercase tracking-[0.1em]">Description</h3>
-                    <div className="text-gray-500 text-lg leading-relaxed space-y-6 font-light">
-                        {blog?.content || blog?.description || "No description provided."}
-                    </div>
+            <div className="max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-16">
+              <div className="md:col-span-2 space-y-8">
+                <h3 className="text-2xl font-black text-gray-900 tracking-tight uppercase tracking-[0.1em]">Description</h3>
+                <div className="text-gray-500 text-lg leading-relaxed space-y-6 font-light">
+                  {blog?.content || blog?.description || "No description provided."}
                 </div>
-                <div className="bg-zinc-50 p-8 rounded-[2rem] h-fit border border-zinc-100">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6">Stats</h4>
-                    <div className="space-y-4 text-sm">
-                        <div className="flex justify-between items-center border-b border-zinc-200 pb-3">
-                            <span className="text-xs font-bold text-zinc-400 uppercase">Joined</span>
-                            <span className="text-sm font-black">{format(new Date(blog?.createdAt), 'MMM yyyy')}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-xs font-bold text-zinc-400 uppercase">Total Views</span>
-                            <span className="text-sm font-black">{posts.reduce((s, p) => s + (p.views || 0), 0).toLocaleString()}</span>
-                        </div>
-                    </div>
+              </div>
+              <div className="bg-zinc-50 p-8 rounded-[2rem] h-fit border border-zinc-100">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6">Stats</h4>
+                <div className="space-y-4 text-sm">
+                  <div className="flex justify-between items-center border-b border-zinc-200 pb-3">
+                    <span className="text-xs font-bold text-zinc-400 uppercase">Joined</span>
+                    <span className="text-sm font-black">{format(new Date(blog?.createdAt || Date.now()), 'MMM yyyy')}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-bold text-zinc-400 uppercase">Total Views</span>
+                    <span className="text-sm font-black">{posts.reduce((s, p) => s + (p.views || 0), 0).toLocaleString()}</span>
+                  </div>
                 </div>
-             </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

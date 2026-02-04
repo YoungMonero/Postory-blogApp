@@ -29,10 +29,10 @@ export function usePosts(): UsePostsReturn {
     setError(null);
 
     try {
-      const response: ApiResponse<Post[]> = await getTenantPublicPosts(tenantSlug, options);
+      const response: ApiResponse<{ posts: Post[] }> = await getTenantPublicPosts(options);
 
       if (response.success && response.data) {
-        setPosts(response.data);
+        setPosts(response.data.posts);
       } else {
         setError(response.message || 'Failed to fetch posts');
       }

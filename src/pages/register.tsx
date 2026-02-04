@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
@@ -7,8 +6,14 @@ import { registerUser } from '../services/auth';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '@/src/component/ui/button';
 
+interface FormState {
+  email: string;
+  password: string;
+  username: string; // matches backend
+}
+
 export default function Register() {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     email: '',
     password: '',
     username: '',
@@ -20,22 +25,31 @@ export default function Register() {
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: (data) => {
-
-      auth.login(data.accessToken, data.username);
-      router.push('/dashboard'); 
+      // Backend returns { accessToken, user: { username, id, ... } }
+      auth.login(data.accessToken, data.user.username);
+      router.push('/dashboard');
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate(form);
+
+    const payload = {
+      email: form.email,
+      password: form.password,
+      username: form.username, // MUST match backend
+    };
+
+    mutation.mutate(payload);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans relative overflow-hidden">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
+      {/* Blobs */}
+      <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" />
+      <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
+      <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
+
       <div className="w-full max-w-[500px] bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200 mb-6">
