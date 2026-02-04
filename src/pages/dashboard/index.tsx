@@ -112,15 +112,18 @@ export default function DashboardPage() {
 
             <div className="space-y-16">
               {posts.map((post: any) => (
-                <article key={post._id} className="flex flex-col md:flex-row gap-8 group">
+                <article
+                  key={post._id}
+                  className="flex flex-col md:flex-row gap-8 group border-b border-gray-100 pb-6 md:border-none md:pb-0"
+                >
                   <Link 
                     href={`/posts/${post.slug || post._id}`} 
-                    className="w-full md:w-[45%] aspect-[16/10] rounded-2xl overflow-hidden shadow-sm shrink-0 bg-gray-100"
+                    className="w-full md:w-[45%] aspect-[16/10] md:rounded-2xl md:overflow-hidden md:shadow-sm shrink-0 bg-gray-100"
                   >
                     <img 
                       src={getImageUrl(post.thumbnail)} 
                       alt={post.title} 
-                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
+                      className="w-full h-full object-cover md:transform md:group-hover:scale-105 md:transition-transform md:duration-700" 
                     />
                   </Link>
 
@@ -137,7 +140,7 @@ export default function DashboardPage() {
                       </div>
                       
                       <Link href={`/posts/${post.slug || post._id}`}>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors">
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-blue-600 transition-colors">
                           {post.title}
                         </h3>
                       </Link>
@@ -147,7 +150,7 @@ export default function DashboardPage() {
                       </p>
                     </div>
                     
-                    <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-4 mt-2 flex-wrap">
                        <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white">
                              {post.author?.displayName?.charAt(0) || 'U'}
@@ -155,7 +158,7 @@ export default function DashboardPage() {
                           <span className="text-xs font-medium text-gray-900">{post.author?.displayName}</span>
                        </div>
                        
-                       <span className="text-gray-300">|</span>
+                       <span className="text-gray-300 hidden md:inline">|</span>
                        
                        <div className="flex items-center gap-3 text-gray-500">
                            <div className="flex items-center gap-1.5" title="Likes">
@@ -172,9 +175,12 @@ export default function DashboardPage() {
                            </div>
                        </div>
 
-                       <span className="text-gray-300">|</span>
+                       <span className="text-gray-300 hidden md:inline">|</span>
 
-                       <Link href={`/posts/${post.slug || post._id}`} className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                       <Link
+                         href={`/posts/${post.slug || post._id}`}
+                         className="text-sm font-semibold text-gray-900 md:hover:text-blue-600 transition-colors"
+                       >
                         Read Article
                        </Link>
                     </div>

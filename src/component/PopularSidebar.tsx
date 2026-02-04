@@ -30,6 +30,7 @@ const PopularSidebar: React.FC = () => {
 
   if (loading) return <div className="p-6 text-gray-400 text-xs font-bold animate-pulse">Loading Popular...</div>;
   if (popular.length === 0) return null; 
+  console.log('Popular posts:', popular);
 
   return (
     <aside className="space-y-8">
