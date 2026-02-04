@@ -82,7 +82,7 @@ export default function BlogChannelView() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 md:px-12">
-        {/* 2. PROFILE HEADER - RESTORED DESCRIPTION */}
+
         <div className="relative flex flex-col md:flex-row items-start gap-8 pb-10 border-b border-gray-100">
           <div className="relative -mt-24 z-20">
             <div 
@@ -113,7 +113,7 @@ export default function BlogChannelView() {
                   <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                   <span>{posts.length} Posts</span>
                 </div>
-                {/* Description Restored Here */}
+
                 <p className="mt-5 text-gray-500 text-lg leading-relaxed font-light">
                   {blog?.description || "Curating the finest insights and stories for the modern reader."}
                 </p>
@@ -134,7 +134,6 @@ export default function BlogChannelView() {
           </div>
         </div>
 
-        {/* 3. TABS + NEW POST BUTTON */}
         <div className="flex items-center justify-between border-b border-gray-100">
           <div className="flex items-center gap-10">
             {['Home', 'About'].map((tab) => (
@@ -158,7 +157,6 @@ export default function BlogChannelView() {
           </Link>
         </div>
 
-        {/* 4. CONTENT AREA */}
         <div className="py-12">
           {activeTab === 'home' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">

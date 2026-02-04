@@ -12,7 +12,7 @@ const ResetPasswordForm = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token: formData.token, // This is the code from the email
+          token: formData.token,
           newPassword: formData.newPassword
         }),
       });
