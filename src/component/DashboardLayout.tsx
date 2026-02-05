@@ -26,19 +26,14 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Fetch blog info to decide between "View" or "Create"
+    // Fetch blog info ONLY if token exists
     const { data: blog } = useQuery({
         queryKey: ['my-blog-status'],
         queryFn: () => getMyBlog(token as string),
-        enabled: !!token,
+        enabled: !!token, 
     });
 
-
-    useEffect(() => {
-        if (!token) {
-            router.push('/login');
-        }
-    }, [token, router]);
+    // REMOVED: The useEffect that was forcing router.push('/login')
 
     const handleLogout = () => {
         logout();
@@ -47,7 +42,12 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
 
     const handleWriteClick = (e: React.MouseEvent) => {
         e.preventDefault();
-  
+        // // If guest clicks write, send them to login
+        // if (!token) {
+        //     router.push('/login');
+        //     return;
+        // }
+        
         if (blog) {
             router.push('/dashboard/create-post');
         } else {
@@ -65,8 +65,6 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    if (!token) return null;
-
     return (
         <div className="min-h-screen bg-white">
             <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 z-50">
@@ -74,24 +72,15 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
 
                     {/* Left: Wordoo Branding */}
                     <div className="flex items-center gap-8 flex-1">
-                        <Link href="/dashboard" className="flex items-center gap-2 group">
-                            <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
+                        <Link href="/" className="flex items-center gap-2 group">
+                            <span className="text-[22px] md:text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
                                 WORD
                                 <span className="relative flex items-center text-indigo-600 ml-0.5">
                                     o
-                                    <span className="-ml-1.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
-                                        o
-                                    </span>
-
-                                    {/* Brand accent dot */}
-                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
-                     bg-indigo-500 rounded-full 
-                     opacity-0 group-hover:opacity-100 
-                     transition-all duration-300 ease-out">
-                                    </span>
+                                    <span className="-ml-1.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5">o</span>
+                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-indigo-500 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out"></span>
                                 </span>
                             </span>
-
                         </Link>
 
                         <div className="relative max-w-md w-full hidden md:block">
@@ -106,85 +95,78 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                         </div>
                     </div>
 
+                    {/* Right Side: Conditional Rendering based on Token */}
+                    <div className="flex items-center gap-2 md:gap-4">
+                        {token ? (
+                            /* LOGGED IN VIEW */
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                                    onClick={handleWriteClick}
+                                >
+                                    <PenSquare size={20} />
+                                    <span className="hidden sm:inline">Write</span>
+                                </Button>
 
-                    <div className="flex items-center gap-4">
-                        <Button
-                            variant="ghost"
-                            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-                            onClick={handleWriteClick}
-                        >
-                            <PenSquare size={20} />
-                            <span className="hidden sm:inline">Write</span>
-                        </Button>
+                                <button className="text-gray-500 hover:text-gray-900 p-2 relative">
+                                    <Bell size={20} />
+                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                                </button>
 
-                        <button className="text-gray-500 hover:text-gray-900 p-2 relative">
-                            <Bell size={20} />
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                        </button>
+                                <div className="relative ml-2" ref={dropdownRef}>
+                                    <button
+                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                        className="flex items-center gap-2 focus:outline-none p-1 rounded-full hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-50 shadow-sm">
+                                            {userName ? userName.charAt(0).toUpperCase() : 'U'}
+                                        </div>
+                                        <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                    </button>
 
-                        <div className="relative ml-2" ref={dropdownRef}>
-                            <button
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                className="flex items-center gap-2 focus:outline-none p-1 rounded-full hover:bg-gray-50 transition-colors"
-                            >
-                                <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold border border-indigo-50 shadow-sm">
-                                    {userName ? userName.charAt(0).toUpperCase() : 'U'}
+                                    {isDropdownOpen && (
+                                        <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                                            <div className="px-4 py-3 border-b border-gray-50">
+                                                <p className="text-sm font-semibold text-gray-900 truncate uppercase">{userName || 'Account'}</p>
+                                                <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-0.5">Wordoo Member</p>
+                                            </div>
+                                            <div className="py-2">
+                                                {blog ? (
+                                                    <Link href={`/${blog.slug}`} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                                                        <ExternalLink size={18} className="text-gray-400" /> View Blog
+                                                    </Link>
+                                                ) : (
+                                                    <Link href="/dashboard/create-blog" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                                                        <PlusCircle size={18} className="text-gray-400" /> Create Blog
+                                                    </Link>
+                                                )}
+                                                <Link href="/dashboard/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                                                    <Settings size={18} className="text-gray-400" /> Settings
+                                                </Link>
+                                            </div>
+                                            <div className="border-t border-gray-50 py-2">
+                                                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left font-medium">
+                                                    <LogOut size={18} /> Log out
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {isDropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                                    <div className="px-4 py-3 border-b border-gray-50">
-                                        <p className="text-sm font-semibold text-gray-900 truncate uppercase tracking-tight">
-                                            {userName || 'Account'}
-                                        </p>
-                                        <p className="text-[10px] font-bold text-primary uppercase tracking-widest mt-0.5">Wordoo Member</p>
-                                    </div>
-
-                                    <div className="py-2">
-                                        {blog ? (
-                                            <Link
-                                                href={`${blog.slug}`}
-                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                                                onClick={() => setIsDropdownOpen(false)}
-                                            >
-                                                <ExternalLink size={18} className="text-gray-400" />
-                                                View Blog
-                                            </Link>
-                                        ) : (
-                                            <Link
-                                                href="/dashboard/create-blog"
-                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                                                onClick={() => setIsDropdownOpen(false)}
-                                            >
-                                                <PlusCircle size={18} className="text-gray-400" />
-                                                Create Blog
-                                            </Link>
-                                        )}
-
-                                        <Link
-                                            href="/dashboard/settings"
-                                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors"
-                                            onClick={() => setIsDropdownOpen(false)}
-                                        >
-                                            <Settings size={18} className="text-gray-400" />
-                                            Settings
-                                        </Link>
-                                    </div>
-
-                                    <div className="border-t border-gray-50 py-2">
-                                        <button
-                                            onClick={handleLogout}
-                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left font-medium"
-                                        >
-                                            <LogOut size={18} />
-                                            Log out
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                            </>
+                        ) : (
+                            /* GUEST VIEW (Hidden Write/Notif, Shown Login/Register) */
+                            <div className="flex items-center gap-3 md:gap-6">
+                                <Link href="/login" className="text-sm font-semibold text-gray-600 hover:text-indigo-600 transition-colors">
+                                    Log in
+                                </Link>
+                                <Link href="/register">
+                                    <Button variant="black" className="rounded-full px-5 h-9 text-xs">
+                                        Get Started
+                                    </Button>
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 </div>
             </header>

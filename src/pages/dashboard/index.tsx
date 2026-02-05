@@ -16,24 +16,21 @@ export default function DashboardPage() {
   const queryClient = useQueryClient(); 
   const [token, setToken] = useState<string | null>(null);
 
+  // LOGIC FIX: Get token but REMOVE the router.push redirect
   useEffect(() => {
     const t = getToken();
-    if (!t) {
-      router.push('/login');
-    } else {
-      setToken(t);
-    }
-  }, [router]);
+    setToken(t || null); // Just set it, don't kick guests out
+  }, []);
 
   useEffect(() => {
     const onFocus = () => {
       queryClient.invalidateQueries({ queryKey: ['public-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['my-blog'] });
+      if (token) queryClient.invalidateQueries({ queryKey: ['my-blog'] });
     };
 
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
-  }, [queryClient]);
+  }, [queryClient, token]);
 
   const categories = [
     { name: 'Fashion', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=100&q=80', color: 'bg-pink-50' },
@@ -53,7 +50,7 @@ export default function DashboardPage() {
   const { data: postsData, isLoading: postsLoading } = useQuery({
     queryKey: ['public-posts'],
     queryFn: () => getTenantPublicPosts({ limit: 10, page: 1 }),
-    enabled: !!token,
+    // LOGIC FIX: Removed enabled: !!token so guests can see posts
     refetchOnWindowFocus: true, 
   });
 
@@ -75,7 +72,8 @@ export default function DashboardPage() {
     return 'bg-gray-100 text-gray-700';
   };
 
-  if (!token || myBlogLoading || postsLoading) {
+  // LOGIC FIX: Don't block the page if token is missing, only if posts are loading
+  if (postsLoading) {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center min-h-[400px]">
