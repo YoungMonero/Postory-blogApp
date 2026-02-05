@@ -1,27 +1,20 @@
-// export function getToken(): string | null {
-//   if (typeof window === 'undefined') return null;
-//   return localStorage.getItem('accessToken');
-// }
+import Cookies from 'js-cookie';
 
-// export function logout() {
-//   localStorage.removeItem('accessToken');
-// }
+const TOKEN_KEY = 'accessToken';
 
-
-
-
-// src/services/auth-storage.ts
 export function getToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('accessToken'); // ✅ match login
+  return Cookies.get(TOKEN_KEY) || null;
 }
 
 export function setToken(token: string) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('accessToken', token); // ✅ match login
+  Cookies.set(TOKEN_KEY, token, { 
+    expires: 7, 
+    path: '/', 
+    sameSite: 'lax', // Needed for redirects
+    secure: process.env.NODE_ENV === 'production' 
+  });
 }
 
 export function clearToken() {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem('accessToken');
+  Cookies.remove(TOKEN_KEY, { path: '/' });
 }
