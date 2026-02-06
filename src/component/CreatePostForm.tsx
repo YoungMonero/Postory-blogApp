@@ -4,6 +4,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { CreatePostDto } from '@/src/types/posts';
 import { usePosts } from '@/src/hooks/usePosts';
 import { generateSlug } from '@/src/services/post';
+import Link from 'next/link';
 import { 
   ArrowLeft, Globe, Settings, Image as ImageIcon, 
   Tag, CheckCircle, Bold, Italic, 
@@ -165,9 +166,10 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
-          <button className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
+          
+          <Link href = "/dashboard" className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
             <ArrowLeft size={20} />
-          </button>
+          </Link>
           <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
           <div>
              <h1 className="text-sm font-bold text-gray-900 leading-none">{formData.title || 'New Draft'}</h1>
