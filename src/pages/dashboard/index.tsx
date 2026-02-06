@@ -13,7 +13,7 @@ import { Heart, MessageSquare } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const queryClient = useQueryClient(); 
+  const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(null);
 
   // LOGIC FIX: Get token but REMOVE the router.push redirect
@@ -36,7 +36,7 @@ export default function DashboardPage() {
     { name: 'Fashion', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=100&q=80', color: 'bg-pink-50' },
     { name: 'Food', image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=100&q=80', color: 'bg-green-50' },
     { name: 'Coding', image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?auto=format&fit=crop&w=100&q=80', color: 'bg-purple-50' },
-    { name: 'Style', image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=100&q=80', color: 'bg-blue-50' }, 
+    { name: 'Style', image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=100&q=80', color: 'bg-blue-50' },
     { name: 'Travel', image: 'https://images.unsplash.com/photo-1541849546-216549ae216d?auto=format&fit=crop&w=100&q=80', color: 'bg-rose-50' },
     { name: 'Culture', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=100&q=80', color: 'bg-orange-50' },
   ];
@@ -51,7 +51,7 @@ export default function DashboardPage() {
     queryKey: ['public-posts'],
     queryFn: () => getTenantPublicPosts({ limit: 10, page: 1 }),
     // LOGIC FIX: Removed enabled: !!token so guests can see posts
-    refetchOnWindowFocus: true, 
+    refetchOnWindowFocus: true,
   });
 
   const posts: Post[] = postsData?.data?.posts || [];
@@ -89,8 +89,8 @@ export default function DashboardPage() {
         <section className="w-full overflow-x-auto pb-4">
           <div className="flex md:grid md:grid-cols-6 gap-5 min-w-max md:min-w-full">
             {categories.map((cat) => (
-              <button 
-                key={cat.name} 
+              <button
+                key={cat.name}
                 className={`flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-1 hover:shadow-md ${cat.color}`}
               >
                 <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm">
@@ -114,14 +114,14 @@ export default function DashboardPage() {
                   key={post._id}
                   className="flex flex-col md:flex-row gap-8 group border-b border-gray-100 pb-6 md:border-none md:pb-0"
                 >
-                  <Link 
-                    href={`/posts/${post.slug || post._id}`} 
+                  <Link
+                    href={`/posts/${post.slug || post._id}`}
                     className="w-full md:w-[45%] aspect-[16/10] md:rounded-2xl md:overflow-hidden md:shadow-sm shrink-0 bg-gray-100"
                   >
-                    <img 
-                      src={getImageUrl(post.thumbnail)} 
-                      alt={post.title} 
-                      className="w-full h-full object-cover md:transform md:group-hover:scale-105 md:transition-transform md:duration-700" 
+                    <img
+                      src={getImageUrl(post.thumbnail)}
+                      alt={post.title}
+                      className="w-full h-full object-cover md:transform md:group-hover:scale-105 md:transition-transform md:duration-700"
                     />
                   </Link>
 
@@ -129,58 +129,92 @@ export default function DashboardPage() {
                     <div>
                       <div className="flex items-center gap-3 mb-3 text-sm">
                         <span className="text-gray-500 font-medium">
-                          {new Date(post.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                          {new Date(post.createdAt).toLocaleDateString(undefined, {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
                         </span>
                         <span className="text-gray-300">•</span>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${getCategoryColor(post.tags?.[0] || 'General')}`}>
-                          {post.tags?.[0] || 'General'}
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${getCategoryColor(
+                            post.tags?.[0] || "General"
+                          )}`}
+                        >
+                          {post.tags?.[0] || "General"}
                         </span>
                       </div>
-                      
+
                       <Link href={`/posts/${post.slug || post._id}`}>
                         <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-blue-600 transition-colors">
                           {post.title}
                         </h3>
                       </Link>
-                      
+
                       <p className="text-gray-500 leading-relaxed mb-4 line-clamp-3 text-base">
-                        {post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 120) : '')}
+                        {post.excerpt ||
+                          (post.content
+                            ? post.content.replace(/<[^>]*>/g, "").substring(0, 120)
+                            : "")}
                       </p>
                     </div>
-                    
+
+                    {/* Updated Footer Section */}
                     <div className="flex items-center gap-4 mt-2 flex-wrap">
-                       <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white">
-                             {post.author?.displayName?.charAt(0) || 'U'}
-                          </div>
-                          <span className="text-xs font-medium text-gray-900">{post.author?.displayName}</span>
-                       </div>
-                       
-                       <span className="text-gray-300 hidden md:inline">|</span>
-                       
-                       <div className="flex items-center gap-3 text-gray-500">
-                           <div className="flex items-center gap-1.5" title="Likes">
-                              <Heart 
-                                size={16} 
-                                fill={post.likes > 0 ? "currentColor" : "none"} 
-                                className={post.likes > 0 ? "text-red-500" : "text-gray-400"} 
-                              />
-                              <span className="text-xs font-medium">{post.likes || 0}</span>
-                           </div>
-                           <div className="flex items-center gap-1.5" title="Comments">
-                              <MessageSquare size={16} className="text-gray-400" />
-                              <span className="text-xs font-medium">{post.commentsCount || 0}</span>
-                           </div>
-                       </div>
+                      <div className="flex items-center gap-2">
+                        {/* Profile Picture / Initial */}
+                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
+                          {post.author?.profilePic ? (
+                            <img
+                              src={post.author.profilePic}
+                              alt={post.author.displayName}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span>{post.author?.displayName?.charAt(0) || "U"}</span>
+                          )}
+                        </div>
 
-                       <span className="text-gray-300 hidden md:inline">|</span>
+                        <div className="flex flex-col">
+                          {/* Blog Name Link */}
+                          <Link
+                            href={`/blogs/${post.blog?.slug || post.blog?._id}`}
+                            className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors leading-none"
+                          >
+                            {post.blog?.title || "Untitled Blog"}
+                          </Link>
+                          {/* Author Name */}
+                          <span className="text-[10px] text-gray-500 font-medium mt-1">
+                            by {post.author?.displayName}
+                          </span>
+                        </div>
+                      </div>
 
-                       <Link
-                         href={`/posts/${post.slug || post._id}`}
-                         className="text-sm font-semibold text-gray-900 md:hover:text-blue-600 transition-colors"
-                       >
+                      <span className="text-gray-300 hidden md:inline">|</span>
+
+                      <div className="flex items-center gap-3 text-gray-500">
+                        <div className="flex items-center gap-1.5" title="Likes">
+                          <Heart
+                            size={16}
+                            fill={post.likes > 0 ? "currentColor" : "none"}
+                            className={post.likes > 0 ? "text-red-500" : "text-gray-400"}
+                          />
+                          <span className="text-xs font-medium">{post.likes || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5" title="Comments">
+                          <MessageSquare size={16} className="text-gray-400" />
+                          <span className="text-xs font-medium">{post.commentsCount || 0}</span>
+                        </div>
+                      </div>
+
+                      <span className="text-gray-300 hidden md:inline">|</span>
+
+                      <Link
+                        href={`/posts/${post.slug || post._id}`}
+                        className="text-sm font-semibold text-gray-900 md:hover:text-blue-600 transition-colors"
+                      >
                         Read Article
-                       </Link>
+                      </Link>
                     </div>
                   </div>
                 </article>
@@ -190,15 +224,15 @@ export default function DashboardPage() {
 
           <div className="lg:col-span-4 space-y-12">
             <div className="sticky top-6 space-y-12">
-                <PopularSidebar />
-                <EditorsPick />
+              <PopularSidebar />
+              <EditorsPick />
 
-                <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-                   <h3 className="font-bold text-gray-900 mb-2">Weekly Newsletter</h3>
-                   <p className="text-sm text-gray-500 mb-4 leading-relaxed">Get the latest stories and insights delivered straight to your inbox.</p>
-                   <input type="email" placeholder="Email address" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm mb-2 focus:ring-1 focus:ring-blue-500 outline-none" />
-                   <button className="w-full bg-black text-white py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">Subscribe</button>
-                </div>
+              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                <h3 className="font-bold text-gray-900 mb-2">Weekly Newsletter</h3>
+                <p className="text-sm text-gray-500 mb-4 leading-relaxed">Get the latest stories and insights delivered straight to your inbox.</p>
+                <input type="email" placeholder="Email address" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm mb-2 focus:ring-1 focus:ring-blue-500 outline-none" />
+                <button className="w-full bg-black text-white py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">Subscribe</button>
+              </div>
             </div>
           </div>
         </div>
