@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Updated to match backend types (removed 'blog', added 'category')
 export type SearchType = 'user' | 'post' | 'tag' | 'category';
 
 interface SearchParams {

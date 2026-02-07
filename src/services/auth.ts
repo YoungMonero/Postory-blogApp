@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-=======
-// src/services/auth.ts
-// import { api } from './api';
->>>>>>> 9305c5f69f161ba01e2cd45183a14578d9110f98
 export interface RegisterInput {
   email: string;
   password: string;

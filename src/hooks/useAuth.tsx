@@ -1,4 +1,3 @@
-// src/hooks/useAuth.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getToken, setToken as setCookieToken, clearToken } from '../services/auth-storage';
 
@@ -26,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = (newToken: string, name: string) => {
-    setCookieToken(newToken); // ✅ Sets the Cookie for Middleware
+    setCookieToken(newToken);
     localStorage.setItem('userName', name);
     
     setToken(newToken);
@@ -34,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    clearToken(); // ✅ Clears Cookie
+    clearToken(); 
     localStorage.removeItem('userName');
     localStorage.removeItem('user');
 
