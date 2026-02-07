@@ -64,8 +64,8 @@ export default function BlogChannelView() {
   const posts = postsResponse?.data || [];
 
   return (
-    
-    
+
+
     <div className="min-h-screen bg-white font-sans">
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
@@ -192,55 +192,61 @@ export default function BlogChannelView() {
         <div className="py-12">
           {activeTab === 'home' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {posts.map((post) => (
-                <article
-                  key={post._id}
-                  className="group flex flex-col cursor-pointer"
-                  onClick={() => router.push(`/post/${post.slug || post._id}`)}
-                >
-                  <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-5 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
-                    <img src={post.thumbnail} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={post.title} />
-                  </div>
-                  <div className="space-y-3 px-2">
-                    <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-gray-400">
-                      <span className="text-indigo-600 font-black">{post.status}</span>
-                      <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                      <span>{format(new Date(post.createdAt), 'MMM d, yyyy')}</span>
-                    </div>
-                    <h4 className="text-xl font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
-                      {post.title}
-                    </h4>
-                    <div className="flex items-center gap-4 pt-2 text-gray-400">
-                      <span className="flex items-center gap-1 text-xs font-bold"><Eye size={14} /> {post.views || 0}</span>
-                      <span className="flex items-center gap-1 text-xs font-bold"><Heart size={14} /> {post.likes || 0}</span>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
+              {posts.map((post) => {
+                const isDraft = post.status?.toLowerCase() === 'draft';
+                const destination = isDraft
+                  ? `/dashboard/edit-post/${post._id}` 
+                  : `/posts/${post.slug || post._id}`;   
+                return (
+                  <article
+                    key={post._id}
+                    className="group flex flex-col cursor-pointer"
+                    onClick={() => router.push(destination)}
+                  >
+                    <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-5 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
+                      {isDraft && (
+                        <div className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
+                          Draft
+                        </div>
+                      )}
 
-          {activeTab === 'about' && (
-            <div className="max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-16">
-              <div className="md:col-span-2 space-y-8">
-                <h3 className="text-2xl font-black text-gray-900 tracking-tight uppercase tracking-[0.1em]">Description</h3>
-                <div className="text-gray-500 text-lg leading-relaxed space-y-6 font-light">
-                  {blog?.content || blog?.description || "No description provided."}
-                </div>
-              </div>
-              <div className="bg-zinc-50 p-8 rounded-[2rem] h-fit border border-zinc-100">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-6">Stats</h4>
-                <div className="space-y-4 text-sm">
-                  <div className="flex justify-between items-center border-b border-zinc-200 pb-3">
-                    <span className="text-xs font-bold text-zinc-400 uppercase">Joined</span>
-                    <span className="text-sm font-black">{format(new Date(blog?.createdAt || Date.now()), 'MMM yyyy')}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-zinc-400 uppercase">Total Views</span>
-                    <span className="text-sm font-black">{posts.reduce((s, p) => s + (p.views || 0), 0).toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
+                      <img
+                        src={post.thumbnail || 'https://via.placeholder.com/400x250?text=No+Image'}
+                        className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${isDraft ? 'opacity-70 grayscale-[30%]' : ''}`}
+                        alt={post.title}
+                      />
+
+                      {isDraft && (
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="bg-white text-black text-xs font-black px-5 py-2 rounded-full uppercase tracking-tighter shadow-xl">
+                            Continue Editing
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3 px-2">
+                      <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-gray-400">
+                        <span className={`${isDraft ? 'text-amber-500' : 'text-indigo-600'} font-black`}>
+                          {post.status}
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                        <span>{format(new Date(post.createdAt), 'MMM d, yyyy')}</span>
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
+                        {post.title || "Untitled Draft"}
+                      </h4>
+
+                      {!isDraft && (
+                        <div className="flex items-center gap-4 pt-2 text-gray-400">
+                          <span className="flex items-center gap-1 text-xs font-bold"><Eye size={14} /> {post.views || 0}</span>
+                          <span className="flex items-center gap-1 text-xs font-bold"><Heart size={14} /> {post.likes || 0}</span>
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </div>
