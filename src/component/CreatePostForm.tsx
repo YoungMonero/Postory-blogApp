@@ -1,91 +1,149 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { CreatePostDto } from '@/src/types/posts';
+import Placeholder from '@tiptap/extension-placeholder';
+import { CreatePostDto, Post } from '@/src/types/posts'; 
 import { usePosts } from '@/src/hooks/usePosts';
 import { generateSlug } from '@/src/services/post';
+import Link from 'next/link';
 import { 
   ArrowLeft, Globe, Settings, Image as ImageIcon, 
   Tag, CheckCircle, Bold, Italic, 
-  List, Heading1, Heading2, Quote, Save, Eye
+  List, ListOrdered, Heading1, Heading2, Quote, Save, Eye,
+  Type, Minus, RotateCcw, RotateCw, Code, AlertCircle
 } from 'lucide-react';
 
 interface CreatePostFormProps {
   token: string | null;
   onSuccess?: () => void;
+  initialData?: any; 
+  isEditing?: boolean; 
 }
 
-const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => {
-  const { createNewPost, loading, error: backendError } = usePosts();
+const CreatePostForm: React.FC<CreatePostFormProps> = ({ 
+  token, 
+  onSuccess, 
+  initialData, 
+  isEditing = false 
+}) => {
+  // Update: use 'updateExistingPost' to match your updated hook
+  const { createNewPost, updateExistingPost, loading, error: backendError } = usePosts();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(''); // Clean state for UI preview
+  const [previewUrl, setPreviewUrl] = useState<string>(''); 
   
   const [formData, setFormData] = useState<CreatePostDto>({
-    title: '',
-    content: '',
-    status: 'draft',
-    thumbnail: '',
-    thumbnailPublicId: '',
-    slug: '',
-    tags: ['General'],
-    excerpt: '',
-    seoDescription: '',
+    title: initialData?.title || '',
+    content: initialData?.content || '',
+    status: initialData?.status || 'draft',
+    thumbnail: initialData?.thumbnail || '',
+    thumbnailPublicId: initialData?.thumbnailPublicId || '',
+    slug: initialData?.slug || '',
+    tags: initialData?.tags || ['General'],
+    excerpt: initialData?.excerpt || '',
+    seoDescription: initialData?.seoDescription || '',
   });
 
   const editor = useEditor({
-    extensions: [StarterKit],
-    content: '',
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3] },
+        bulletList: { keepMarks: true },
+        orderedList: { keepMarks: true },
+      }),
+      Placeholder.configure({
+        placeholder: 'Tell your story...',
+      }),
+    ],
+    content: initialData?.content || '', 
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'prose prose-lg max-w-none focus:outline-none min-h-[500px] px-6 py-8 text-gray-700',
+        class: 'tiptap-content prose prose-lg max-w-none focus:outline-none min-h-[500px] px-8 py-8 text-gray-700',
       },
     },
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       const plainText = editor.getText().trim();
+      
+      setFormData(prev => {
+        const isUnderLimit = (prev.seoDescription?.length || 0) < 100;
+        const isDeleting = plainText.length < (prev.seoDescription?.length || 0);
+        const shouldSync = isUnderLimit || isDeleting;
+
+        return { 
+          ...prev, 
+          content: html,
+          excerpt: shouldSync ? plainText.substring(0, 100) : prev.excerpt,
+          seoDescription: shouldSync ? plainText.substring(0, 100) : prev.seoDescription
+        };
+      });
+
+      if (!isEditing) {
+        localStorage.setItem('wordoo_draft_content', html);
+      }
+    },
+  }); 
+
+  useEffect(() => {
+    if (initialData && editor && isEditing) {
+      setFormData({
+        ...initialData,
+        tags: initialData.tags || ['General']
+      });
+      editor.commands.setContent(initialData.content || '');
+      if (initialData.updatedAt) setLastSaved(new Date(initialData.updatedAt));
+    }
+  }, [initialData, editor, isEditing]);
+
+  useEffect(() => {
+    if (!editor || isEditing) return;
+    const savedTitle = localStorage.getItem('wordoo_draft_title');
+    const savedContent = localStorage.getItem('wordoo_draft_content');
+    const savedThumbnail = localStorage.getItem('wordoo_draft_thumbnail');
+
+    if (savedTitle || savedContent || savedThumbnail) {
       setFormData(prev => ({ 
         ...prev, 
-        content: html,
-        // Only auto-fill if the user hasn't typed much in these fields yet
-        excerpt: (prev.excerpt || '').length < 10 ? plainText.substring(0, 150) : prev.excerpt,
-        seoDescription: (prev.seoDescription || '').length < 10 ? plainText.substring(0, 160) : prev.seoDescription
+        title: savedTitle || prev.title, 
+        content: savedContent || prev.content,
+        thumbnail: savedThumbnail || prev.thumbnail 
       }));
-    },
-  });
+      if (savedContent) editor.commands.setContent(savedContent);
+      setLastSaved(new Date());
+    }
+  }, [editor, isEditing]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (name === 'title') {
       setFormData(prev => ({ ...prev, slug: generateSlug(value) }));
+      if (!isEditing) localStorage.setItem('wordoo_draft_title', value);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      // Clean up old preview URL to prevent memory leaks
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      
-      const newPreview = URL.createObjectURL(selectedFile);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setPreviewUrl(base64String);
+        setFormData(prev => ({ ...prev, thumbnail: base64String }));
+        if (!isEditing) localStorage.setItem('wordoo_draft_thumbnail', base64String);
+      };
+      reader.readAsDataURL(selectedFile);
       setFile(selectedFile);
-      setPreviewUrl(newPreview);
-      setFormData(prev => ({ ...prev, thumbnail: newPreview }));
     }
   };
 
   const handleSubmit = async (publishStatus: 'draft' | 'published') => {
     if (!token) return alert('Please log in');
-
     const latestContent = editor?.getHTML() || "";
-    const plainText = editor?.getText() || "";
-
     if (!formData.title.trim()) return alert("Title is required");
-    if (!latestContent || latestContent === '<p></p>') return alert("Content is required");
-
+    
     setUploading(true);
     try {
       let finalThumbnail = formData.thumbnail;
@@ -94,107 +152,85 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
       if (file) {
         const fileFormData = new FormData();
         fileFormData.append('thumbnail', file); 
-
         const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/thumbnail`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: fileFormData,
         });
-
-        if (!uploadRes.ok) {
-          const errorData = await uploadRes.json();
-          throw new Error(errorData.message || 'Thumbnail upload failed');
-        }
-
         const uploadData = await uploadRes.json();
         finalThumbnail = uploadData.data.url;
         finalPublicId = uploadData.data.publicId;
       }
 
-      let finalSeo = (formData.seoDescription ?? '').trim();
-      if (finalSeo.length < 20) {
-        finalSeo = `${formData.title}: ${plainText}`.substring(0, 160);
-      }
-
       const payload: CreatePostDto = { 
         ...formData, 
-        status: publishStatus,
-        content: latestContent,
-        thumbnail: finalThumbnail,
-        thumbnailPublicId: finalPublicId,
-        excerpt: (formData.excerpt && formData.excerpt.length >= 10) 
-          ? formData.excerpt 
-          : plainText.substring(0, 150).trim() || formData.title,
-        seoDescription: finalSeo
+        status: publishStatus, 
+        content: latestContent, 
+        thumbnail: finalThumbnail, 
+        thumbnailPublicId: finalPublicId 
       };
 
-      const result = await createNewPost(payload, token);
-      
-      if (result) {
-        setLastSaved(new Date());
-        if (publishStatus === 'published') {
-            alert("Success! Post is live.");
-           
-            setFormData({ 
-              title: '', content: '', status: 'draft', thumbnail: '', 
-              thumbnailPublicId: '', slug: '', tags: ['General'], 
-              excerpt: '', seoDescription: '' 
-            });
-            editor?.commands.setContent('');
-            setFile(null);
-            setPreviewUrl('');
-            if (onSuccess) onSuccess();
-        }
+      let result;
+      if (isEditing && initialData?._id) {
+        // Update: call 'updateExistingPost'
+        result = await updateExistingPost(initialData._id, payload, token);
+      } else {
+        result = await createNewPost(payload, token);
       }
-    } catch (err: any) {
-      console.error("Publishing Error:", err);
-      alert(err.message || "An error occurred while saving the post");
-    } finally {
-      setUploading(false);
+
+      if (result) {
+        localStorage.removeItem('wordoo_draft_title');
+        localStorage.removeItem('wordoo_draft_content');
+        localStorage.removeItem('wordoo_draft_thumbnail');
+        
+        alert(isEditing ? "Post updated!" : "Post published!");
+        
+        if (!isEditing && publishStatus === 'published') {
+            setFormData({ title: '', content: '', status: 'draft', thumbnail: '', thumbnailPublicId: '', slug: '', tags: ['General'], excerpt: '', seoDescription: '' });
+            editor?.commands.setContent('');
+        }
+        
+        if (onSuccess) onSuccess();
+      }
+    } catch (err: any) { 
+        alert(err.message || "Error processing request"); 
+    } finally { 
+        setUploading(false); 
     }
   };
 
-
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      <style>{`
+        .tiptap-content h1 { font-size: 2.25rem !important; font-weight: 800 !important; margin-bottom: 1.5rem !important; color: #111827 !important; display: block !important; }
+        .tiptap-content h2 { font-size: 1.5rem !important; font-weight: 700 !important; margin-top: 2rem !important; margin-bottom: 1rem !important; color: #1f2937 !important; display: block !important; }
+        .tiptap-content ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin: 1rem 0 !important; }
+        .tiptap-content ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin: 1rem 0 !important; }
+        .tiptap-content blockquote { border-left: 4px solid #4f46e5 !important; background: #f5f7ff !important; padding: 1rem 1.5rem !important; font-style: italic !important; margin: 1.5rem 0 !important; color: #4338ca !important; }
+        .tiptap-content p { margin-bottom: 1rem !important; line-height: 1.75 !important; }
+        .tiptap-content code { background: #f3f4f6 !important; padding: 0.2rem 0.4rem !important; border-radius: 0.25rem !important; font-family: monospace !important; }
+      `}</style>
+
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
-          <button className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
+          <Link href="/dashboard" className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
             <ArrowLeft size={20} />
-          </button>
+          </Link>
           <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
           <div>
-             <h1 className="text-sm font-bold text-gray-900 leading-none">{formData.title || 'New Draft'}</h1>
+             <h1 className="text-sm font-bold text-gray-900 leading-none">{formData.title || (isEditing ? 'Editing Post' : 'New Draft')}</h1>
              <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                {lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : 'Unsaved changes'}
+                {lastSaved ? `${isEditing ? 'Last updated' : 'Saved'} ${lastSaved.toLocaleTimeString()}` : 'Unsaved changes'}
                 {(loading || uploading) && <span className="animate-pulse text-indigo-500 ml-1 font-medium italic">Saving...</span>}
              </p>
           </div>
         </div>
-        
         <div className="flex items-center gap-3">
-          <button 
-            type="button"
-            onClick={() => handleSubmit('draft')} 
-            disabled={loading || uploading}
-            className="hidden sm:flex text-sm font-semibold text-gray-600 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
-          >
-            Save Draft
+          <button type="button" onClick={() => handleSubmit('draft')} className="hidden sm:flex text-sm font-semibold text-gray-600 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors">
+            {isEditing ? 'Keep as Draft' : 'Save Draft'}
           </button>
-          <button 
-            type="button"
-            onClick={() => handleSubmit('published')} 
-            disabled={loading || uploading} 
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition-all active:scale-95 disabled:opacity-50"
-          >
-            {formData.status === 'published' ? 'Update' : 'Publish'}
-            {formData.status === 'published' ? <CheckCircle size={16} /> : <Globe size={16} />}
+          <button type="button" onClick={() => handleSubmit('published')} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm transition-all active:scale-95">
+            {isEditing || formData.status === 'published' ? 'Update' : 'Publish'} <Globe size={16} />
           </button>
         </div>
       </header>
@@ -208,77 +244,66 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
                         <div className="relative aspect-[21/9] w-full overflow-hidden">
                             <img src={formData.thumbnail} className="w-full h-full object-cover" alt="Cover" />
                             <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <label className="bg-white text-gray-900 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer hover:bg-gray-50 transition-colors">
-                                    Change Cover
-                                    <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                                <label className="bg-white text-gray-900 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer">
+                                  Change Cover
+                                  <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                                 </label>
                             </div>
                         </div>
                     ) : (
-                       <div className="p-4 flex justify-start">
-                          <label className="flex items-center gap-2 text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-md hover:bg-gray-100 transition-all text-sm font-medium cursor-pointer">
-                             <ImageIcon size={16} />
-                             Add Cover Image
+                       <div className="p-6 flex justify-center w-full">
+                          <label className="w-full max-w-2xl py-12 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-indigo-100 bg-indigo-50/30 rounded-xl hover:bg-indigo-50 hover:border-indigo-300 transition-all cursor-pointer group/cover">
+                             <div className="p-3 bg-white rounded-full shadow-sm group-hover/cover:scale-110 transition-transform">
+                                <ImageIcon size={28} className="text-indigo-600 animate-pulse" />
+                             </div>
+                             <div className="text-center">
+                                <p className="text-sm font-bold text-indigo-900">Add a beautiful cover image</p>
+                                <p className="text-xs text-indigo-400 mt-1 font-medium">Click to browse your files</p>
+                             </div>
                              <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                           </label>
                        </div>
                     )}
                 </div>
 
-                <div className="px-6 pt-8 pb-2">
-                    <input 
-                      type="text" 
-                      name="title" 
-                      value={formData.title} 
-                      onChange={handleInputChange} 
-                      placeholder="Post Title" 
-                      className="w-full text-4xl md:text-5xl font-extrabold text-gray-900 placeholder-gray-200 border-none p-0 focus:ring-0 bg-transparent leading-tight tracking-tight" 
-                    />
+                <div className="px-8 pt-8 pb-2">
+                    <input type="text" name="title" value={formData.title} onChange={handleInputChange} placeholder="Post Title" className="w-full text-4xl md:text-5xl font-extrabold text-gray-900 placeholder-gray-200 border-none p-0 focus:ring-0 bg-transparent leading-tight tracking-tight" />
                 </div>
 
-                <div className="flex items-center gap-1 border-y border-gray-100 px-6 py-2 bg-white sticky top-0 z-20">
+                <div className="flex items-center gap-1 border-y border-gray-100 px-6 py-2 bg-white sticky top-0 z-20 flex-wrap">
+                    <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} icon={<RotateCcw size={16}/>} />
+                    <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} icon={<RotateCw size={16}/>} />
+                    <div className="w-px h-6 bg-gray-200 mx-1" />
                     <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} active={editor?.isActive('heading', { level: 1 })} icon={<Heading1 size={18}/>} />
                     <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} active={editor?.isActive('heading', { level: 2 })} icon={<Heading2 size={18}/>} />
-                    <div className="w-px h-6 bg-gray-200 mx-2" />
+                    <ToolbarButton onClick={() => editor?.chain().focus().setParagraph().run()} active={editor?.isActive('paragraph')} icon={<Type size={18}/>} />
+                    <div className="w-px h-6 bg-gray-200 mx-1" />
                     <ToolbarButton onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive('bold')} icon={<Bold size={18}/>} />
                     <ToolbarButton onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive('italic')} icon={<Italic size={18}/>} />
+                    <ToolbarButton onClick={() => editor?.chain().focus().toggleCode().run()} active={editor?.isActive('code')} icon={<Code size={18}/>} />
+                    <div className="w-px h-6 bg-gray-200 mx-1" />
                     <ToolbarButton onClick={() => editor?.chain().focus().toggleBulletList().run()} active={editor?.isActive('bulletList')} icon={<List size={18}/>} />
+                    <ToolbarButton onClick={() => editor?.chain().focus().toggleOrderedList().run()} active={editor?.isActive('orderedList')} icon={<ListOrdered size={18}/>} />
                     <ToolbarButton onClick={() => editor?.chain().focus().toggleBlockquote().run()} active={editor?.isActive('blockquote')} icon={<Quote size={18}/>} />
+                    <ToolbarButton onClick={() => editor?.chain().focus().setHorizontalRule().run()} icon={<Minus size={18}/>} />
                 </div>
 
-                <EditorContent editor={editor} className="flex-1" />
+                <EditorContent editor={editor} className="flex-1 cursor-text" />
              </div>
           </div>
 
           <aside className="lg:col-span-4 space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-6">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2 pb-3 border-b border-gray-100">
-                    <Settings size={18} />
-                    Post Settings
-                </h3>
-
+                <h3 className="font-bold text-gray-900 flex items-center gap-2 pb-3 border-b border-gray-100"><Settings size={18} /> Post Settings</h3>
                 <div className="space-y-3">
-                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <Tag size={14} /> Category
-                    </label>
+                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Tag size={14} /> Category</label>
                     <div className="flex flex-wrap gap-2">
                         {['General', 'Coding', 'Technology', 'Lifestyle', 'Food', 'Travel', 'Sports'].map((cat) => (
-                            <button 
-                                key={cat} 
-                                type="button" 
-                                onClick={() => setFormData(p => ({...p, tags: [cat]}))} 
-                                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                                    formData.tags?.includes(cat) 
-                                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
-                                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-                                }`}
-                            >
-                                {cat}
-                            </button>
+                            <button key={cat} type="button" onClick={() => setFormData(p => ({...p, tags: [cat]}))} className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${formData.tags?.includes(cat) ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>{cat}</button>
                         ))}
                     </div>
                 </div>
-
+                
                 <div className="space-y-3">
                     <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <Globe size={14} /> URL Slug
@@ -307,19 +332,15 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
                 </div>
             </div>
 
-            <div className="bg-indigo-50 rounded-xl border border-indigo-100 p-5">
-                <h4 className="font-bold text-indigo-900 mb-2">Ready to share?</h4>
-                <p className="text-sm text-indigo-700 mb-4">
-                    Your post is currently a <strong>draft</strong>.
-                </p>
-                <button type="button" className="w-full bg-white text-indigo-600 hover:bg-indigo-50 border-indigo-200 border py-2 px-4 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
-                    <Eye size={16} /> Preview Post
-                </button>
+            <div className="bg-indigo-50 rounded-xl border border-indigo-100 p-5 text-center">
+              <button type="button" className="w-full bg-white text-indigo-600 hover:bg-indigo-50 border-indigo-200 border py-2 px-4 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
+                <Eye size={16} /> Preview Post
+              </button>
             </div>
 
             {backendError && (
               <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-xs font-bold text-red-600 uppercase flex items-center gap-2">
-                <Save size={14} /> Sync Error: {backendError}
+                <AlertCircle size={14} /> Sync Error: {backendError}
               </div>
             )}
           </aside>
@@ -330,13 +351,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
 };
 
 const ToolbarButton = ({ onClick, active, icon }: any) => (
-  <button 
-    type="button" 
-    onClick={onClick} 
-    className={`p-2 rounded-md transition-all ${active ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'}`}
-  >
-    {icon}
-  </button>
+  <button type="button" onClick={onClick} className={`p-2 rounded-md transition-all ${active ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'}`}>{icon}</button>
 );
 
 export default CreatePostForm;     

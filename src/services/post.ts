@@ -279,4 +279,28 @@ export async function uploadPostThumbnail(
     };
   }
 }
+
 export { api };
+
+export const getPostById = async (id: string) => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+  
+  try {
+    const response = await fetch(`${apiUrl}/posts/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch post');
+    }
+
+    const result = await response.json();
+    return result.data; 
+  } catch (error) {
+    console.error("Error in getPostById:", error);
+    throw error;
+  }
+};

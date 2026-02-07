@@ -10,7 +10,7 @@ import { Heart, MessageSquare, Share2, ArrowLeft } from 'lucide-react';
 export default function PostDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { token, userName } = useAuth(); // userName is a string
+  const { token, userName, openAuthModal } = useAuth(); // userName is a string
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,11 +49,12 @@ export default function PostDetailPage() {
     fetchPost();
   }, [id, router.isReady, userName]);
 
-  const handleLike = async () => {
+  const handleLike = async (e: React.MouseEvent) => {
     const targetId = post?._id || post?.id;
     if (!targetId || !token) {
-      alert('Please log in to like this post');
-      return;
+    e.preventDefault();
+    openAuthModal();
+    return;   
     }
 
     try {

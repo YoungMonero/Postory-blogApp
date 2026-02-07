@@ -10,8 +10,13 @@ import {
   FileEdit,
   Upload,
 } from "lucide-react";
+// Import the auth hook
+import { useAuth } from "@/src/hooks/useAuth";
 
 export default function LandingPage() {
+  // Access the token from your auth context
+  const { token } = useAuth();
+
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900">
 
@@ -53,17 +58,27 @@ export default function LandingPage() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Link
-                href="/login"
-                className="text-gray-900 font-medium hover:text-primary transition-colors"
-              >
-                Log in
-              </Link>
-              <Link href="/register">
-                <Button variant="black" size="lg" className="rounded-full px-6">
-                  Get Started
-                </Button>
-              </Link>
+              {token ? (
+                <Link href="/dashboard">
+                  <Button variant="black" size="lg" className="rounded-full px-6 flex items-center gap-2">
+                    Go to Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="text-gray-900 font-medium hover:text-primary transition-colors"
+                  >
+                    Log in
+                  </Link>
+                  <Link href="/register">
+                    <Button variant="black" size="lg" className="rounded-full px-6">
+                      Get Started
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -90,23 +105,23 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/register">
+            <Link href="/dashboard">
               <Button
                 variant="black"
                 size="lg"
                 className="rounded-full px-8 py-4 text-lg h-auto shadow-xl shadow-gray-200 hover:shadow-2xl hover:-translate-y-1 transition-all"
               >
-                Start Writing Free <ArrowRight className="ml-2 w-5 h-5" />
+                {token ? "Continue Reading" : "Start reading Free"} <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>
 
-            <Link href="/blog/tech-chronicles/getting-started-with-nextjs">
+            <Link href={token ? "/dashboard" : "/register"}>
               <Button
                 variant="secondary"
                 size="lg"
                 className="rounded-full px-8 py-4 text-lg h-auto bg-white border-2 border-gray-100 text-gray-700 hover:border-gray-200 hover:bg-gray-50"
               >
-                View Demo Blog
+                {token ? "Your Feed" : "Get Started"}
               </Button>
             </Link>
           </div>
