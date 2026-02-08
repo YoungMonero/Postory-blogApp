@@ -115,7 +115,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     }
   }, [editor, isEditing]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextareaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (name === 'title') {
@@ -172,7 +172,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
 
       let result;
       if (isEditing && initialData?._id) {
-        // Update: call 'updateExistingPost'
         result = await updateExistingPost(initialData._id, payload, token);
       } else {
         result = await createNewPost(payload, token);
@@ -354,4 +353,4 @@ const ToolbarButton = ({ onClick, active, icon }: any) => (
   <button type="button" onClick={onClick} className={`p-2 rounded-md transition-all ${active ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'}`}>{icon}</button>
 );
 
-export default CreatePostForm;     
+export default CreatePostForm;

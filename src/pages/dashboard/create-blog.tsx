@@ -47,7 +47,7 @@ export default function CreateBlogPage() {
       queryClient.invalidateQueries({ queryKey: ['my-blog'] });
 
       if (slug) {
-        router.push(`/${slug}`);
+        router.push(`${slug}`);
       } else {
         router.push('/dashboard');
       }

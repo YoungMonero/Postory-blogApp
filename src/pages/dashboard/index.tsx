@@ -153,7 +153,7 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-25">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8 space-y-12">
             <div className="border-b border-gray-100 pb-4">
               <h2 className="text-3xl font-bold text-gray-900">Recent Posts</h2>
@@ -161,77 +161,91 @@ export default function DashboardPage() {
 
             <div className="space-y-16">
               {posts.length > 0 ? (
-                posts.map((post: any) => (
-                  <article key={post._id} className="flex flex-col md:flex-row gap-8 group border-b border-gray-100 pb-6 md:border-none md:pb-0">
-                    <Link
-                      href={`/posts/${post.slug || post._id}`}
-                      className="w-full md:w-[45%] aspect-[16/10] md:rounded-2xl md:overflow-hidden md:shadow-sm shrink-0 bg-gray-100"
-                    >
-                      <PostThumbnail post={post} getImageUrl={getImageUrl} />
-                    </Link>
+                posts.map((post: any) => {
+                  console.log("Blog Data for post:", post.title, post.blog);
 
-                    <div className="flex-1 py-1 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center gap-3 mb-3 text-sm">
-                          <span className="text-gray-500 font-medium">
-                            {new Date(post.createdAt).toLocaleDateString(undefined, {
-                              month: "long",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                          </span>
-                          <span className="text-gray-300">•</span>
-                          <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide ${getCategoryColor(post.tags?.[0] || "General")}`}>
-                            {post.tags?.[0] || "General"}
-                          </span>
+                  return (
+                    <article key={post._id} className="flex flex-col md:flex-row gap-8 group border-b border-gray-100 pb-6 md:border-none md:pb-0">
+                      <Link
+                        href={`/posts/${post.slug || post._id}`}
+                        className="w-full md:w-[45%] aspect-[16/10] md:rounded-2xl md:overflow-hidden md:shadow-sm shrink-0 bg-gray-100"
+                      >
+                        <PostThumbnail post={post} getImageUrl={getImageUrl} />
+                      </Link>
+
+                      <div className="flex-1 py-1 flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap mb-4">
+                            {post.tags?.slice(0, 3).map((tag: string, index: number) => (
+                              <span
+                                key={index}
+                                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(tag)}`}
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            <span className="text-xs text-gray-500">
+                              {new Date(post.createdAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+
+                          <Link href={`/posts/${post.slug || post._id}`}>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-indigo-600 transition-colors">
+                              {post.title}
+                            </h3>
+                          </Link>
+
+                          <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
+                            {post.excerpt || post.content?.substring(0, 200) + '...'}
+                          </p>
                         </div>
 
-                        <Link href={`/posts/${post.slug || post._id}`}>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-indigo-600 transition-colors">
-                            {post.title}
-                          </h3>
-                        </Link>
-
-                        <p className="text-gray-500 leading-relaxed mb-4 line-clamp-3 text-base">
-                          {post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, "").substring(0, 120) : "")}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-4 mt-2 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
-                            {post.author?.profilePic ? (
-                              <img src={post.author.profilePic} alt={post.author.displayName} className="w-full h-full object-cover" />
-                            ) : (
-                              <span>{post.author?.displayName?.charAt(0) || "U"}</span>
-                            )}
+                        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
+                              {post.blog?.profileImage ? (
+                                <img src={post.blog.profileImage} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span>{(post.blog?.authorName || "U").charAt(0)}</span>
+                              )}
+                            </div>
+                            
+                            <div className="flex flex-col">
+                              <Link 
+                               href={`/blogs/${post.blog?.slug || post.blog?._id}`}
+                                className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
+                              >
+                                {post.blog?.title || post.blog?.name || "Untitled Blog"}
+                              </Link>
+                              <span className="text-[10px] text-gray-500 font-medium mt-1">
+                                by {post.blog?.name || "Anonymous"}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex flex-col">
-                            <Link href={`/blogs/${post.blog?.slug || post.blog?._id}`} className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none">
-                              {post.blog?.title || "Untitled Blog"}
+
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1.5" title="Likes">
+                              <Heart size={16} fill={post.likes > 0 ? "currentColor" : "none"} className={post.likes > 0 ? "text-red-500" : "text-gray-400"} />
+                              <span className="text-xs font-medium">{post.likes || 0}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5" title="Comments">
+                              <MessageSquare size={16} className="text-gray-400" />
+                              <span className="text-xs font-medium">{post.commentsCount || 0}</span>
+                            </div>
+                            <span className="text-gray-300 hidden md:inline">|</span>
+                            <Link href={`/posts/${post.slug || post._id}`} className="text-sm font-semibold text-gray-900 md:hover:text-indigo-600 transition-colors">
+                              Read Article
                             </Link>
-                            <span className="text-[10px] text-gray-500 font-medium mt-1">by {post.author?.displayName}</span>
                           </div>
                         </div>
-                        <span className="text-gray-300 hidden md:inline">|</span>
-                        <div className="flex items-center gap-3 text-gray-500">
-                          <div className="flex items-center gap-1.5" title="Likes">
-                            <Heart size={16} fill={post.likes > 0 ? "currentColor" : "none"} className={post.likes > 0 ? "text-red-500" : "text-gray-400"} />
-                            <span className="text-xs font-medium">{post.likes || 0}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5" title="Comments">
-                            <MessageSquare size={16} className="text-gray-400" />
-                            <span className="text-xs font-medium">{post.commentsCount || 0}</span>
-                          </div>
-                        </div>
-                        <span className="text-gray-300 hidden md:inline">|</span>
-                        <Link href={`/posts/${post.slug || post._id}`} className="text-sm font-semibold text-gray-900 md:hover:text-indigo-600 transition-colors">
-                          Read Article
-                        </Link>
                       </div>
-                    </div>
-                  </article>
-                ))
+                    </article>
+                  );
+                })
               ) : (
                 <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
                   <p className="text-gray-400 font-medium">No posts found on this page.</p>

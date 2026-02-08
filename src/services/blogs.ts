@@ -15,6 +15,43 @@ export async function getMyBlog(token: string): Promise<Blog | null> {
   return data?.blog ?? null;
 }
 
+export async function updateBlogContent(
+  id: string,
+  data: Partial<CreateBlogDto>,
+  token: string
+): Promise<Blog> {
+  const res = await fetch(`${API_URL}/blogs/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to update blog');
+  return res.json();
+}
+
+export async function deleteBlog(id: string, token: string): Promise<void> {
+  const res = await fetch(`${API_URL}/blogs/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Failed to delete blog');
+}
+
+export async function getBlogBySlug(slug: string): Promise<Blog> {
+  const res = await fetch(`${API_URL}/blogs/post/${slug}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Blog post not found');
+  return res.json();
+}
+
+export async function getAllBlogs(): Promise<Blog[]> {
+  const res = await fetch(`${API_URL}/blogs`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch public blogs');
+  return res.json();
+}
+
 export async function createBlog(data: CreateBlogDto, token: string): Promise<Blog> {
   const res = await fetch(`${API_URL}/blogs`, {
     method: 'POST',
