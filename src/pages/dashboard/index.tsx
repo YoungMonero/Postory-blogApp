@@ -11,7 +11,6 @@ import EditorsPick from '@/src/component/EditorsPick';
 import Link from 'next/link';
 import { Heart, MessageSquare, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 
-// --- THUMBNAIL COMPONENT ---
 const PostThumbnail = ({ post, getImageUrl }: { post: any, getImageUrl: Function }) => {
   const imageUrl = getImageUrl(post.thumbnail);
   const isPlaceholder = imageUrl.includes('placeholder.com');
@@ -162,7 +161,6 @@ export default function DashboardPage() {
             <div className="space-y-16">
               {posts.length > 0 ? (
                 posts.map((post: any) => {
-                  console.log("Blog Data for post:", post.title, post.blog);
 
                   return (
                     <article key={post._id} className="flex flex-col md:flex-row gap-8 group border-b border-gray-100 pb-6 md:border-none md:pb-0">
@@ -215,17 +213,7 @@ export default function DashboardPage() {
     </div>
     
     <div className="flex flex-col">
-      {/* DEBUG: Check what's in post.blog */}
-      {console.log('DEBUG POST BLOG:', {
-        id: post._id,
-        blogExists: !!post.blog,
-        blogObject: post.blog,
-        blogKeys: post.blog ? Object.keys(post.blog) : 'no blog',
-        blogTitle: post.blog?.title,
-        blogName: post.blog?.name,
-        blogAuthorName: post.blog?.authorName,
-        blogSlug: post.blog?.slug
-      })}
+    
       
       <Link 
         href={`/blogs/${post.blog?.slug || 'no-slug-found'}`}
@@ -235,7 +223,7 @@ export default function DashboardPage() {
         {post.blog?.title || `Untitled Blog (Debug: ${post.blog ? 'has object' : 'NO BLOG OBJECT'})`}
       </Link>
       <span className="text-[10px] text-gray-500 font-medium mt-1">
-        by {post.blog?.authorName || post.blog?.name || `Anonymous (Debug: ${post.blog ? 'has object' : 'NO BLOG'})`}
+        by {post.blog?.authorName || post.blog?.name || `Anonymous`}
       </span>
     </div>
   </div>

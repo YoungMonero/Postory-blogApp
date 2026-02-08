@@ -5,9 +5,15 @@ import { getMyBlog, uploadBlogImage, updateMyBlogImages } from '@/src/services/b
 import { getUserPosts, updatePost, deletePost } from '@/src/services/post';
 import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
-import { Bell, Check, PlusCircle, Info, Search, Camera, Share2, Settings, Heart, Eye, MoreVertical, Edit, Trash2, Download, Eye as EyeIcon, EyeOff, Clock, Archive } from 'lucide-react';
-import { format, addDays } from 'date-fns';
+import { 
+  Bell, Check, PlusCircle, Camera, Share2, Settings, 
+  Heart, Eye, MoreVertical, Edit, Trash2, Download, 
+  Clock, Archive, Search, X 
+} from 'lucide-react';
+import { format } from 'date-fns';
 import PostActionsDropdown from '@/src/component/PostActionsDropdown';
+import { useDashboardSearch } from '@/src/component/search/DashboardSearchShadow';
+import { SearchSuggestionsDropdown } from '@/src/component/search/SearchSuggestionsDropdown';
 
 export default function BlogChannelView() {
   const router = useRouter();
@@ -15,6 +21,17 @@ export default function BlogChannelView() {
   const { token, user } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+
+  // SEARCH HOOK
+  const {
+    query,
+    setQuery,
+    results,
+    isLoading: searchLoading,
+    error: searchError,
+    isActive: searchActive,
+    clearSearch,
+  } = useDashboardSearch();
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
@@ -29,6 +46,26 @@ export default function BlogChannelView() {
     enabled: !!token,
     retry: false,
   });
+
+  // Search result handler
+  const handleSelectResult = (result: any) => {
+    console.log('Selected result:', result);
+    switch (result.type) {
+      case 'user':
+        router.push(`/profile/${result.data.username}`);
+        break;
+      case 'post':
+        router.push(`/posts/${result.data.slug || result.data.id}`);
+        break;
+      case 'tag':
+        router.push(`/tags/${result.text}`);
+        break;
+      case 'category':
+        router.push(`/category/${result.text}`);
+        break;
+    }
+    clearSearch();
+  };
 
   const { data: postsResponse, isLoading: postsLoading } = useQuery({
     queryKey: ['user-posts', token],
@@ -54,36 +91,28 @@ export default function BlogChannelView() {
     }
   };
 
-   // page slug.tsx
-const handleDeletePost = async (postId: string) => {
-  if (!token) return;
+  const handleDeletePost = async (postId: string) => {
+    if (!token) return;
 
-  // Fancy modal instead of alert
-  const confirmed = window.confirm(
-    'You are about to delete this post. It will be kept in trash for 30 days before permanent deletion.'
-  );
+    const confirmed = window.confirm(
+      'You are about to delete this post. It will be kept in trash for 30 days before permanent deletion.'
+    );
 
-  if (!confirmed) return;
+    if (!confirmed) return;
 
-  try {
-    // Call deletePost API
-    const res = await deletePost(postId, token);
+    try {
+      const res = await deletePost(postId, token);
 
-    if (res.success) {
-      // Refetch posts
-      queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
-      // Optional: toast or notification
-      console.log('Post moved to trash successfully.');
-    } else {
-      console.error('Failed:', res.message);
+      if (res.success) {
+        queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
+      } else {
+        console.error('Failed:', res.message);
+      }
+    } catch (err) {
+      console.error('Delete failed:', err);
     }
-  } catch (err) {
-    console.error('Delete failed:', err);
-  }
-};
+  };
 
-
-  // If you want actual deletion, use this function
   const handlePermanentDelete = async (postId: string, postTitle: string) => {
     if (!token) return;
     
@@ -159,11 +188,7 @@ const handleDeletePost = async (postId: string) => {
   };
 
   const handleEditPost = (postId: string, isDraft: boolean) => {
-    if (isDraft) {
-      router.push(`/dashboard/edit-post/${postId}`);
-    } else {
-      router.push(`/dashboard/edit-post/${postId}`);
-    }
+    router.push(`/dashboard/edit-post/${postId}`);
   };
 
   if (blogLoading || postsLoading || !token) {
@@ -175,7 +200,6 @@ const handleDeletePost = async (postId: string) => {
   }
 
   const posts = postsResponse?.data || [];
-  const currentUserId = user?.id;
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -197,15 +221,48 @@ const handleDeletePost = async (postId: string) => {
               </span>
             </span>
           </Link>
-          <div className="flex items-center gap-6">
-            <Search className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
+          
+          {/* SEARCH BAR */}
+          <div className="relative flex-1 max-w-md">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search users, posts, tags..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              {query && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
+                  <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                </button>
+              )}
+            </div>
+            
+            {/* FIXED: Added query prop */}
+            <SearchSuggestionsDropdown
+              visible={searchActive}
+              loading={searchLoading}
+              results={results}
+              error={searchError}
+              onSelect={handleSelectResult}
+              query={query} // ← THIS WAS MISSING
+            />
+          </div>
+          
+          <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-gray-200 border border-gray-100 overflow-hidden">
-              {/* User Profile Thumbnail could go here */}
+              {/* User Profile Thumbnail */}
             </div>
           </div>
         </div>
       </nav>
 
+      {/* ... rest of your component remains the same ... */}
       <div
         className="relative w-full h-[320px] md:h-[450px] bg-gray-100 overflow-hidden group cursor-pointer"
         onClick={() => coverInputRef.current?.click()}
@@ -298,7 +355,7 @@ const handleDeletePost = async (postId: string) => {
         <div className="py-12">
           {activeTab === 'home' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {posts.map((post) => {
+              {posts.map((post: any) => {
                 const isDraft = post.status?.toLowerCase() === 'draft';
                 const isArchived = post.status?.toLowerCase() === 'archived';
                 const destination = isDraft
@@ -312,7 +369,6 @@ const handleDeletePost = async (postId: string) => {
                     key={post._id}
                     className="group flex flex-col cursor-pointer relative"
                   >
-                    {/* Show loading overlay if deleting */}
                     {deletingPostId === post._id && (
                       <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-30 flex items-center justify-center rounded-[2rem]">
                         <div className="text-center">
@@ -322,7 +378,6 @@ const handleDeletePost = async (postId: string) => {
                       </div>
                     )}
 
-                    {/* Show archived badge */}
                     {isArchived && (
                       <div className="absolute top-4 left-4 z-10 bg-gray-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
                         <Archive size={10} /> Archived

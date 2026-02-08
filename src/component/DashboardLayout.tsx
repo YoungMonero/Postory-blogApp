@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
- import { useRouter } from 'next/router';
+import { useRouter } from 'next/router';
 import {
     Search,
     PenSquare,
@@ -9,13 +9,15 @@ import {
     Settings,
     ExternalLink,
     ChevronDown,
-    PlusCircle
+    PlusCircle,
+    X
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from './ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { getMyBlog } from '@/src/services/blogs';
-import { useSearchSuggestions } from '@/src/hooks/useSearchSuggestions';
+import { useDashboardSearch } from '@/src/component/search/DashboardSearchShadow';
+import { SearchSuggestionsDropdown } from '@/src/component/search/SearchSuggestionsDropdown';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -27,13 +29,23 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // SEARCH HOOK - Add this here
+    const {
+        query,
+        setQuery,
+        results,
+        isLoading: searchLoading,
+        error: searchError,
+        isActive: searchActive,
+        clearSearch,
+    } = useDashboardSearch();
+
     // Fetch blog info to decide between "View" or "Create"
     const { data: blog } = useQuery({
         queryKey: ['my-blog-status'],
         queryFn: () => getMyBlog(token as string),
         enabled: !!token,
     });
-
 
     useEffect(() => {
         if (!token) {
@@ -54,6 +66,26 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
         } else {
             router.push('/dashboard/create-blog');
         }
+    };
+
+    // Search result handler
+    const handleSelectResult = (result: any) => {
+        console.log('Selected result:', result);
+        switch (result.type) {
+            case 'user':
+                router.push(`${result.data.username}`);
+                break;
+            case 'post':
+                router.push(`/posts/${result.data.slug || result.data.id}`);
+                break;
+            case 'tag':
+                router.push(`/tags/${result.text}`);
+                break;
+            case 'category':
+                router.push(`/category/${result.text}`);
+                break;
+        }
+        clearSearch();
     };
 
     useEffect(() => {
@@ -85,28 +117,49 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                                     </span>
 
                                     {/* Brand accent dot */}
-                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
+                                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
                      bg-indigo-500 rounded-full 
                      opacity-0 group-hover:opacity-100 
                      transition-all duration-300 ease-out">
                                     </span>
                                 </span>
                             </span>
-
                         </Link>
 
+                        {/* UPDATED SEARCH BAR WITH FUNCTIONALITY */}
                         <div className="relative max-w-md w-full hidden md:block">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search size={18} className="text-gray-400" />
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Search size={18} className="text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Search Wordoo..."
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    className="block w-full pl-10 pr-10 py-2 border border-gray-100 rounded-full bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm transition-all"
+                                />
+                                {query && (
+                                    <button
+                                        onClick={clearSearch}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    >
+                                        <X size={16} className="text-gray-400 hover:text-gray-600" />
+                                    </button>
+                                )}
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Search Wordoo..."
-                                className="block w-full pl-10 pr-3 py-2 border border-gray-100 rounded-full bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm transition-all"
+                            
+                            {/* SEARCH SUGGESTIONS DROPDOWN */}
+                            <SearchSuggestionsDropdown
+                                visible={searchActive}
+                                loading={searchLoading}
+                                results={results}
+                                error={searchError}
+                                onSelect={handleSelectResult}
+                                query={query}
                             />
                         </div>
                     </div>
-
 
                     <div className="flex items-center gap-4">
                         <Button
