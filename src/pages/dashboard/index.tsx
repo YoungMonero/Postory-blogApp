@@ -194,38 +194,51 @@ export default function DashboardPage() {
                           </div>
 
                           <Link href={`/posts/${post.slug || post._id}`}>
-                            <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-indigo-600 transition-colors">
-                              {post.title}
-                            </h3>
-                          </Link>
+  <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-indigo-600 transition-colors">
+    {post.title}
+  </h3>
+</Link>
+                          
+<p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
+  {post.excerpt || post.content?.substring(0, 200) + '...'}
+</p>
+</div>
 
-                          <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-                            {post.excerpt || post.content?.substring(0, 200) + '...'}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
-                              {post.blog?.profileImage ? (
-                                <img src={post.blog.profileImage} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <span>{(post.blog?.authorName || "U").charAt(0)}</span>
-                              )}
-                            </div>
-                            
-                            <div className="flex flex-col">
-                              <Link 
-                               href={`/blogs/${post.blog?.slug || post.blog?._id}`}
-                                className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
-                              >
-                                {post.blog?.title || post.blog?.name || "Untitled Blog"}
-                              </Link>
-                              <span className="text-[10px] text-gray-500 font-medium mt-1">
-                                by {post.blog?.name || "Anonymous"}
-                              </span>
-                            </div>
-                          </div>
+<div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
+  <div className="flex items-center gap-2">
+    <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
+      {post.blog?.profileImage ? (
+        <img src={post.blog.profileImage} alt="" className="w-full h-full object-cover" />
+      ) : (
+        <span>{(post.blog?.authorName || "U").charAt(0)}</span>
+      )}
+    </div>
+    
+    <div className="flex flex-col">
+      {/* DEBUG: Check what's in post.blog */}
+      {console.log('DEBUG POST BLOG:', {
+        id: post._id,
+        blogExists: !!post.blog,
+        blogObject: post.blog,
+        blogKeys: post.blog ? Object.keys(post.blog) : 'no blog',
+        blogTitle: post.blog?.title,
+        blogName: post.blog?.name,
+        blogAuthorName: post.blog?.authorName,
+        blogSlug: post.blog?.slug
+      })}
+      
+      <Link 
+        href={`/blogs/${post.blog?.slug || 'no-slug-found'}`}
+        className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
+      >
+        {/* DEBUG VERSION */}
+        {post.blog?.title || `Untitled Blog (Debug: ${post.blog ? 'has object' : 'NO BLOG OBJECT'})`}
+      </Link>
+      <span className="text-[10px] text-gray-500 font-medium mt-1">
+        by {post.blog?.authorName || post.blog?.name || `Anonymous (Debug: ${post.blog ? 'has object' : 'NO BLOG'})`}
+      </span>
+    </div>
+  </div>
 
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1.5" title="Likes">

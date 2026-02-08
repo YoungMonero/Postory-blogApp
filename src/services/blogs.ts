@@ -15,64 +15,6 @@ export async function getMyBlog(token: string): Promise<Blog | null> {
   return data?.blog ?? null;
 }
 
-export async function updateBlogContent(
-  id: string,
-  data: Partial<CreateBlogDto>,
-  token: string
-): Promise<Blog> {
-  const res = await fetch(`${API_URL}/blogs/${id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('Failed to update blog');
-  return res.json();
-}
-
-export async function deleteBlog(id: string, token: string): Promise<void> {
-  const res = await fetch(`${API_URL}/blogs/${id}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error('Failed to delete blog');
-}
-
-export async function getBlogBySlug(slug: string): Promise<Blog> {
-  const res = await fetch(`${API_URL}/blogs/public/${slug}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Blog not found');
-  return res.json();
-}
-
-// Add this to src/services/blogs.ts
-
-/**
- * Fetches all public posts belonging to a specific blog slug
- */
-export async function getBlogPostsBySlug(slug: string): Promise<any[]> {
-  const res = await fetch(`${API_URL}/posts/public/blog/${slug}`, { 
-    cache: 'no-store' 
-  });
-
-  if (!res.ok) {
-    // If the blog has no posts, the backend might return 404. 
-    // We return an empty array so the frontend doesn't crash.
-    return [];
-  }
-
-  return res.json();
-}
-
-
-
-export async function getAllBlogs(): Promise<Blog[]> {
-  const res = await fetch(`${API_URL}/blogs`, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Failed to fetch public blogs');
-  return res.json();
-}
-
 export async function getPublicBlogBySlug(slug: string): Promise<Blog> {
   const res = await fetch(`${API_URL}/blogs/public/${slug}`, { 
     cache: 'no-store' 
@@ -82,7 +24,6 @@ export async function getPublicBlogBySlug(slug: string): Promise<Blog> {
     const error = await res.json().catch(() => ({}));
     throw new Error(error.message || 'Blog profile not found');
   }
-  
   return res.json();
 }
 
