@@ -41,14 +41,48 @@ export async function deleteBlog(id: string, token: string): Promise<void> {
 }
 
 export async function getBlogBySlug(slug: string): Promise<Blog> {
-  const res = await fetch(`${API_URL}/blogs/post/${slug}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Blog post not found');
+  const res = await fetch(`${API_URL}/blogs/public/${slug}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Blog not found');
   return res.json();
 }
+
+// Add this to src/services/blogs.ts
+
+/**
+ * Fetches all public posts belonging to a specific blog slug
+ */
+export async function getBlogPostsBySlug(slug: string): Promise<any[]> {
+  const res = await fetch(`${API_URL}/posts/public/blog/${slug}`, { 
+    cache: 'no-store' 
+  });
+
+  if (!res.ok) {
+    // If the blog has no posts, the backend might return 404. 
+    // We return an empty array so the frontend doesn't crash.
+    return [];
+  }
+
+  return res.json();
+}
+
+
 
 export async function getAllBlogs(): Promise<Blog[]> {
   const res = await fetch(`${API_URL}/blogs`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch public blogs');
+  return res.json();
+}
+
+export async function getPublicBlogBySlug(slug: string): Promise<Blog> {
+  const res = await fetch(`${API_URL}/blogs/public/${slug}`, { 
+    cache: 'no-store' 
+  });
+  
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || 'Blog profile not found');
+  }
+  
   return res.json();
 }
 

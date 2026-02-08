@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { Bell, Check, PlusCircle, Info, Search, Camera, Share2, Settings, Heart, Eye, MoreVertical, Edit, Trash2, Download, Eye as EyeIcon, EyeOff, Clock, Archive } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import PostActionsDropdown from '@/src/component/PostActionsDropdown';
-import { ToastProvider } from '@/src/component/ToastMessage';
 
 export default function BlogChannelView() {
   const router = useRouter();
