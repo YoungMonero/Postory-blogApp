@@ -18,7 +18,8 @@ export async function getMyBlog(token: string): Promise<Blog | null> {
 export async function getPublicBlogBySlug(slug: string): Promise<Blog> {
   const res = await fetch(`${API_URL}/blogs/public/${slug}`, { 
     cache: 'no-store' 
-  });
+    
+  });  
   
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
