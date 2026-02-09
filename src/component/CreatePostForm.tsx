@@ -135,7 +135,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
         setLastSaved(new Date());
         if (publishStatus === 'published') {
             alert("Success! Post is live.");
-            // Reset everything properly
+           
             setFormData({ 
               title: '', content: '', status: 'draft', thumbnail: '', 
               thumbnailPublicId: '', slug: '', tags: ['General'], 
@@ -155,7 +155,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ token, onSuccess }) => 
     }
   };
 
-  // Clean up ObjectURL on unmount
+
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -341,4 +341,4 @@ const ToolbarButton = ({ onClick, active, icon }: any) => (
   </button>
 );
 
-export default CreatePostForm;
+export default CreatePostForm;     
