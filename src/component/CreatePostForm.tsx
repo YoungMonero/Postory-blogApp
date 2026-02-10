@@ -40,7 +40,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     thumbnail: initialData?.thumbnail || '',
     thumbnailPublicId: initialData?.thumbnailPublicId || '',
     slug: initialData?.slug || '',
-    tags: initialData?.tags || ['General'],
+    categories: initialData?.categories || ['General'],
     excerpt: initialData?.excerpt || '',
     seoDescription: initialData?.seoDescription || '',
   });
@@ -90,7 +90,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     if (initialData && editor && isEditing) {
       setFormData({
         ...initialData,
-        tags: initialData.tags || ['General']
+        categories: initialData.categories || ['General']
       });
       editor.commands.setContent(initialData.content || '');
       if (initialData.updatedAt) setLastSaved(new Date(initialData.updatedAt));
@@ -185,7 +185,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         alert(isEditing ? "Post updated!" : "Post published!");
         
         if (!isEditing && publishStatus === 'published') {
-            setFormData({ title: '', content: '', status: 'draft', thumbnail: '', thumbnailPublicId: '', slug: '', tags: ['General'], excerpt: '', seoDescription: '' });
+            setFormData({ title: '', content: '', status: 'draft', thumbnail: '', thumbnailPublicId: '', slug: '', categories: ['General'], excerpt: '', seoDescription: '' });
             editor?.commands.setContent('');
         }
         
@@ -298,7 +298,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
                     <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Tag size={14} /> Category</label>
                     <div className="flex flex-wrap gap-2">
                         {['General', 'Coding', 'Technology', 'Lifestyle', 'Food', 'Travel', 'Sports'].map((cat) => (
-                            <button key={cat} type="button" onClick={() => setFormData(p => ({...p, tags: [cat]}))} className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${formData.tags?.includes(cat) ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>{cat}</button>
+                            <button key={cat} type="button" onClick={() => setFormData(p => ({...p, categories: [cat]}))} className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${formData.categories?.includes(cat) ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>{cat}</button>
                         ))}
                     </div>
                 </div>

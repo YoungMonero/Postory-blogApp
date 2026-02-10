@@ -173,7 +173,7 @@ export default function DashboardPage() {
                       <div className="flex-1 py-1 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap mb-4">
-                            {post.tags?.slice(0, 3).map((tag: string, index: number) => (
+                            {post.categories?.slice(0, 3).map((tag: string, index: number) => (
                               <span
                                 key={index}
                                 className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(tag)}`}
