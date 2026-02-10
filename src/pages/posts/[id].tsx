@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,  useRef  } from 'react';
 import { useRouter } from 'next/router';
 import { getPublicPostDetail } from '@/src/services/post';
 import { Post } from '@/src/types/posts';
@@ -6,6 +6,7 @@ import CommentSection from '@/src/component/CommentSection';
 import { commentService } from '@/src/services/comment';
 import { useAuth } from '@/src/hooks/useAuth';
 import { Heart, MessageSquare, Share2, ArrowLeft } from 'lucide-react';
+import { api } from '@/src/services/post'
 
 export default function PostDetailPage() {
   const router = useRouter();
@@ -18,21 +19,43 @@ export default function PostDetailPage() {
   const [likesCount, setLikesCount] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
+  const hasIncrementedViews = useRef(false);
   const handleBack = () => router.push('/dashboard');
 
   useEffect(() => {
     if (!router.isReady || !id) return;
-
+  
     const fetchPost = async () => {
       try {
         setLoading(true);
+        
         const response = await getPublicPostDetail(id as string);
-
+  
         if (response?.data) {
           const postData = response.data;
+          const postId = postData._id || postData.id;
+          
+
+          if (!hasIncrementedViews.current && postId) {
+            try {
+              const config = token ? { 
+                headers: { Authorization: `Bearer ${token}` } 
+              } : {};
+
+              await api.post(`/posts/${postId}/view`, {}, config);
+              hasIncrementedViews.current = true;
+            } catch (viewError: any) {
+              if (viewError.response?.status === 403) {
+                console.warn('View increment requires authentication');
+               
+              } else {
+            } console.warn('Could not increment view count:', viewError);
+          }
+        }
+          
           setPost(postData);
           setLikesCount(postData.likes || 0);
-
+  
           if (userName && postData.likedBy) {
             const hasLiked = postData.likedBy.includes(userName);
             setIsLiked(hasLiked);
@@ -44,7 +67,7 @@ export default function PostDetailPage() {
         setLoading(false);
       }
     };
-
+  
     fetchPost();
   }, [id, router.isReady, userName]);
 
@@ -76,7 +99,6 @@ export default function PostDetailPage() {
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
-      {/* FLOATING BACK BUTTON */}
       <nav className="fixed top-8 left-8 z-50 hidden lg:block">
         <button
           onClick={handleBack}
@@ -90,7 +112,6 @@ export default function PostDetailPage() {
         </button>
       </nav>
 
-      {/* MOBILE BACK BUTTON */}
       <button
         onClick={handleBack}
         className="lg:hidden flex items-center gap-2 text-gray-400 mb-8 font-bold text-xs uppercase tracking-widest"
@@ -98,7 +119,6 @@ export default function PostDetailPage() {
         <ArrowLeft size={14} /> Back to Dashboard
       </button>
 
-      {/* POST HEADER */}
       <header className="mb-10">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
           {post.title}
@@ -123,7 +143,6 @@ export default function PostDetailPage() {
         </div>
       </header>
 
-      {/* THUMBNAIL */}
       {post.thumbnail && (
         <div className="mb-12">
           <img
@@ -134,13 +153,11 @@ export default function PostDetailPage() {
         </div>
       )}
 
-      {/* ARTICLE CONTENT */}
       <article
         className="prose prose-lg prose-indigo max-w-none text-gray-800 leading-relaxed font-serif"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
 
-      {/* INTERACTION BAR */}
       <div className="sticky bottom-8 left-0 right-0 flex justify-center z-50 mt-12">
         <div className="flex items-center gap-6 bg-white/80 backdrop-blur-md border border-gray-200 px-6 py-3 rounded-full shadow-xl shadow-gray-200/50">
           <button
@@ -180,7 +197,6 @@ export default function PostDetailPage() {
       </div>
 
       <div id="discussion" className="mt-20">
-        {/* ✅ Post ID works regardless of backend */}
         <CommentSection postId={post._id || post.id} token={token} />
       </div>
     </main>

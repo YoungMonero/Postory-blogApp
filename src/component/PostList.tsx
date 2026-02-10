@@ -5,7 +5,6 @@ import { usePosts } from '@/src/hooks/usePosts';
 import { Post } from '@/src/types/posts';
 import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
-// Added icons for the card changes
 import { Heart, MessageCircle, Eye } from 'lucide-react';
 
 interface PostCardProps {

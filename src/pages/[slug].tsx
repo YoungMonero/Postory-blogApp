@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useRef } from 'react';
 import { getMyBlog, uploadBlogImage, updateMyBlogImages } from '@/src/services/blogs';
-import { getUserPosts, updatePost, deletePost } from '@/src/services/post';
+import { getUserPosts, updatePost, deletePost, getPostsWithViews, getPostViews } from '@/src/services/post';
 import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
 import { 
@@ -73,6 +73,7 @@ export default function BlogChannelView() {
     retry: false,
   });
 
+
   const handleImageUpload = async (file: File, type: 'coverImage' | 'profileImage') => {
     if (!token) return;
     setUploading(true);
@@ -111,6 +112,7 @@ export default function BlogChannelView() {
       console.error('Delete failed:', err);
     }
   };
+
 
   const handlePermanentDelete = async (postId: string, postTitle: string) => {
     if (!token) return;
@@ -188,7 +190,8 @@ export default function BlogChannelView() {
 
   const handleEditPost = (postId: string, isDraft: boolean) => {
     router.push(`/dashboard/edit-post/${postId}`);
-  }; // come back here when the edit page is fine to route this in the right path
+  };
+
 
   if (blogLoading || postsLoading || !token) {
     return (
@@ -198,7 +201,7 @@ export default function BlogChannelView() {
     );
   }
 
-  const posts = postsResponse?.data || [];
+  const posts = postsResponse?.data || []; 
 
   return (
     <div className="min-h-screen bg-white font-sans">

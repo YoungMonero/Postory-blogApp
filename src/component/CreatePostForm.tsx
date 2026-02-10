@@ -26,7 +26,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
   initialData, 
   isEditing = false 
 }) => {
-  // Update: use 'updateExistingPost' to match your updated hook
+
   const { createNewPost, updateExistingPost, loading, error: backendError } = usePosts();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -167,7 +167,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         status: publishStatus, 
         content: latestContent, 
         thumbnail: finalThumbnail, 
-        thumbnailPublicId: finalPublicId 
+        thumbnailPublicId: finalPublicId,
       };
 
       let result;
@@ -333,7 +333,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
 
             <div className="bg-indigo-50 rounded-xl border border-indigo-100 p-5 text-center">
               <button type="button" className="w-full bg-white text-indigo-600 hover:bg-indigo-50 border-indigo-200 border py-2 px-4 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
-                <Eye size={16} /> Preview Post
+                <Eye size={18} /> Preview Post
               </button>
             </div>
 

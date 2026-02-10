@@ -112,8 +112,8 @@ export default function DashboardPage() {
     return thumbnail.startsWith('/') ? `${apiUrl}${thumbnail}` : `${apiUrl}/${thumbnail}`;
   };
 
-  const getCategoryColor = (tag: string) => {
-    const t = tag?.toLowerCase();
+  const getCategoryColor = (categories: string) => {
+    const t = categories?.toLowerCase();
     if (t === 'coding') return 'bg-purple-100 text-purple-700';
     if (t === 'style') return 'bg-blue-100 text-blue-700';
     if (t === 'travel') return 'bg-rose-100 text-rose-700';
@@ -173,12 +173,12 @@ export default function DashboardPage() {
                       <div className="flex-1 py-1 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap mb-4">
-                            {post.categories?.slice(0, 3).map((tag: string, index: number) => (
+                            {post.categories?.slice(0, 3).map((categories: string, index: number) => (
                               <span
                                 key={index}
-                                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(tag)}`}
+                                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(categories)}`}
                               >
-                                {tag}
+                                {categories}
                               </span>
                             ))}
                             <span className="text-xs text-gray-500">
