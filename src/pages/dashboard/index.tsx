@@ -121,7 +121,6 @@ export default function DashboardPage() {
     return 'bg-gray-100 text-gray-700';
   };
 
-  // Show full-screen loader whenever we are fetching data (initial or page change)
   if (postsLoading || isFetching) {
     return (
       <DashboardLayout>
