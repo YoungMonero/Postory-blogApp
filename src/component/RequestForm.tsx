@@ -81,7 +81,7 @@ const ForgotPasswordRequest = () => {
               required
               value={email} // ✅ ADDED value binding
               onChange={handleInputChange} // ✅ FIXED: use handleInputChange
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-none transition-all text-gray-900"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:bg-white outline-hidden transition-all text-gray-900"
             />
           </div>
 
