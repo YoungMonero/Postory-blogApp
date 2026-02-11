@@ -106,9 +106,7 @@ export default function PostActionsDropdown({
           {/* Delete Option (with warning style) */}
           <button
             onClick={() => {
-              if (window.confirm('Are you sure you want to delete this post?')) {
-                onDelete();
-              }
+              onDelete();
               setIsOpen(false);
             }}
             className="w-full flex items-center px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
