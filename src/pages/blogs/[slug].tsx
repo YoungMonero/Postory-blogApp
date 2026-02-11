@@ -47,13 +47,15 @@ export default function BlogPage({ blog }: Props) {
       )}
 
       {/* Content */}
+import DOMPurify from "dompurify";
+
       <article
         style={{
           fontSize: "1.1rem",
           lineHeight: 1.7,
           color: "#333",
         }}
-        dangerouslySetInnerHTML={{ __html: blog.content || '' }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content || '') }}
       />
     </main>
   );

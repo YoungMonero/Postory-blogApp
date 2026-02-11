@@ -197,7 +197,7 @@ export default function DashboardPage() {
 </Link>
                           
 <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-  {post.excerpt || post.content?.substring(0, 200) + '...'}
+  {post.excerpt || (post.content ? post.content.substring(0, 200) + '...' : '')}
 </p>
 </div>
 
