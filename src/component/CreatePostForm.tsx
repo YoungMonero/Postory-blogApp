@@ -255,9 +255,12 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         localStorage.removeItem('wordoo_draft_content');
         localStorage.removeItem('wordoo_draft_thumbnail');
         
-        // ✅ FIXED: Clear IndexedDB on successful submit
-        await draftStorage.removeItem('current_thumbnail');
-        await draftStorage.removeItem('thumbnail_timestamp');
+        try {
+                    await draftStorage.removeItem('current_thumbnail');
+                    await draftStorage.removeItem('thumbnail_timestamp');
+                  } catch (cleanupErr) {
+                    console.error('Failed to clear draft storage:', cleanupErr);
+             }
         
         alert(isEditing ? "Post updated!" : "Post published!");
         
