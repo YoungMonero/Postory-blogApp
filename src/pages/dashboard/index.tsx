@@ -218,8 +218,7 @@ export default function DashboardPage() {
         href={`/blogs/${post.blog?.slug || 'no-slug-found'}`}
         className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
       >
-        {/* DEBUG VERSION */}
-        {post.blog?.title || `Untitled Blog (Debug: ${post.blog ? 'has object' : 'NO BLOG OBJECT'})`}
+        {post.blog?.title || 'Untitled Blog'}
       </Link>
       <span className="text-[10px] text-gray-500 font-medium mt-1">
         by {post.blog?.authorName || post.blog?.name || `Anonymous`}

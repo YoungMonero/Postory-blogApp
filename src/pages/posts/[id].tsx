@@ -69,7 +69,7 @@ export default function PostDetailPage() {
     };
   
     fetchPost();
-  }, [id, router.isReady, userName]);
+  }, [id, router.isReady, userName, token]);
 
   const handleLike = async (e: React.MouseEvent) => {
     const targetId = post?._id || post?.id;

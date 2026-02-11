@@ -52,14 +52,21 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
   });
 
   // ✅ FIXED: Moved useCallback to top level
-  const saveDraft = useCallback(
-    debounce((content: string) => {
-      if (!isEditing) {
-        localStorage.setItem('wordoo_draft_content', content);
-      }
-    }, 1000),
+  const saveDraft = useMemo(
+    () =>
+      debounce((content: string) => {
+        if (!isEditing) {
+          localStorage.setItem('wordoo_draft_content', content);
+        }
+      }, 1000),
     [isEditing]
   );
+
+  useEffect(() => {
+    return () => {
+      saveDraft.cancel();
+    };
+  }, [saveDraft]);
 
   const editor = useEditor({
     extensions: [

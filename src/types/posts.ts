@@ -8,7 +8,7 @@ export interface Post {
   thumbnail?: string;
   thumbnailPublicId?: string;
   excerpt?: string;
-  tags?: string[];
+  categories?: string[];
   seoDescription?: string;
   readingTime?: number;
   likes: number;             

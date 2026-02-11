@@ -145,7 +145,7 @@ export default function BlogChannelView() {
       alert(`Post ${newStatus === 'published' ? 'published' : 'moved to drafts'}\n\n"${postTitle}" is now ${newStatus}.`);
     } catch (error) {
       console.error('Failed to update post status:', error);
-      alert(' Failed to update post status. Please try again.');
+      alert('Failed to update post status. Please try again.');
     }
   };
 

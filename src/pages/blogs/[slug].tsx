@@ -53,9 +53,8 @@ export default function BlogPage({ blog }: Props) {
           lineHeight: 1.7,
           color: "#333",
         }}
-      >
-        {blog.content}
-      </article>
+        dangerouslySetInnerHTML={{ __html: blog.content || '' }}
+      />
     </main>
   );
 }
