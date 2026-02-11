@@ -139,19 +139,17 @@ const ResetPasswordForm = () => {
             />
           </div>
 
-          {/* Error message display */}
+          
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
 
-          {/* ✅ FIXED: outline-none → outline-hidden on button */}
           <button
             type="submit"
             disabled={loading}
             className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 transition-all flex items-center justify-center gap-2 outline-hidden"
-            // ✅ outline-none → outline-hidden ⬆️
           >
             {loading ? <Loader2 className="animate-spin" /> : 'Reset password'}
           </button>
