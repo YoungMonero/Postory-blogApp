@@ -1,5 +1,6 @@
 import { GetServerSideProps } from "next";
 import { getPublicBlogBySlug } from "@/src/services/blogs";
+import DOMPurify from "dompurify";
 
 type Blog = {
   title: string;
@@ -47,8 +48,6 @@ export default function BlogPage({ blog }: Props) {
       )}
 
       {/* Content */}
-import DOMPurify from "dompurify";
-
       <article
         style={{
           fontSize: "1.1rem",
