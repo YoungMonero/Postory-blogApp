@@ -48,7 +48,6 @@ export default function BlogChannelView() {
 
   // Search result handler
   const handleSelectResult = (result: any) => {
-    console.log('Selected result:', result);
     switch (result.type) {
       case 'user':
         router.push(`/profile/${result.data.username}`);
