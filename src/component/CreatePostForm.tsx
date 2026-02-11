@@ -1,17 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import { CreatePostDto, Post } from '@/src/types/posts'; 
+import { CreatePostDto } from '@/src/types/posts'; 
 import { usePosts } from '@/src/hooks/usePosts';
 import { generateSlug } from '@/src/services/post';
 import Link from 'next/link';
 import { 
   ArrowLeft, Globe, Settings, Image as ImageIcon, 
   Tag, CheckCircle, Bold, Italic, 
-  List, ListOrdered, Heading1, Heading2, Quote, Save, Eye,
-  Type, Minus, RotateCcw, RotateCw, Code, AlertCircle
+  List, ListOrdered, Heading1, Heading2, Quote, 
+  Type, Minus, RotateCcw, RotateCw, Code, AlertCircle, Eye
 } from 'lucide-react';
+import localforage from 'localforage';
+import { debounce } from 'lodash';
 
 interface CreatePostFormProps {
   token: string | null;
@@ -20,13 +22,17 @@ interface CreatePostFormProps {
   isEditing?: boolean; 
 }
 
+const draftStorage = localforage.createInstance({
+  name: 'WordooDrafts',
+  storeName: 'post_drafts'
+});
+
 const CreatePostForm: React.FC<CreatePostFormProps> = ({ 
   token, 
   onSuccess, 
   initialData, 
   isEditing = false 
 }) => {
-  // Update: use 'updateExistingPost' to match your updated hook
   const { createNewPost, updateExistingPost, loading, error: backendError } = usePosts();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -40,10 +46,27 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     thumbnail: initialData?.thumbnail || '',
     thumbnailPublicId: initialData?.thumbnailPublicId || '',
     slug: initialData?.slug || '',
-    tags: initialData?.tags || ['General'],
+    categories: initialData?.categories || ['General'],
     excerpt: initialData?.excerpt || '',
     seoDescription: initialData?.seoDescription || '',
   });
+
+  // ✅ FIXED: Moved useCallback to top level
+  const saveDraft = useMemo(
+    () =>
+      debounce((content: string) => {
+        if (!isEditing) {
+          localStorage.setItem('wordoo_draft_content', content);
+        }
+      }, 1000),
+    [isEditing]
+  );
+
+  useEffect(() => {
+    return () => {
+      saveDraft.cancel();
+    };
+  }, [saveDraft]);
 
   const editor = useEditor({
     extensions: [
@@ -63,6 +86,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         class: 'tiptap-content prose prose-lg max-w-none focus:outline-none min-h-[500px] px-8 py-8 text-gray-700',
       },
     },
+    // ✅ FIXED: Proper onUpdate with debounced save
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       const plainText = editor.getText().trim();
@@ -80,9 +104,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         };
       });
 
-      if (!isEditing) {
-        localStorage.setItem('wordoo_draft_content', html);
-      }
+      // ✅ Use debounced save
+      saveDraft(html);
     },
   }); 
 
@@ -90,13 +113,36 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     if (initialData && editor && isEditing) {
       setFormData({
         ...initialData,
-        tags: initialData.tags || ['General']
+        categories: initialData.categories || ['General']
       });
       editor.commands.setContent(initialData.content || '');
       if (initialData.updatedAt) setLastSaved(new Date(initialData.updatedAt));
     }
   }, [initialData, editor, isEditing]);
 
+  // ✅ FIXED: Load thumbnail from IndexedDB
+  useEffect(() => {
+    if (!editor || isEditing) return;
+    
+    const loadDraftFromIndexedDB = async () => {
+      try {
+        const savedThumbnail = await draftStorage.getItem<string>('current_thumbnail');
+        if (savedThumbnail) {
+          setFormData(prev => ({ 
+            ...prev, 
+            thumbnail: savedThumbnail 
+          }));
+          setPreviewUrl(savedThumbnail);
+        }
+      } catch (error) {
+        console.error('Failed to load thumbnail from IndexedDB:', error);
+      }
+    };
+    
+    loadDraftFromIndexedDB();
+  }, [editor, isEditing]);
+
+  // Load from localStorage
   useEffect(() => {
     if (!editor || isEditing) return;
     const savedTitle = localStorage.getItem('wordoo_draft_title');
@@ -115,7 +161,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     }
   }, [editor, isEditing]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { 
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (name === 'title') {
@@ -124,21 +170,37 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     }
   };
 
+  //
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      
+      reader.onloadend = async () => {
         const base64String = reader.result as string;
         setPreviewUrl(base64String);
         setFormData(prev => ({ ...prev, thumbnail: base64String }));
-        if (!isEditing) localStorage.setItem('wordoo_draft_thumbnail', base64String);
+        if (!isEditing) {
+          try {
+            await draftStorage.setItem('current_thumbnail', base64String);
+            await draftStorage.setItem('thumbnail_timestamp', Date.now());
+          } catch (error) {
+            console.error('Failed to save thumbnail to IndexedDB:', error);
+          }
+        }
       };
+      
+      // ✅ ADD THIS ERROR HANDLER
+      reader.onerror = () => {
+        alert('Failed to read the selected file. Please try again.');
+        console.error('FileReader error:', reader.error);
+      };
+      
       reader.readAsDataURL(selectedFile);
       setFile(selectedFile);
     }
   };
-
+//
   const handleSubmit = async (publishStatus: 'draft' | 'published') => {
     if (!token) return alert('Please log in');
     const latestContent = editor?.getHTML() || "";
@@ -157,7 +219,17 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
           headers: { 'Authorization': `Bearer ${token}` },
           body: fileFormData,
         });
+        
+        if (!uploadRes.ok) {
+          const errorText = await uploadRes.text();
+          throw new Error(`Thumbnail upload failed (${uploadRes.status}): ${errorText}`);
+        }
+        
         const uploadData = await uploadRes.json();
+
+        if (!uploadData?.data?.url || !uploadData?.data?.publicId) {
+          throw new Error('Invalid response from thumbnail upload');
+        }
         finalThumbnail = uploadData.data.url;
         finalPublicId = uploadData.data.publicId;
       }
@@ -167,35 +239,52 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         status: publishStatus, 
         content: latestContent, 
         thumbnail: finalThumbnail, 
-        thumbnailPublicId: finalPublicId 
+        thumbnailPublicId: finalPublicId,
       };
 
       let result;
       if (isEditing && initialData?._id) {
-        // Update: call 'updateExistingPost'
         result = await updateExistingPost(initialData._id, payload, token);
       } else {
         result = await createNewPost(payload, token);
       }
 
       if (result) {
+        // Clear localStorage
         localStorage.removeItem('wordoo_draft_title');
         localStorage.removeItem('wordoo_draft_content');
         localStorage.removeItem('wordoo_draft_thumbnail');
         
+        try {
+                    await draftStorage.removeItem('current_thumbnail');
+                    await draftStorage.removeItem('thumbnail_timestamp');
+                  } catch (cleanupErr) {
+                    console.error('Failed to clear draft storage:', cleanupErr);
+             }
+        
         alert(isEditing ? "Post updated!" : "Post published!");
         
         if (!isEditing && publishStatus === 'published') {
-            setFormData({ title: '', content: '', status: 'draft', thumbnail: '', thumbnailPublicId: '', slug: '', tags: ['General'], excerpt: '', seoDescription: '' });
-            editor?.commands.setContent('');
+          setFormData({ 
+            title: '', 
+            content: '', 
+            status: 'draft', 
+            thumbnail: '', 
+            thumbnailPublicId: '', 
+            slug: '', 
+            categories: ['General'], 
+            excerpt: '', 
+            seoDescription: '' 
+          });
+          editor?.commands.setContent('');
         }
         
         if (onSuccess) onSuccess();
       }
     } catch (err: any) { 
-        alert(err.message || "Error processing request"); 
+      alert(err.message || "Error processing request"); 
     } finally { 
-        setUploading(false); 
+      setUploading(false); 
     }
   };
 
@@ -211,6 +300,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         .tiptap-content code { background: #f3f4f6 !important; padding: 0.2rem 0.4rem !important; border-radius: 0.25rem !important; font-family: monospace !important; }
       `}</style>
 
+      {/* Rest of JSX remains exactly the same */}
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
           <Link href="/dashboard" className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
@@ -218,11 +308,11 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
           </Link>
           <div className="h-6 w-px bg-gray-200 hidden sm:block"></div>
           <div>
-             <h1 className="text-sm font-bold text-gray-900 leading-none">{formData.title || (isEditing ? 'Editing Post' : 'New Draft')}</h1>
-             <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                {lastSaved ? `${isEditing ? 'Last updated' : 'Saved'} ${lastSaved.toLocaleTimeString()}` : 'Unsaved changes'}
-                {(loading || uploading) && <span className="animate-pulse text-indigo-500 ml-1 font-medium italic">Saving...</span>}
-             </p>
+            <h1 className="text-sm font-bold text-gray-900 leading-none">{formData.title || (isEditing ? 'Editing Post' : 'New Draft')}</h1>
+            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+              {lastSaved ? `${isEditing ? 'Last updated' : 'Saved'} ${lastSaved.toLocaleTimeString()}` : 'Unsaved changes'}
+              {(loading || uploading) && <span className="animate-pulse text-indigo-500 ml-1 font-medium italic">Saving...</span>}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -238,103 +328,135 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
       <div className="flex-1 max-w-[1600px] mx-auto w-full p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
           <div className="lg:col-span-8 flex flex-col gap-6">
-             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[calc(100vh-200px)]">
-                <div className="relative group bg-gray-50 border-b border-gray-100 min-h-[60px]">
-                    {formData.thumbnail ? (
-                        <div className="relative aspect-[21/9] w-full overflow-hidden">
-                            <img src={formData.thumbnail} className="w-full h-full object-cover" alt="Cover" />
-                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <label className="bg-white text-gray-900 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer">
-                                  Change Cover
-                                  <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                                </label>
-                            </div>
-                        </div>
-                    ) : (
-                       <div className="p-6 flex justify-center w-full">
-                          <label className="w-full max-w-2xl py-12 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-indigo-100 bg-indigo-50/30 rounded-xl hover:bg-indigo-50 hover:border-indigo-300 transition-all cursor-pointer group/cover">
-                             <div className="p-3 bg-white rounded-full shadow-sm group-hover/cover:scale-110 transition-transform">
-                                <ImageIcon size={28} className="text-indigo-600 animate-pulse" />
-                             </div>
-                             <div className="text-center">
-                                <p className="text-sm font-bold text-indigo-900">Add a beautiful cover image</p>
-                                <p className="text-xs text-indigo-400 mt-1 font-medium">Click to browse your files</p>
-                             </div>
-                             <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                          </label>
-                       </div>
-                    )}
-                </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-h-[calc(100vh-200px)]">
+              <div className="relative group bg-gray-50 border-b border-gray-100 min-h-[60px]">
+                {formData.thumbnail ? (
+                  <div className="relative aspect-[21/9] w-full overflow-hidden">
+                    <img src={formData.thumbnail} className="w-full h-full object-cover" alt="Cover" />
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <label className="bg-white text-gray-900 px-4 py-2 rounded-lg text-xs font-bold cursor-pointer">
+                        Change Cover
+                        <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                      </label>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 flex justify-center w-full">
+                    <label className="w-full max-w-2xl py-12 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-indigo-100 bg-indigo-50/30 rounded-xl hover:bg-indigo-50 hover:border-indigo-300 transition-all cursor-pointer group/cover">
+                      <div className="p-3 bg-white rounded-full shadow-sm group-hover/cover:scale-110 transition-transform">
+                        <ImageIcon size={28} className="text-indigo-600 animate-pulse" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-bold text-indigo-900">Add a beautiful cover image</p>
+                        <p className="text-xs text-indigo-400 mt-1 font-medium">Click to browse your files</p>
+                      </div>
+                      <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                    </label>
+                  </div>
+                )}
+              </div>
 
-                <div className="px-8 pt-8 pb-2">
-                    <input type="text" name="title" value={formData.title} onChange={handleInputChange} placeholder="Post Title" className="w-full text-4xl md:text-5xl font-extrabold text-gray-900 placeholder-gray-200 border-none p-0 focus:ring-0 bg-transparent leading-tight tracking-tight" />
-                </div>
+              <div className="px-8 pt-8 pb-2">
+                <input 
+                  type="text" 
+                  name="title" 
+                  value={formData.title} 
+                  onChange={handleInputChange} 
+                  placeholder="Post Title" 
+                  className="w-full text-4xl md:text-5xl font-extrabold text-gray-900 placeholder-gray-200 border-none p-0 focus:ring-0 bg-transparent leading-tight tracking-tight" 
+                />
+              </div>
 
-                <div className="flex items-center gap-1 border-y border-gray-100 px-6 py-2 bg-white sticky top-0 z-20 flex-wrap">
-                    <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} icon={<RotateCcw size={16}/>} />
-                    <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} icon={<RotateCw size={16}/>} />
-                    <div className="w-px h-6 bg-gray-200 mx-1" />
-                    <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} active={editor?.isActive('heading', { level: 1 })} icon={<Heading1 size={18}/>} />
-                    <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} active={editor?.isActive('heading', { level: 2 })} icon={<Heading2 size={18}/>} />
-                    <ToolbarButton onClick={() => editor?.chain().focus().setParagraph().run()} active={editor?.isActive('paragraph')} icon={<Type size={18}/>} />
-                    <div className="w-px h-6 bg-gray-200 mx-1" />
-                    <ToolbarButton onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive('bold')} icon={<Bold size={18}/>} />
-                    <ToolbarButton onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive('italic')} icon={<Italic size={18}/>} />
-                    <ToolbarButton onClick={() => editor?.chain().focus().toggleCode().run()} active={editor?.isActive('code')} icon={<Code size={18}/>} />
-                    <div className="w-px h-6 bg-gray-200 mx-1" />
-                    <ToolbarButton onClick={() => editor?.chain().focus().toggleBulletList().run()} active={editor?.isActive('bulletList')} icon={<List size={18}/>} />
-                    <ToolbarButton onClick={() => editor?.chain().focus().toggleOrderedList().run()} active={editor?.isActive('orderedList')} icon={<ListOrdered size={18}/>} />
-                    <ToolbarButton onClick={() => editor?.chain().focus().toggleBlockquote().run()} active={editor?.isActive('blockquote')} icon={<Quote size={18}/>} />
-                    <ToolbarButton onClick={() => editor?.chain().focus().setHorizontalRule().run()} icon={<Minus size={18}/>} />
-                </div>
+              <div className="flex items-center gap-1 border-y border-gray-100 px-6 py-2 bg-white sticky top-0 z-20 flex-wrap">
+                <ToolbarButton onClick={() => editor?.chain().focus().undo().run()} icon={<RotateCcw size={16}/>} />
+                <ToolbarButton onClick={() => editor?.chain().focus().redo().run()} icon={<RotateCw size={16}/>} />
+                <div className="w-px h-6 bg-gray-200 mx-1" />
+                <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} active={editor?.isActive('heading', { level: 1 })} icon={<Heading1 size={18}/>} />
+                <ToolbarButton onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} active={editor?.isActive('heading', { level: 2 })} icon={<Heading2 size={18}/>} />
+                <ToolbarButton onClick={() => editor?.chain().focus().setParagraph().run()} active={editor?.isActive('paragraph')} icon={<Type size={18}/>} />
+                <div className="w-px h-6 bg-gray-200 mx-1" />
+                <ToolbarButton onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive('bold')} icon={<Bold size={18}/>} />
+                <ToolbarButton onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive('italic')} icon={<Italic size={18}/>} />
+                <ToolbarButton onClick={() => editor?.chain().focus().toggleCode().run()} active={editor?.isActive('code')} icon={<Code size={18}/>} />
+                <div className="w-px h-6 bg-gray-200 mx-1" />
+                <ToolbarButton onClick={() => editor?.chain().focus().toggleBulletList().run()} active={editor?.isActive('bulletList')} icon={<List size={18}/>} />
+                <ToolbarButton onClick={() => editor?.chain().focus().toggleOrderedList().run()} active={editor?.isActive('orderedList')} icon={<ListOrdered size={18}/>} />
+                <ToolbarButton onClick={() => editor?.chain().focus().toggleBlockquote().run()} active={editor?.isActive('blockquote')} icon={<Quote size={18}/>} />
+                <ToolbarButton onClick={() => editor?.chain().focus().setHorizontalRule().run()} icon={<Minus size={18}/>} />
+              </div>
 
-                <EditorContent editor={editor} className="flex-1 cursor-text" />
-             </div>
+              <EditorContent editor={editor} className="flex-1 cursor-text" />
+            </div>
           </div>
 
           <aside className="lg:col-span-4 space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 space-y-6">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2 pb-3 border-b border-gray-100"><Settings size={18} /> Post Settings</h3>
-                <div className="space-y-3">
-                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Tag size={14} /> Category</label>
-                    <div className="flex flex-wrap gap-2">
-                        {['General', 'Coding', 'Technology', 'Lifestyle', 'Food', 'Travel', 'Sports'].map((cat) => (
-                            <button key={cat} type="button" onClick={() => setFormData(p => ({...p, tags: [cat]}))} className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${formData.tags?.includes(cat) ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'}`}>{cat}</button>
-                        ))}
-                    </div>
+              <h3 className="font-bold text-gray-900 flex items-center gap-2 pb-3 border-b border-gray-100">
+                <Settings size={18} /> Post Settings
+              </h3>
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Tag size={14} /> Category
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {['General', 'Coding', 'Technology', 'Lifestyle', 'Food', 'Travel', 'Sports'].map((cat) => (
+                    <button 
+                      key={cat} 
+                      type="button" 
+                      onClick={() => setFormData(p => ({...p, categories: [cat]}))} 
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                        formData.categories?.includes(cat) 
+                          ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
+                          : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
-                
-                <div className="space-y-3">
-                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <Globe size={14} /> URL Slug
-                    </label>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
-                        <span className="text-gray-400 text-xs mr-1">/blog/</span>
-                        <input name="slug" value={formData.slug} onChange={handleInputChange} className="bg-transparent border-none p-0 text-sm text-gray-600 focus:ring-0 w-full font-medium" />
-                    </div>
+              </div>
+              
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Globe size={14} /> URL Slug
+                </label>
+                <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+                  <span className="text-gray-400 text-xs mr-1">/blog/</span>
+                  <input 
+                    name="slug" 
+                    value={formData.slug} 
+                    onChange={handleInputChange} 
+                    className="bg-transparent border-none p-0 text-sm text-gray-600 focus:ring-0 w-full font-medium" 
+                  />
                 </div>
+              </div>
 
-                <div className="space-y-3">
-                    <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        <CheckCircle size={14} /> SEO Snippet
-                    </label>
-                    <textarea 
-                        name="seoDescription" 
-                        value={formData.seoDescription} 
-                        onChange={handleInputChange} 
-                        rows={3} 
-                        className="w-full rounded-lg border-gray-200 text-sm p-3 bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-indigo-500 transition-all" 
-                        placeholder="Meta description for search results..." 
-                    />
-                    <p className={`text-[10px] font-bold text-right ${(formData.seoDescription?.length || 0) < 20 ? 'text-red-400' : 'text-green-500'}`}>
-                        {formData.seoDescription?.length || 0} / Min 20 chars
-                    </p>
-                </div>
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <CheckCircle size={14} /> SEO Snippet
+                </label>
+                <textarea 
+                  name="seoDescription" 
+                  value={formData.seoDescription} 
+                  onChange={handleInputChange} 
+                  rows={3} 
+                  className="w-full rounded-lg border-gray-200 text-sm p-3 bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-indigo-500 transition-all" 
+                  placeholder="Meta description for search results..." 
+                />
+                <p className={`text-[10px] font-bold text-right ${
+                  (formData.seoDescription?.length || 0) < 20 ? 'text-red-400' : 'text-green-500'
+                }`}>
+                  {formData.seoDescription?.length || 0} / Min 20 chars
+                </p>
+              </div>
             </div>
 
             <div className="bg-indigo-50 rounded-xl border border-indigo-100 p-5 text-center">
-              <button type="button" className="w-full bg-white text-indigo-600 hover:bg-indigo-50 border-indigo-200 border py-2 px-4 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
-                <Eye size={16} /> Preview Post
+              <button 
+                type="button" 
+                className="w-full bg-white text-indigo-600 hover:bg-indigo-50 border-indigo-200 border py-2 px-4 rounded-lg font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
+              >
+                <Eye size={18} /> Preview Post
               </button>
             </div>
 
@@ -351,7 +473,15 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
 };
 
 const ToolbarButton = ({ onClick, active, icon }: any) => (
-  <button type="button" onClick={onClick} className={`p-2 rounded-md transition-all ${active ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'}`}>{icon}</button>
+  <button 
+    type="button" 
+    onClick={onClick} 
+    className={`p-2 rounded-md transition-all ${
+      active ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'
+    }`}
+  >
+    {icon}
+  </button>
 );
 
 export default CreatePostForm;

@@ -2,18 +2,35 @@ import { useRouter } from 'next/router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useRef } from 'react';
 import { getMyBlog, uploadBlogImage, updateMyBlogImages } from '@/src/services/blogs';
-import { getUserPosts } from '@/src/services/post';
+import { getUserPosts, updatePost, deletePost } from '@/src/services/post';
 import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
-import { Bell, Check, PlusCircle, Info, Search, Camera, Share2, Settings, Heart, Eye } from 'lucide-react';
+import { 
+  Bell, Check, PlusCircle, Camera, Share2, Settings, 
+  Heart, Eye, MoreVertical, Edit, Trash2, Download, 
+  Clock, Archive, Search, X 
+} from 'lucide-react';
 import { format } from 'date-fns';
-
+import PostActionsDropdown from '@/src/component/PostActionsDropdown';
+import { useDashboardSearch } from '@/src/component/search/DashboardSearchShadow';
+import { SearchSuggestionsDropdown } from '@/src/component/search/SearchSuggestionsDropdown';
 
 export default function BlogChannelView() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { token } = useAuth();
+  const { token, userName, userId } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+
+  const {
+    query,
+    setQuery,
+    results,
+    isLoading: searchLoading,
+    error: searchError,
+    isActive: searchActive,
+    clearSearch,
+  } = useDashboardSearch();
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
@@ -29,12 +46,32 @@ export default function BlogChannelView() {
     retry: false,
   });
 
+  // Search result handler
+  const handleSelectResult = (result: any) => {
+    switch (result.type) {
+      case 'user':
+        router.push(`/profile/${result.data.username}`);
+        break;
+      case 'post':
+        router.push(`/posts/${result.data.slug || result.data.id}`);
+        break;
+      case 'tag':
+        router.push(`/tags/${result.text}`);
+        break;
+      case 'category':
+        router.push(`/category/${result.text}`);
+        break;
+    }
+    clearSearch();
+  };
+
   const { data: postsResponse, isLoading: postsLoading } = useQuery({
     queryKey: ['user-posts', token],
     queryFn: async () => (token ? await getUserPosts(token) : null),
     enabled: !!token && !!blog,
     retry: false,
   });
+
 
   const handleImageUpload = async (file: File, type: 'coverImage' | 'profileImage') => {
     if (!token) return;
@@ -53,6 +90,108 @@ export default function BlogChannelView() {
     }
   };
 
+  const handleDeletePost = async (postId: string) => {
+    if (!token) return;
+
+    const confirmed = window.confirm(
+      'You are about to delete this post. It will be kept in trash for 30 days before permanent deletion.'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const res = await deletePost(postId, token);
+
+      if (res.success) {
+        queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
+      } else {
+        console.error('Failed:', res.message);
+      }
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+  };
+
+
+  const handlePermanentDelete = async (postId: string, postTitle: string) => {
+    if (!token) return;
+    
+    const confirmed = window.confirm(
+      `Permanent Delete\n\nAre you sure you want to permanently delete "${postTitle}"?\n\nThis action cannot be undone and the post will be immediately removed from your blog.`
+    );
+    
+    if (confirmed) {
+      setDeletingPostId(postId);
+      try {
+        await deletePost(postId, token);
+        alert(`Post permanently deleted\n\n"${postTitle}" has been permanently removed from your blog.`);
+        queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
+      } catch (error) {
+        console.error('Failed to delete post:', error);
+        alert('Failed to delete post. Please try again.');
+      } finally {
+        setDeletingPostId(null);
+      }
+    }
+  };
+
+  const handleToggleVisibility = async (postId: string, currentStatus: string, postTitle: string) => {
+    if (!token) return;
+    try {
+      const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+      await updatePost(postId, { status: newStatus }, token);
+      queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
+      alert(`Post ${newStatus === 'published' ? 'published' : 'moved to drafts'}\n\n"${postTitle}" is now ${newStatus}.`);
+    } catch (error) {
+      console.error('Failed to update post status:', error);
+      alert('Failed to update post status. Please try again.');
+    }
+  };
+
+  const handleDownload = (post: any) => {
+    const postData = {
+      title: post.title,
+      content: post.content,
+      excerpt: post.excerpt,
+      author: post.author?.name || 'Unknown',
+      createdAt: post.createdAt,
+      likes: post.likes || 0,
+      comments: post.commentsCount || 0,
+      views: post.views || 0,
+      url: `${window.location.origin}/posts/${post.slug || post._id}`
+    };
+
+    const blob = new Blob([JSON.stringify(postData, null, 2)], {
+      type: 'application/json'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${post.title?.replace(/\s+/g, '-') || 'post'}-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert('Download started\n\nYour post has been downloaded as a JSON file.');
+  };
+
+  const handleCopyLink = (postId: string, postSlug?: string, postTitle?: string) => {
+    const identifier = postSlug || postId;
+    const postUrl = `${window.location.origin}/posts/${identifier}`;
+    navigator.clipboard.writeText(postUrl)
+      .then(() => alert(`Link copied\n\nLink to "${postTitle || 'post'}" copied to clipboard!\n\n${postUrl}`))
+      .catch(err => {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy link. Please try again.');
+      });
+  };
+
+  const handleEditPost = (postId: string, isDraft: boolean) => {
+    router.push(`/dashboard/edit-post/${postId}`);
+  };
+
+
   if (blogLoading || postsLoading || !token) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -61,11 +200,9 @@ export default function BlogChannelView() {
     );
   }
 
-  const posts = postsResponse?.data || [];
+  const posts = postsResponse?.data || []; 
 
   return (
-
-
     <div className="min-h-screen bg-white font-sans">
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-[1400px] mx-auto px-6 h-14 flex items-center justify-between">
@@ -77,8 +214,6 @@ export default function BlogChannelView() {
                 <span className="-ml-1.5 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
                   o
                 </span>
-
-                {/* Brand accent dot */}
                 <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5
                      bg-indigo-500 rounded-full
                      opacity-0 group-hover:opacity-100
@@ -87,16 +222,48 @@ export default function BlogChannelView() {
               </span>
             </span>
           </Link>
-          <div className="flex items-center gap-6">
-            <Search className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600" />
+          
+          {/* SEARCH BAR */}
+          <div className="relative flex-1 max-w-md">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search users, posts, tags..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-10 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+              {query && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
+                  <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                </button>
+              )}
+            </div>
+            
+            {/* FIXED: Added query prop */}
+            <SearchSuggestionsDropdown
+              visible={searchActive}
+              loading={searchLoading}
+              results={results}
+              error={searchError}
+              onSelect={handleSelectResult}
+              query={query} // ← THIS WAS MISSING
+            />
+          </div>
+          
+          <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-gray-200 border border-gray-100 overflow-hidden">
-              {/* User Profile Thumbnail could go here */}
+              {/* User Profile Thumbnail */}
             </div>
           </div>
         </div>
       </nav>
 
-
+      {/* ... rest of your component remains the same ... */}
       <div
         className="relative w-full h-[320px] md:h-[450px] bg-gray-100 overflow-hidden group cursor-pointer"
         onClick={() => coverInputRef.current?.click()}
@@ -113,7 +280,6 @@ export default function BlogChannelView() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 md:px-12">
-        {/* 2. PROFILE HEADER - RESTORED DESCRIPTION */}
         <div className="relative flex flex-col md:flex-row items-start gap-8 pb-10 border-b border-gray-100">
           <div className="relative -mt-24 z-20">
             <div
@@ -144,7 +310,7 @@ export default function BlogChannelView() {
                   <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                   <span>{posts.length} Posts</span>
                 </div>
-                {/* Description Restored Here */}
+
                 <p className="mt-5 text-gray-500 text-lg leading-relaxed font-light">
                   {blog?.description || "Curating the finest insights and stories for the modern reader."}
                 </p>
@@ -165,7 +331,6 @@ export default function BlogChannelView() {
           </div>
         </div>
 
-        {/* 3. TABS + NEW POST BUTTON */}
         <div className="flex items-center justify-between border-b border-gray-100">
           <div className="flex items-center gap-10">
             {['Home', 'About'].map((tab) => (
@@ -188,61 +353,106 @@ export default function BlogChannelView() {
           </Link>
         </div>
 
-        {/* 4. CONTENT AREA */}
         <div className="py-12">
           {activeTab === 'home' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {posts.map((post) => {
+              {posts.map((post: any) => {
                 const isDraft = post.status?.toLowerCase() === 'draft';
+                const isArchived = post.status?.toLowerCase() === 'archived';
                 const destination = isDraft
                   ? `/dashboard/edit-post/${post._id}` 
-                  : `/posts/${post.slug || post._id}`;   
+                  : `/posts/${post.slug || post._id}`;
+                
+                  const isOwner = !!userName && (
+                    post.author?.username === userName || 
+                    blog?.authorName === userName  
+                  );
+
                 return (
                   <article
                     key={post._id}
-                    className="group flex flex-col cursor-pointer"
-                    onClick={() => router.push(destination)}
+                    className="group flex flex-col cursor-pointer relative"
                   >
-                    <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-5 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
-                      {isDraft && (
-                        <div className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
-                          Draft
+                    {deletingPostId === post._id && (
+                      <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-30 flex items-center justify-center rounded-[2rem]">
+                        <div className="text-center">
+                          <div className="h-10 w-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                          <p className="text-sm font-bold text-gray-700">Moving to trash...</p>
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      <img
-                        src={post.thumbnail || 'https://via.placeholder.com/400x250?text=No+Image'}
-                        className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${isDraft ? 'opacity-70 grayscale-[30%]' : ''}`}
-                        alt={post.title}
+                    {isArchived && (
+                      <div className="absolute top-4 left-4 z-10 bg-gray-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg flex items-center gap-1">
+                        <Archive size={10} /> Archived
+                      </div>
+                    )}
+
+                    <div className="absolute top-4 right-4 z-20" onClick={(e) => e.stopPropagation()}>
+                      <PostActionsDropdown
+                        postId={post._id}
+                        isOwner={isOwner}
+                        currentStatus={post.status}
+                        onEdit={() => handleEditPost(post._id, isDraft)}
+                        onDelete={() => handleDeletePost(post._id)}
+                        onToggleVisibility={() => handleToggleVisibility(post._id, post.status, post.title)}
+                        onDownload={() => handleDownload(post)}
+                        onCopyLink={() => handleCopyLink(post._id, post.slug, post.title)}
                       />
-
-                      {isDraft && (
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="bg-white text-black text-xs font-black px-5 py-2 rounded-full uppercase tracking-tighter shadow-xl">
-                            Continue Editing
-                          </span>
-                        </div>
-                      )}
                     </div>
 
-                    <div className="space-y-3 px-2">
-                      <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-gray-400">
-                        <span className={`${isDraft ? 'text-amber-500' : 'text-indigo-600'} font-black`}>
-                          {post.status}
-                        </span>
-                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                        <span>{format(new Date(post.createdAt), 'MMM d, yyyy')}</span>
-                      </div>
-                      <h4 className="text-xl font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
-                        {post.title || "Untitled Draft"}
-                      </h4>
+                    <div onClick={() => !isArchived && router.push(destination)}>
+                      <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-5 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">
+                        {isDraft && !isArchived && (
+                          <div className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">
+                            Draft
+                          </div>
+                        )}
 
-                      {!isDraft && (
-                        <div className="flex items-center gap-4 pt-2 text-gray-400">
-                          <span className="flex items-center gap-1 text-xs font-bold"><Eye size={14} /> {post.views || 0}</span>
-                          <span className="flex items-center gap-1 text-xs font-bold"><Heart size={14} /> {post.likes || 0}</span>
+                        <img
+                          src={post.thumbnail || 'https://via.placeholder.com/400x250?text=No+Image'}
+                          className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${isDraft || isArchived ? 'opacity-70 grayscale-[30%]' : ''}`}
+                          alt={post.title}
+                        />
+
+                        {isArchived && (
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <div className="text-center text-white p-4">
+                              <Clock size={24} className="mx-auto mb-2" />
+                              <p className="text-xs font-bold uppercase tracking-widest">In Trash</p>
+                              <p className="text-[10px] mt-1 opacity-80">Will be deleted soon</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {isDraft && !isArchived && (
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="bg-white text-black text-xs font-black px-5 py-2 rounded-full uppercase tracking-tighter shadow-xl">
+                              Continue Editing
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-3 px-2">
+                        <div className="flex items-center gap-3 text-[9px] font-black uppercase tracking-widest text-gray-400">
+                          <span className={`${isDraft ? 'text-amber-500' : isArchived ? 'text-gray-500' : 'text-indigo-600'} font-black`}>
+                            {post.status}
+                          </span>
+                          <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                          <span>{format(new Date(post.createdAt), 'MMM d, yyyy')}</span>
                         </div>
-                      )}
+                        <h4 className="text-xl font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-indigo-600 transition-colors">
+                          {post.title || "Untitled Draft"}
+                        </h4>
+
+                        {!isDraft && !isArchived && (
+                          <div className="flex items-center gap-4 pt-2 text-gray-400">
+                            <span className="flex items-center gap-1 text-xs font-bold"><Eye size={14} /> {post.views || 0}</span>
+                            <span className="flex items-center gap-1 text-xs font-bold"><Heart size={14} /> {post.likes || 0}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </article>
                 );

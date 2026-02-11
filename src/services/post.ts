@@ -180,12 +180,10 @@ export async function updatePost(
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError<ErrorResponse>;
-    throw {
-      success: false,
-      message:
-        axiosError.response?.data?.message || 'Failed to update post',
-      error: axiosError.message,
-    };
+    throw new Error(
+      axiosError.response?.data?.message || 'Failed to update post'
+    );
+    
   }
 }
 
@@ -212,7 +210,6 @@ export async function deletePost(
   }
 }
 
-
 export async function getUserPosts(
   token: string
 ): Promise<ApiResponse<Post[]>> {
@@ -223,10 +220,17 @@ export async function getUserPosts(
       },
     });
 
-    return response.data;
+    const postsWithViews = (response.data.data || []).map(post => ({
+      ...post,
+      views: post.views || 0
+    }));
+
+    return {
+      ...response.data,
+      data: postsWithViews
+    };
   } catch (error) {
     const axiosError = error as AxiosError<ErrorResponse>;
-
     throw new Error(
       axiosError.response?.data?.message || 'Failed to fetch posts'
     );
@@ -282,25 +286,105 @@ export async function uploadPostThumbnail(
 
 export { api };
 
-export const getPostById = async (id: string) => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+export const getPostById = async (id: string, token?: string) => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   
   try {
+    // Use provided token or get from storage
+    const authToken = token || (typeof window !== 'undefined' 
+      ? sessionStorage.getItem('access_token')
+      : null);
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add Authorization header if token exists
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
     const response = await fetch(`${apiUrl}/posts/${id}`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
+      credentials: 'include', // Include cookies if needed
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch post');
+      const errorText = await response.text();
+      let errorMessage = 'Failed to fetch post';
+      
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.message || errorMessage;
+      } catch {
+        errorMessage = response.statusText || errorMessage;
+      }
+
+      // Create user-friendly error messages
+      switch (response.status) {
+        case 401:
+          errorMessage = 'Authentication required. Please log in.';
+          break;
+        case 403:
+          errorMessage = 'You do not have permission to view this post.';
+          break;
+        case 404:
+          errorMessage = 'Post not found. It may have been deleted.';
+          break;
+      }
+
+      throw new Error(errorMessage);
     }
 
     const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to fetch post');
+    }
+    
     return result.data; 
   } catch (error) {
     console.error("Error in getPostById:", error);
     throw error;
   }
-};
+}
+
+export async function getPostViews(postId: string, token?: string): Promise<number> {
+  try {
+    const config = token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : {};
+
+    const response = await api.get<ApiResponse<Post>>(
+      `/posts/${postId}`,
+      config
+    );
+
+    // Return the view count from the post data
+    return response.data.data?.views || 0;
+  } catch (error) {
+    console.error('Error fetching post views:', error);
+    return 0;
+  }
+}
+export async function getPostsWithViews(token?: string): Promise<Post[]> {
+  try {
+    const config = token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : {};
+
+    const response = await api.get<ApiResponse<Post[]>>(
+      '/posts',
+      config
+    );
+
+    return (response.data.data || []).map(post => ({
+      ...post,
+      views: post.views || 0
+    }));
+  } catch (error) {
+    console.error('Error fetching posts with views:', error);
+    return [];
+  }
+}

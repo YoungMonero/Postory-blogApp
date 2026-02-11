@@ -15,6 +15,19 @@ export async function getMyBlog(token: string): Promise<Blog | null> {
   return data?.blog ?? null;
 }
 
+export async function getPublicBlogBySlug(slug: string): Promise<Blog> {
+  const res = await fetch(`${API_URL}/blogs/public/${slug}`, { 
+    cache: 'no-store' 
+    
+  });  
+  
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || 'Blog profile not found');
+  }
+  return res.json();
+}
+
 export async function createBlog(data: CreateBlogDto, token: string): Promise<Blog> {
   const res = await fetch(`${API_URL}/blogs`, {
     method: 'POST',
