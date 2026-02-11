@@ -80,3 +80,5 @@ const ForgotPasswordRequest = () => {
     </div>
   );
 };
+
+export default ForgotPasswordRequest;
