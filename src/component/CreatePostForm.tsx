@@ -5,6 +5,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { CreatePostDto } from '@/src/types/posts'; 
 import { usePosts } from '@/src/hooks/usePosts';
 import { generateSlug } from '@/src/services/post';
+import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { 
   ArrowLeft, Globe, Settings, Image as ImageIcon, 
@@ -27,12 +28,14 @@ const draftStorage = localforage.createInstance({
   storeName: 'post_drafts'
 });
 
+
 const CreatePostForm: React.FC<CreatePostFormProps> = ({ 
   token, 
   onSuccess, 
   initialData, 
   isEditing = false 
 }) => {
+  const queryClient = useQueryClient();
   const { createNewPost, updateExistingPost, loading, error: backendError } = usePosts();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -51,7 +54,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     seoDescription: initialData?.seoDescription || '',
   });
 
-  // ✅ FIXED: Moved useCallback to top level
+
   const saveDraft = useMemo(
     () =>
       debounce((content: string) => {
@@ -86,7 +89,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         class: 'tiptap-content prose prose-lg max-w-none focus:outline-none min-h-[500px] px-8 py-8 text-gray-700',
       },
     },
-    // ✅ FIXED: Proper onUpdate with debounced save
+  
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       const plainText = editor.getText().trim();
@@ -103,8 +106,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
           seoDescription: shouldSync ? plainText.substring(0, 100) : prev.seoDescription
         };
       });
-
-      // ✅ Use debounced save
       saveDraft(html);
     },
   }); 
@@ -120,7 +121,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     }
   }, [initialData, editor, isEditing]);
 
-  // ✅ FIXED: Load thumbnail from IndexedDB
+
   useEffect(() => {
     if (!editor || isEditing) return;
     
@@ -142,7 +143,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     loadDraftFromIndexedDB();
   }, [editor, isEditing]);
 
-  // Load from localStorage
+
   useEffect(() => {
     if (!editor || isEditing) return;
     const savedTitle = localStorage.getItem('wordoo_draft_title');
@@ -190,7 +191,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         }
       };
       
-      // ✅ ADD THIS ERROR HANDLER
+
       reader.onerror = () => {
         alert('Failed to read the selected file. Please try again.');
         console.error('FileReader error:', reader.error);
@@ -250,7 +251,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
       }
 
       if (result) {
-        // Clear localStorage
         localStorage.removeItem('wordoo_draft_title');
         localStorage.removeItem('wordoo_draft_content');
         localStorage.removeItem('wordoo_draft_thumbnail');
@@ -262,7 +262,10 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
                     console.error('Failed to clear draft storage:', cleanupErr);
              }
         
-        alert(isEditing ? "Post updated!" : "Post published!");
+  queryClient.invalidateQueries({ queryKey: ['public-posts'] });
+  queryClient.invalidateQueries({ queryKey: ['user-posts'] });
+
+      alert(isEditing ? "Post updated!" : "Post published!");
         
         if (!isEditing && publishStatus === 'published') {
           setFormData({ 
