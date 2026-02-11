@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
+const [errorMessage, setErrorMessage] = useState<string | null>(null);
+const [isSent, setIsSent] = useState(false);
+export { ForgotPasswordRequest };
 const ForgotPasswordRequest = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,8 +23,12 @@ const ForgotPasswordRequest = () => {
       if (res.ok) setIsSent(true);
       else alert("Could not send reset email. Check if the email is correct.");
     } catch (error) {
-      console.error(error);
-    } finally {
+      console.error('Request failed:', error);
+      setErrorMessage('Network error. Please try again.');
+    }  const handleInputChange = (e) => {
+      setErrorMessage(null);
+      // ... rest of handler
+    }; finally {
       setLoading(false);
     }
   };

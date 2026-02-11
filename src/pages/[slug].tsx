@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, useRef } from 'react';
 import { getMyBlog, uploadBlogImage, updateMyBlogImages } from '@/src/services/blogs';
-import { getUserPosts, updatePost, deletePost, getPostsWithViews, getPostViews } from '@/src/services/post';
+import { getUserPosts, updatePost, deletePost } from '@/src/services/post';
 import { useAuth } from '@/src/hooks/useAuth';
 import Link from 'next/link';
 import { 
@@ -19,7 +19,6 @@ export default function BlogChannelView() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { token, userName, userId } = useAuth();
-  console.log('🔥 ACTUAL useAuth output:', { token, userName });
   const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
 
@@ -118,7 +117,7 @@ export default function BlogChannelView() {
     if (!token) return;
     
     const confirmed = window.confirm(
-      `⚠️ Permanent Delete\n\nAre you sure you want to permanently delete "${postTitle}"?\n\nThis action cannot be undone and the post will be immediately removed from your blog.`
+      `Permanent Delete\n\nAre you sure you want to permanently delete "${postTitle}"?\n\nThis action cannot be undone and the post will be immediately removed from your blog.`
     );
     
     if (confirmed) {

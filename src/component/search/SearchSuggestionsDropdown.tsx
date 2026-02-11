@@ -49,15 +49,7 @@ export function SearchSuggestionsDropdown({
   error,
   query,
 }: Props) {
-  // Debug: Log what we're receiving
-  console.log('SearchSuggestionsDropdown props:', {
-    visible,
-    loading,
-    resultsCount: results?.length,
-    results,
-    query,
-    error
-  });
+
 
   if (!visible) return null;
 
@@ -92,7 +84,6 @@ export function SearchSuggestionsDropdown({
         <div className="py-2">
           {results.map((item, index) => {
 
-            console.log(`Result ${index}:`, item);
             
             const itemType = item.type || 'post';
             const Icon = typeIcons[itemType] || FileText;
