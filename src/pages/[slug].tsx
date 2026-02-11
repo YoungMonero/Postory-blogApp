@@ -18,7 +18,7 @@ import { SearchSuggestionsDropdown } from '@/src/component/search/SearchSuggesti
 export default function BlogChannelView() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { token, user } = useAuth();
+  const { token, userName } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
 
@@ -363,7 +363,7 @@ export default function BlogChannelView() {
                   ? `/dashboard/edit-post/${post._id}` 
                   : `/posts/${post.slug || post._id}`;
                 
-                const isOwner = true;
+                  const isOwner = !!userName && post.author?.username === userName;
 
                 return (
                   <article
