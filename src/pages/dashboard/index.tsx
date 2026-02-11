@@ -72,14 +72,6 @@ export default function DashboardPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
-  useEffect(() => {
-    const onFocus = () => {
-      queryClient.invalidateQueries({ queryKey: ['public-posts', page] });
-      if (token) queryClient.invalidateQueries({ queryKey: ['my-blog'] });
-    };
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, [queryClient, token, page]);
 
   const categories = [
     { name: 'Fashion', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=100&q=80', color: 'bg-pink-50' },
@@ -95,13 +87,17 @@ export default function DashboardPage() {
     queryFn: () => getMyBlog(token as string),
     enabled: !!token,
   });
+// have to remove it causes re-rending all the time
+const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
+  queryKey: ['public-posts', page],
+  queryFn: () => getTenantPublicPosts({ limit: limit, page: page }),
+  refetchOnWindowFocus: false,  
+  staleTime: 5 * 60 * 1000,    
+  cacheTime: 10 * 60 * 1000,
+  keepPreviousData: true,   
+});
 
-  const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
-    queryKey: ['public-posts', page],
-    queryFn: () => getTenantPublicPosts({ limit: limit, page: page }),
-    refetchOnWindowFocus: true,
-  });
-
+//
   const posts: Post[] = postsData?.data?.posts || [];
   const hasMore = posts.length === limit;
 
