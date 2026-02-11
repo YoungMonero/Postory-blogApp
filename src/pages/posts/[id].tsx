@@ -11,7 +11,7 @@ import { api } from '@/src/services/post'
 export default function PostDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { token, userName, openAuthModal } = useAuth(); // userName is a string
+  const { token, userName, openAuthModal } = useAuth(); 
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,11 +36,11 @@ export default function PostDetailPage() {
           const postId = postData._id || postData.id;
           
 
-          if (!hasIncrementedViews.current && postId) {
+          if (!hasIncrementedViews.current && postId  && token) {
             try {
-              const config = token ? { 
+              const config = { 
                 headers: { Authorization: `Bearer ${token}` } 
-              } : {};
+              };
 
               await api.post(`/posts/${postId}/view`, {}, config);
               hasIncrementedViews.current = true;
