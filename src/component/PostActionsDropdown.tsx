@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MoreVertical, Edit, Trash2, Download, Eye, EyeOff } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Download, Eye, EyeOff, Link as LinkIcon } from 'lucide-react';
 
 interface PostActionsDropdownProps {
   postId: string;
@@ -8,7 +8,10 @@ interface PostActionsDropdownProps {
   onDelete: () => void;
   onToggleVisibility?: () => void;
   onDownload?: () => void;
+  onCopyLink: (postId: string, slug?: string, title?: string) => void;
   currentStatus?: 'published' | 'draft';
+  slug?: string;      // ✅ ADDED
+  title?: string;     // ✅ ADDED
 }
 
 export default function PostActionsDropdown({
@@ -18,7 +21,10 @@ export default function PostActionsDropdown({
   onDelete,
   onToggleVisibility,
   onDownload,
-  currentStatus = 'published'
+  onCopyLink,        // ✅ ADDED
+  currentStatus = 'published',
+  slug,              // ✅ ADDED
+  title              // ✅ ADDED
 }: PostActionsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -51,10 +57,21 @@ export default function PostActionsDropdown({
         <MoreVertical className="w-5 h-5 text-gray-500 dark:text-gray-400" />
       </button>
 
-      {/* Dropdown menu */}
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800 z-50 py-1">
-          {/* Edit Option */}
+          
+          {/* ✅ COPY LINK BUTTON - ADDED AT THE TOP */}
+          <button
+            onClick={() => {
+              onCopyLink(postId, slug, title);
+              setIsOpen(false);
+            }}
+            className="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <LinkIcon className="w-4 h-4 mr-3" />
+            Copy Link
+          </button>
+
           <button
             onClick={() => {
               onEdit();
@@ -66,7 +83,6 @@ export default function PostActionsDropdown({
             Edit Post
           </button>
 
-          {/* Toggle Visibility (Draft/Published) */}
           {onToggleVisibility && (
             <button
               onClick={() => {
@@ -89,7 +105,6 @@ export default function PostActionsDropdown({
             </button>
           )}
 
-          {/* Download Option */}
           {onDownload && (
             <button
               onClick={() => {
@@ -106,9 +121,7 @@ export default function PostActionsDropdown({
           {/* Delete Option (with warning style) */}
           <button
             onClick={() => {
-              if (window.confirm('Are you sure you want to delete this post?')) {
-                onDelete();
-              }
+              onDelete();
               setIsOpen(false);
             }}
             className="w-full flex items-center px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"

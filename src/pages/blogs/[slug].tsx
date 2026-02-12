@@ -1,5 +1,6 @@
 import { GetServerSideProps } from "next";
 import { getPublicBlogBySlug } from "@/src/services/blogs";
+import DOMPurify from "dompurify";
 
 type Blog = {
   title: string;
@@ -53,9 +54,8 @@ export default function BlogPage({ blog }: Props) {
           lineHeight: 1.7,
           color: "#333",
         }}
-      >
-        {blog.content}
-      </article>
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(blog.content || '') }}
+      />
     </main>
   );
 }

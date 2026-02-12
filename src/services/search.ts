@@ -1,14 +1,12 @@
-// search.ts - Complete service with all endpoints
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+if (!API_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL environment variable is not set');
+}
 
 console.log('Search Service Initialized');
 console.log('API_URL:', API_URL);
 
 export type SearchType = 'user' | 'post' | 'tag' | 'category';
-
-/* ---------------------------------- */
-/* Interfaces */
-/* ---------------------------------- */
 
 interface SearchParams {
   q: string;
@@ -40,10 +38,6 @@ interface DailySearchAnalytics {
   date: string;
   queries: Record<string, number>;
 }
-
-/* ---------------------------------- */
-/* 1. GET /search/suggestions - Main Search */
-/* ---------------------------------- */
 
 export async function fetchSearchSuggestions({
   q,
@@ -86,11 +80,6 @@ export async function fetchSearchSuggestions({
     return { suggestions: [] };
   }
 }
-
-/* ---------------------------------- */
-/* 2. GET /search/quick - Quick Search */
-/* ---------------------------------- */
-
 export async function fetchQuickSearch(query: string): Promise<QuickSearchResponse> {
   console.log(' fetchQuickSearch called with:', query);
 
@@ -125,10 +114,6 @@ export async function fetchQuickSearch(query: string): Promise<QuickSearchRespon
   }
 }
 
-/* ---------------------------------- */
-/* 3. GET /search/popular - Popular Searches */
-/* ---------------------------------- */
-
 export async function fetchPopularSearches(limit: number = 10): Promise<PopularSearchItem[]> {
   console.log('fetchPopularSearches called with limit:', limit);
 
@@ -158,9 +143,6 @@ export async function fetchPopularSearches(limit: number = 10): Promise<PopularS
   }
 }
 
-/* ---------------------------------- */
-/* 4. GET /search/analytics - Search Analytics */
-/* ---------------------------------- */
 
 export async function fetchSearchAnalytics(days: number = 7): Promise<DailySearchAnalytics[]> {
   console.log('fetchSearchAnalytics called with days:', days);
@@ -175,11 +157,11 @@ export async function fetchSearchAnalytics(days: number = 7): Promise<DailySearc
       },
     });
 
-    console.log(' Search analytics status:', res.status, res.statusText);
-
-    if (!res.ok) {
-      throw new Error(`Search analytics failed: ${res.status} ${res.statusText}`);
-    }
+    console.log(' Search analytics status:', res.status, res.statusText);
+    
+    if (!res.ok) {
+      throw new Error(`Search analytics failed: ${res.status} ${res.statusText}`);
+    }
 
     const data = await res.json();
     console.log('Search analytics days:', data.length || 0);
@@ -190,10 +172,6 @@ export async function fetchSearchAnalytics(days: number = 7): Promise<DailySearc
     return [];
   }
 }
-
-/* ---------------------------------- */
-/* 5. Combined Search Utility */
-/* ---------------------------------- */
 
 export interface AllSearchResults {
   suggestions: SearchSuggestion[];
@@ -236,10 +214,6 @@ export async function fetchAllSearchData(query?: string): Promise<AllSearchResul
   }
 }
 
-/* ---------------------------------- */
-/* 6. Search Hook Helper */
-/* ---------------------------------- */
-
 export interface SearchOptions {
   query: string;
   limit?: number;
@@ -281,10 +255,6 @@ export async function search(options: SearchOptions): Promise<{
     return { suggestions: [] };
   }
 }
-
-/* ---------------------------------- */
-/* Export all types */
-/* ---------------------------------- */
 
 export type {
   SearchSuggestion,

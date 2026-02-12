@@ -72,14 +72,6 @@ export default function DashboardPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
-  useEffect(() => {
-    const onFocus = () => {
-      queryClient.invalidateQueries({ queryKey: ['public-posts', page] });
-      if (token) queryClient.invalidateQueries({ queryKey: ['my-blog'] });
-    };
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, [queryClient, token, page]);
 
   const categories = [
     { name: 'Fashion', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=100&q=80', color: 'bg-pink-50' },
@@ -95,13 +87,17 @@ export default function DashboardPage() {
     queryFn: () => getMyBlog(token as string),
     enabled: !!token,
   });
+// have to remove it causes re-rending all the time
+const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
+  queryKey: ['public-posts', page],
+  queryFn: () => getTenantPublicPosts({ limit: limit, page: page }),
+  refetchOnWindowFocus: false,  
+  staleTime: 5 * 60 * 1000,    
+  cacheTime: 10 * 60 * 1000,
+  keepPreviousData: true,   
+});
 
-  const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
-    queryKey: ['public-posts', page],
-    queryFn: () => getTenantPublicPosts({ limit: limit, page: page }),
-    refetchOnWindowFocus: true,
-  });
-
+//
   const posts: Post[] = postsData?.data?.posts || [];
   const hasMore = posts.length === limit;
 
@@ -112,8 +108,8 @@ export default function DashboardPage() {
     return thumbnail.startsWith('/') ? `${apiUrl}${thumbnail}` : `${apiUrl}/${thumbnail}`;
   };
 
-  const getCategoryColor = (tag: string) => {
-    const t = tag?.toLowerCase();
+  const getCategoryColor = (categories: string) => {
+    const t = categories?.toLowerCase();
     if (t === 'coding') return 'bg-purple-100 text-purple-700';
     if (t === 'style') return 'bg-blue-100 text-blue-700';
     if (t === 'travel') return 'bg-rose-100 text-rose-700';
@@ -121,7 +117,6 @@ export default function DashboardPage() {
     return 'bg-gray-100 text-gray-700';
   };
 
-  // Show full-screen loader whenever we are fetching data (initial or page change)
   if (postsLoading || isFetching) {
     return (
       <DashboardLayout>
@@ -174,12 +169,12 @@ export default function DashboardPage() {
                       <div className="flex-1 py-1 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap mb-4">
-                            {post.tags?.slice(0, 3).map((tag: string, index: number) => (
+                            {post.categories?.slice(0, 3).map((categories: string, index: number) => (
                               <span
                                 key={index}
-                                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(tag)}`}
+                                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(categories)}`}
                               >
-                                {tag}
+                                {categories}
                               </span>
                             ))}
                             <span className="text-xs text-gray-500">
@@ -198,7 +193,7 @@ export default function DashboardPage() {
 </Link>
                           
 <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-  {post.excerpt || post.content?.substring(0, 200) + '...'}
+  {post.excerpt || (post.content ? post.content.substring(0, 200) + '...' : '')}
 </p>
 </div>
 
@@ -219,8 +214,7 @@ export default function DashboardPage() {
         href={`/blogs/${post.blog?.slug || 'no-slug-found'}`}
         className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
       >
-        {/* DEBUG VERSION */}
-        {post.blog?.title || `Untitled Blog (Debug: ${post.blog ? 'has object' : 'NO BLOG OBJECT'})`}
+        {post.blog?.title || 'Untitled Blog'}
       </Link>
       <span className="text-[10px] text-gray-500 font-medium mt-1">
         by {post.blog?.authorName || post.blog?.name || `Anonymous`}

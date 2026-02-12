@@ -210,7 +210,6 @@ export async function deletePost(
   }
 }
 
-
 export async function getUserPosts(
   token: string
 ): Promise<ApiResponse<Post[]>> {
@@ -221,10 +220,17 @@ export async function getUserPosts(
       },
     });
 
-    return response.data;
+    const postsWithViews = (response.data.data || []).map(post => ({
+      ...post,
+      views: post.views || 0
+    }));
+
+    return {
+      ...response.data,
+      data: postsWithViews
+    };
   } catch (error) {
     const axiosError = error as AxiosError<ErrorResponse>;
-
     throw new Error(
       axiosError.response?.data?.message || 'Failed to fetch posts'
     );
@@ -342,4 +348,43 @@ export const getPostById = async (id: string, token?: string) => {
     console.error("Error in getPostById:", error);
     throw error;
   }
-};
+}
+
+export async function getPostViews(postId: string, token?: string): Promise<number> {
+  try {
+    const config = token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : {};
+
+    const response = await api.get<ApiResponse<Post>>(
+      `/posts/${postId}`,
+      config
+    );
+
+    // Return the view count from the post data
+    return response.data.data?.views || 0;
+  } catch (error) {
+    console.error('Error fetching post views:', error);
+    return 0;
+  }
+}
+export async function getPostsWithViews(token?: string): Promise<Post[]> {
+  try {
+    const config = token
+      ? { headers: { Authorization: `Bearer ${token}` } }
+      : {};
+
+    const response = await api.get<ApiResponse<Post[]>>(
+      '/posts',
+      config
+    );
+
+    return (response.data.data || []).map(post => ({
+      ...post,
+      views: post.views || 0
+    }));
+  } catch (error) {
+    console.error('Error fetching posts with views:', error);
+    return [];
+  }
+}
