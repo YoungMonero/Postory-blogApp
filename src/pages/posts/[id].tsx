@@ -33,7 +33,6 @@ export default function PostDetailPage() {
           setPost(postData);
           setLikesCount(postData.likes || 0);
 
-          // ✅ Compare userName string with likedBy array
           if (userName && postData.likedBy) {
             const hasLiked = postData.likedBy.includes(userName);
             setIsLiked(hasLiked);

@@ -4,6 +4,7 @@ import type { AppProps } from 'next/app';
 import { AuthProvider } from '../hooks/useAuth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+
 // Create a React Query client
 const queryClient = new QueryClient();
 

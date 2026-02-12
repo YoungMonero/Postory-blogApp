@@ -1,4 +1,3 @@
-// src/hooks/useAuth.tsx
 import { createContext, useContext, useEffect, useState } from 'react';
 import { getToken, setToken as setCookieToken, clearToken } from '../services/auth-storage';
 import AuthRequiredModal from '../component/modals/AuthRequiredModal'; // We will create this next
@@ -40,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('userName', name);
     setToken(newToken);
     setUserName(name);
-    setIsAuthModalOpen(false); // Auto-close modal on success
+    setIsAuthModalOpen(false); 
   };
 
   const logout = () => {

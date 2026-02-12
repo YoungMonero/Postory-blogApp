@@ -1,51 +1,33 @@
+// DashboardSearchController.tsx - SIMPLIFIED VERSION
 import { useState, useEffect } from 'react';
-import { fetchSearchSuggestions } from '@/src/services/search';
+import { useSearchSuggestions } from '../../hooks/useSearchSuggestions'; // Import this
 
-export function DashboardSearchController() {
+export function useDashboardSearch() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isActive, setIsActive] = useState(false);
 
+  // Use the React Query hook
+  const { 
+    data: searchData, 
+    isLoading, 
+    error 
+  } = useSearchSuggestions(query, 5);
+
+  // Extract results from searchData
+  const results = searchData?.suggestions || [];
+
   useEffect(() => {
-    if (query.length < 2) {
-      setResults([]);
+    if (query.length >= 2) {
+      setIsActive(true);
+    } else {
       setIsActive(false);
-      return;
     }
-
-    const timeout = setTimeout(async () => {
-      try {
-        setIsLoading(true);
-
-        const response = await fetchSearchSuggestions({ q: query });
-
-        /**
-         * ✅ NORMALIZATION LAYER
-         * Backend may return:
-         * - { success, data: [] }
-         * - { success, data: { users, posts, tags } }
-         */
-        let normalizedResults: any[] = [];
-
-        if (Array.isArray(response.data)) {
-          normalizedResults = response.data;
-        } else if (response.data && typeof response.data === 'object') {
-          normalizedResults = Object.values(response.data).flat();
-        }
-
-        setResults(normalizedResults);
-        setIsActive(true);
-      } catch (err) {
-        console.error('Search failed', err);
-        setResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timeout);
   }, [query]);
+
+  const clearSearch = () => {
+    setQuery('');
+    setIsActive(false);
+  };
 
   return {
     query,
@@ -53,5 +35,7 @@ export function DashboardSearchController() {
     results,
     isLoading,
     isActive,
+    error: error ? (error as Error).message : null,
+    clearSearch,
   };
 }
