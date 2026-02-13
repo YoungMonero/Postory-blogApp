@@ -16,17 +16,15 @@ type Props = {
 export default function BlogPage({ blog }: Props) {
   return (
     <main style={{ maxWidth: 800, margin: "60px auto", padding: "0 20px" }}>
-      {/* Title */}
       <h1 style={{ fontSize: "2.5rem", fontWeight: "bold", marginBottom: 10 }}>
         {blog.title}
       </h1>
 
-      {/* Date */}
+
       <p style={{ color: "#777", marginBottom: 20 }}>
         {new Date(blog.createdAt).toLocaleDateString()}
       </p>
 
-      {/* Tags */}
       {blog.tags && blog.tags.length > 0 && (
         <div style={{ marginBottom: 20 }}>
           {blog.tags.map((tag, index) => (
@@ -47,7 +45,6 @@ export default function BlogPage({ blog }: Props) {
         </div>
       )}
 
-      {/* Content */}
       <article
         style={{
           fontSize: "1.1rem",
