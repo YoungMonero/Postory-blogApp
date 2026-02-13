@@ -39,9 +39,9 @@ export default function Register() {
     if (!emailRegex.test(email)) return "Please enter a valid email address.";
 
     const lowerEmail = email.toLowerCase();
-    // Fixes the .co issue for gmail specifically
+
     if (lowerEmail.includes("@gmail.") && !lowerEmail.endsWith("@gmail.com")) {
-      return "Gmail addresses must end with @gmail.com";
+      return "Email is not valid";
     }
     return null;
   };
@@ -111,7 +111,7 @@ export default function Register() {
             />
             {/* Contextual Error Message under the input */}
             {emailError && (
-              <p className="text-[11px] font-bold text-red-500 mt-1 uppercase tracking-tight">
+              <p className="text-[11px] font-bold text-red-500 mt-1 lowercase tracking-tight">
                 {emailError}
               </p>
             )}

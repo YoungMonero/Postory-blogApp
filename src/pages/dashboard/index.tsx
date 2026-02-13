@@ -72,14 +72,6 @@ export default function DashboardPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [page]);
 
-  useEffect(() => {
-    const onFocus = () => {
-      queryClient.invalidateQueries({ queryKey: ['public-posts', page] });
-      if (token) queryClient.invalidateQueries({ queryKey: ['my-blog'] });
-    };
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, [queryClient, token, page]);
 
   const categories = [
     { name: 'Fashion', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=100&q=80', color: 'bg-pink-50' },
@@ -95,13 +87,17 @@ export default function DashboardPage() {
     queryFn: () => getMyBlog(token as string),
     enabled: !!token,
   });
+// have to remove it causes re-rending all the time
+const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
+  queryKey: ['public-posts', page],
+  queryFn: () => getTenantPublicPosts({ limit: limit, page: page }),
+  refetchOnWindowFocus: false,  
+  staleTime: 5 * 60 * 1000,    
+  cacheTime: 10 * 60 * 1000,
+  keepPreviousData: true,   
+});
 
-  const { data: postsData, isLoading: postsLoading, isFetching } = useQuery({
-    queryKey: ['public-posts', page],
-    queryFn: () => getTenantPublicPosts({ limit: limit, page: page }),
-    refetchOnWindowFocus: true,
-  });
-
+//
   const posts: Post[] = postsData?.data?.posts || [];
   const hasMore = posts.length === limit;
 
@@ -112,8 +108,8 @@ export default function DashboardPage() {
     return thumbnail.startsWith('/') ? `${apiUrl}${thumbnail}` : `${apiUrl}/${thumbnail}`;
   };
 
-  const getCategoryColor = (tag: string) => {
-    const t = tag?.toLowerCase();
+  const getCategoryColor = (categories: string) => {
+    const t = categories?.toLowerCase();
     if (t === 'coding') return 'bg-purple-100 text-purple-700';
     if (t === 'style') return 'bg-blue-100 text-blue-700';
     if (t === 'travel') return 'bg-rose-100 text-rose-700';
@@ -121,7 +117,6 @@ export default function DashboardPage() {
     return 'bg-gray-100 text-gray-700';
   };
 
-  // Show full-screen loader whenever we are fetching data (initial or page change)
   if (postsLoading || isFetching) {
     return (
       <DashboardLayout>
@@ -174,12 +169,12 @@ export default function DashboardPage() {
                       <div className="flex-1 py-1 flex flex-col justify-between">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap mb-4">
-                            {post.tags?.slice(0, 3).map((tag: string, index: number) => (
+                            {post.categories?.slice(0, 3).map((categories: string, index: number) => (
                               <span
                                 key={index}
-                                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(tag)}`}
+                                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getCategoryColor(categories)}`}
                               >
-                                {tag}
+                                {categories}
                               </span>
                             ))}
                             <span className="text-xs text-gray-500">
@@ -192,41 +187,40 @@ export default function DashboardPage() {
                           </div>
 
                           <Link href={`/posts/${post.slug || post._id}`}>
-                            <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-indigo-600 transition-colors">
-                              {post.title}
-                            </h3>
-                          </Link>
+  <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-indigo-600 transition-colors">
+    {post.title}
+  </h3>
+</Link>
+                          
+<p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
+  {post.excerpt || (post.content ? post.content.substring(0, 200) + '...' : '')}
+</p>
+</div>
 
-                          <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-                            {post.excerpt || post.content?.substring(0, 200) + '...'}
-                          </p>
-                        </div>
-
-                        <div className="flex-col flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
-                          <div className="flex items-center gap-2 m mb-3">
-                            <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
-                              {post.blog?.profileImage ? (
-                                <img src={post.blog.profileImage} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <span>{(post.blog?.authorName || "U").charAt(0)}</span>
-                              )}
-                            </div>
-
-                            <div className="flex flex-col">
-
-
-                              <Link
-                                href={`/blogs/${post.blog?.slug || 'no-slug-found'}`}
-                                className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
-                              >
-                                {/* DEBUG VERSION */}
-                                {post.blog?.title || `Untitled Blog (Debug: ${post.blog ? 'has object' : 'NO BLOG OBJECT'})`}
-                              </Link>
-                              <span className="text-[10px] text-gray-500 font-medium mt-1">
-                                by {post.blog?.authorName || post.blog?.name || `Anonymous`}
-                              </span>
-                            </div>
-                          </div>
+<div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
+  <div className="flex items-center gap-2">
+    <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
+      {post.blog?.profileImage ? (
+        <img src={post.blog.profileImage} alt="" className="w-full h-full object-cover" />
+      ) : (
+        <span>{(post.blog?.authorName || "U").charAt(0)}</span>
+      )}
+    </div>
+    
+    <div className="flex flex-col">
+    
+      
+      <Link 
+        href={`/blogs/${post.blog?.slug || 'no-slug-found'}`}
+        className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
+      >
+        {post.blog?.title || 'Untitled Blog'}
+      </Link>
+      <span className="text-[10px] text-gray-500 font-medium mt-1">
+        by {post.blog?.authorName || post.blog?.name || `Anonymous`}
+      </span>
+    </div>
+  </div>
 
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1.5" title="Likes">

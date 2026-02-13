@@ -18,11 +18,10 @@ import { SearchSuggestionsDropdown } from '@/src/component/search/SearchSuggesti
 export default function BlogChannelView() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { token, user } = useAuth();
+  const { token, userName, userId } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
 
-  // SEARCH HOOK
   const {
     query,
     setQuery,
@@ -49,7 +48,6 @@ export default function BlogChannelView() {
 
   // Search result handler
   const handleSelectResult = (result: any) => {
-    console.log('Selected result:', result);
     switch (result.type) {
       case 'user':
         router.push(`/profile/${result.data.username}`);
@@ -73,6 +71,7 @@ export default function BlogChannelView() {
     enabled: !!token && !!blog,
     retry: false,
   });
+
 
   const handleImageUpload = async (file: File, type: 'coverImage' | 'profileImage') => {
     if (!token) return;
@@ -113,22 +112,23 @@ export default function BlogChannelView() {
     }
   };
 
+
   const handlePermanentDelete = async (postId: string, postTitle: string) => {
     if (!token) return;
     
     const confirmed = window.confirm(
-      `⚠️ Permanent Delete\n\nAre you sure you want to permanently delete "${postTitle}"?\n\nThis action cannot be undone and the post will be immediately removed from your blog.`
+      `Permanent Delete\n\nAre you sure you want to permanently delete "${postTitle}"?\n\nThis action cannot be undone and the post will be immediately removed from your blog.`
     );
     
     if (confirmed) {
       setDeletingPostId(postId);
       try {
         await deletePost(postId, token);
-        alert(`✅ Post permanently deleted\n\n"${postTitle}" has been permanently removed from your blog.`);
+        alert(`Post permanently deleted\n\n"${postTitle}" has been permanently removed from your blog.`);
         queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
       } catch (error) {
         console.error('Failed to delete post:', error);
-        alert('❌ Failed to delete post. Please try again.');
+        alert('Failed to delete post. Please try again.');
       } finally {
         setDeletingPostId(null);
       }
@@ -141,10 +141,10 @@ export default function BlogChannelView() {
       const newStatus = currentStatus === 'published' ? 'draft' : 'published';
       await updatePost(postId, { status: newStatus }, token);
       queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
-      alert(`✅ Post ${newStatus === 'published' ? 'published' : 'moved to drafts'}\n\n"${postTitle}" is now ${newStatus}.`);
+      alert(`Post ${newStatus === 'published' ? 'published' : 'moved to drafts'}\n\n"${postTitle}" is now ${newStatus}.`);
     } catch (error) {
       console.error('Failed to update post status:', error);
-      alert('❌ Failed to update post status. Please try again.');
+      alert('Failed to update post status. Please try again.');
     }
   };
 
@@ -173,23 +173,24 @@ export default function BlogChannelView() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    alert('✅ Download started\n\nYour post has been downloaded as a JSON file.');
+    alert('Download started\n\nYour post has been downloaded as a JSON file.');
   };
 
   const handleCopyLink = (postId: string, postSlug?: string, postTitle?: string) => {
     const identifier = postSlug || postId;
     const postUrl = `${window.location.origin}/posts/${identifier}`;
     navigator.clipboard.writeText(postUrl)
-      .then(() => alert(`✅ Link copied\n\nLink to "${postTitle || 'post'}" copied to clipboard!\n\n${postUrl}`))
+      .then(() => alert(`Link copied\n\nLink to "${postTitle || 'post'}" copied to clipboard!\n\n${postUrl}`))
       .catch(err => {
         console.error('Failed to copy:', err);
-        alert('❌ Failed to copy link. Please try again.');
+        alert('Failed to copy link. Please try again.');
       });
   };
 
   const handleEditPost = (postId: string, isDraft: boolean) => {
     router.push(`/dashboard/edit-post/${postId}`);
   };
+
 
   if (blogLoading || postsLoading || !token) {
     return (
@@ -199,7 +200,7 @@ export default function BlogChannelView() {
     );
   }
 
-  const posts = postsResponse?.data || [];
+  const posts = postsResponse?.data || []; 
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -362,7 +363,10 @@ export default function BlogChannelView() {
                   ? `/dashboard/edit-post/${post._id}` 
                   : `/posts/${post.slug || post._id}`;
                 
-                const isOwner = true;
+                  const isOwner = !!userName && (
+                    post.author?.username === userName || 
+                    blog?.authorName === userName  
+                  );
 
                 return (
                   <article
