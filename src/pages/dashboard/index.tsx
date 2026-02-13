@@ -27,7 +27,7 @@ const PostThumbnail = ({ post, getImageUrl }: { post: any, getImageUrl: Function
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 select-none pointer-events-none transition-transform duration-1000 group-hover/thumb:scale-110">        
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 select-none pointer-events-none transition-transform duration-1000 group-hover/thumb:scale-110">
         {Array.from({ length: 6 }).map((_, i) => (
           <span
             key={i}
@@ -40,7 +40,7 @@ const PostThumbnail = ({ post, getImageUrl }: { post: any, getImageUrl: Function
           >
             WORDOO
           </span>
-        ))}      
+        ))}
       </div>
       <div className="relative z-10">
         <ImageIcon className="text-white/40 mb-3 mx-auto" size={32} />
@@ -57,7 +57,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [token, setToken] = useState<string | null>(null);
-  
+
   // PAGINATION STATE
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -192,41 +192,41 @@ export default function DashboardPage() {
                           </div>
 
                           <Link href={`/posts/${post.slug || post._id}`}>
-  <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-indigo-600 transition-colors">
-    {post.title}
-  </h3>
-</Link>
-                          
-<p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-  {post.excerpt || post.content?.substring(0, 200) + '...'}
-</p>
-</div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-3 leading-tight md:group-hover:text-indigo-600 transition-colors">
+                              {post.title}
+                            </h3>
+                          </Link>
 
-<div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
-  <div className="flex items-center gap-2">
-    <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
-      {post.blog?.profileImage ? (
-        <img src={post.blog.profileImage} alt="" className="w-full h-full object-cover" />
-      ) : (
-        <span>{(post.blog?.authorName || "U").charAt(0)}</span>
-      )}
-    </div>
-    
-    <div className="flex flex-col">
-    
-      
-      <Link 
-        href={`/blogs/${post.blog?.slug || 'no-slug-found'}`}
-        className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
-      >
-        {/* DEBUG VERSION */}
-        {post.blog?.title || `Untitled Blog (Debug: ${post.blog ? 'has object' : 'NO BLOG OBJECT'})`}
-      </Link>
-      <span className="text-[10px] text-gray-500 font-medium mt-1">
-        by {post.blog?.authorName || post.blog?.name || `Anonymous`}
-      </span>
-    </div>
-  </div>
+                          <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
+                            {post.excerpt || post.content?.substring(0, 200) + '...'}
+                          </p>
+                        </div>
+
+                        <div className="flex-col flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
+                          <div className="flex items-center gap-2 m mb-3">
+                            <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-[10px] font-bold text-white overflow-hidden shrink-0">
+                              {post.blog?.profileImage ? (
+                                <img src={post.blog.profileImage} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span>{(post.blog?.authorName || "U").charAt(0)}</span>
+                              )}
+                            </div>
+
+                            <div className="flex flex-col">
+
+
+                              <Link
+                                href={`/blogs/${post.blog?.slug || 'no-slug-found'}`}
+                                className="text-sm font-bold text-gray-900 hover:text-indigo-600 transition-colors leading-none"
+                              >
+                                {/* DEBUG VERSION */}
+                                {post.blog?.title || `Untitled Blog (Debug: ${post.blog ? 'has object' : 'NO BLOG OBJECT'})`}
+                              </Link>
+                              <span className="text-[10px] text-gray-500 font-medium mt-1">
+                                by {post.blog?.authorName || post.blog?.name || `Anonymous`}
+                              </span>
+                            </div>
+                          </div>
 
                           <div className="flex items-center gap-4">
                             <div className="flex items-center gap-1.5" title="Likes">
@@ -256,7 +256,7 @@ export default function DashboardPage() {
 
               {/* PAGINATION CONTROLS */}
               <div className="flex items-center justify-between pt-10 border-t border-gray-100">
-                <button 
+                <button
                   onClick={() => setPage(p => Math.max(p - 1, 1))}
                   disabled={page === 1}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm"
@@ -270,7 +270,7 @@ export default function DashboardPage() {
                   </span>
                 </div>
 
-                <button 
+                <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={!hasMore}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm"
