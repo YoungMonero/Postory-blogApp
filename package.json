@@ -17,6 +17,7 @@
     "@tiptap/pm": "^3.17.1",
     "@tiptap/react": "^3.17.1",
     "@tiptap/starter-kit": "^3.17.1",
+    "@vercel/og": "^0.8.6",
     "axios": "^1.13.4",
     "date-fns": "^4.1.0",
     "dompurify": "^3.3.1",
