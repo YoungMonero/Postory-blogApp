@@ -60,7 +60,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
 
     const handleWriteClick = (e: React.MouseEvent) => {
         e.preventDefault();
-  
+
         if (blog) {
             router.push('/dashboard/create-post');
         } else {
@@ -70,24 +70,26 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
 
     // Search result handler
     const handleSelectResult = (result: any) => {
-        console.log('Selected result:', result);
         switch (result.type) {
             case 'user':
-                router.push(`${result.data.username}`);
+                // The backend now sends the correct blog slug in 'data.slug'
+                const targetPath = result.data.slug || result.data.username;
+
+                if (targetPath) {
+                    // This will now correctly hit /blogs/funny-guy
+                    router.push(`/blogs/${targetPath}`);
+                }
                 break;
+
             case 'post':
                 router.push(`/posts/${result.data.slug || result.data.id}`);
                 break;
-            case 'tag':
-                router.push(`/tags/${result.text}`);
-                break;
-            case 'category':
-                router.push(`/category/${result.text}`);
+
+            default:
                 break;
         }
         clearSearch();
     };
-
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -148,7 +150,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                                     </button>
                                 )}
                             </div>
-                            
+
                             {/* SEARCH SUGGESTIONS DROPDOWN */}
                             <SearchSuggestionsDropdown
                                 visible={searchActive}
