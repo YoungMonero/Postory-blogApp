@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { getToken, setToken as setCookieToken, clearToken } from '../services/auth-storage';
 import AuthRequiredModal from '../component/modals/AuthRequiredModal';
 import { jwtDecode } from 'jwt-decode';
@@ -31,71 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-
-  const decodeAndSetUser = (token: string) => {
-    try {
-      const decoded: any = jwtDecode(token);
-      console.log(' Decoded token:', decoded);
-      
-      setUserName(decoded.username || decoded.userId || null);
-      setUserId(decoded.userId || decoded.sub || null);
-      setEmail(decoded.email || null);
-      setRole(decoded.role || null);
-      setHasBlog(decoded.hasBlog || false);
-      setTenantId(decoded.tenantId || null);
-      
-
-      localStorage.setItem('userData', JSON.stringify({
-        userName: decoded.username,
-        userId: decoded.userId,
-        email: decoded.email,
-        role: decoded.role,
-        hasBlog: decoded.hasBlog,
-        tenantId: decoded.tenantId
-      }));
-    } catch (error) {
-      console.error(' Failed to decode token:', error);
-    }
-  };
-
-  useEffect(() => {
-    const storedToken = getToken();
-    
-    if (storedToken) {
-      setToken(storedToken);
-      decodeAndSetUser(storedToken);
-    } else {
-
-      const storedUserData = localStorage.getItem('userData');
-      if (storedUserData) {
-        try {
-          const userData = JSON.parse(storedUserData);
-          setUserName(userData.userName);
-          setUserId(userData.userId);
-          setEmail(userData.email);
-          setRole(userData.role);
-          setHasBlog(userData.hasBlog);
-          setTenantId(userData.tenantId);
-        } catch (e) {
-          console.error('Failed to restore user data:', e);
-        }
-      }
-    }
-    
-    setLoading(false);
-  }, []);
-
-  const openAuthModal = () => setIsAuthModalOpen(true);
-  const closeAuthModal = () => setIsAuthModalOpen(false);
-
-  const login = (newToken: string) => {
-    setCookieToken(newToken);
-    setToken(newToken);
-    decodeAndSetUser(newToken);
-    setIsAuthModalOpen(false);
-  };
-
-  const logout = () => {
+  // --- 1. Define Logout First ---
+  // We use useCallback so it can be safely called inside decodeAndSetUser
+  const logout = useCallback(() => {
     clearToken();
     localStorage.removeItem('userData');
     localStorage.removeItem('userName'); 
@@ -107,6 +45,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRole(null);
     setHasBlog(false);
     setTenantId(null);
+  }, []);
+
+  // --- 2. Define Decode logic ---
+  const decodeAndSetUser = useCallback((token: string) => {
+    try {
+      const decoded: any = jwtDecode(token);
+      
+      // Check if token is expired
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp && decoded.exp < currentTime) {
+        console.warn('Token expired. Logging out.');
+        logout();
+        return;
+      }
+
+      setUserName(decoded.username || decoded.userId || null);
+      setUserId(decoded.userId || decoded.sub || null);
+      setEmail(decoded.email || null);
+      setRole(decoded.role || null);
+      setHasBlog(decoded.hasBlog || false);
+      setTenantId(decoded.tenantId || null);
+
+      localStorage.setItem('userData', JSON.stringify({
+        userName: decoded.username,
+        userId: decoded.userId,
+        email: decoded.email,
+        role: decoded.role,
+        hasBlog: decoded.hasBlog,
+        tenantId: decoded.tenantId
+      }));
+    } catch (error) {
+      console.error('Failed to decode token:', error);
+      logout(); // Wipe state if token is malformed
+    }
+  }, [logout]);
+
+  // --- 3. Run Initial Auth Check ---
+  useEffect(() => {
+    const storedToken = getToken();
+    
+    if (storedToken) {
+      setToken(storedToken);
+      decodeAndSetUser(storedToken);
+    } else {
+      // No token found? Wipe everything. 
+      // This prevents "Ghost Data" from previous users.
+      logout();
+    }
+    
+    setLoading(false);
+  }, [decodeAndSetUser, logout]);
+
+  // --- 4. Helper Functions ---
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
+
+  const login = (newToken: string) => {
+    setCookieToken(newToken);
+    setToken(newToken);
+    decodeAndSetUser(newToken);
+    setIsAuthModalOpen(false);
   };
 
   return (
