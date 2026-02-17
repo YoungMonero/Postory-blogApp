@@ -100,8 +100,7 @@ export default function PublicBlogChannelView() {
     );
   }
 
-  const posts = blog.posts || [];
-
+const posts = (blog as any).posts || [];
   return (
     <div className="min-h-screen bg-white font-sans">
       {/* NAVBAR */}

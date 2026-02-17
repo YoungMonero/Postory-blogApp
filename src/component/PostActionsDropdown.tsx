@@ -117,7 +117,6 @@ export default function PostActionsDropdown({
             </button>
           )}
 
-          {/* Delete Option (with warning style) */}
           <button
             onClick={() => {
               onDelete();
