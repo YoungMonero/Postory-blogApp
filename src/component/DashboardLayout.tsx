@@ -18,6 +18,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getMyBlog } from '@/src/services/blogs';
 import { useDashboardSearch } from '@/src/component/search/DashboardSearchShadow';
 import { SearchSuggestionsDropdown } from '@/src/component/search/SearchSuggestionsDropdown';
+import { NotificationBell } from './NotificationBell';
+import { NotificationProvider } from '@/src/contexts/NotificationContext';
 
 interface LayoutProps {
     children: React.ReactNode;
@@ -101,8 +103,15 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
     }, []);
 
     if (!token) return null;
+  
+    const errorMessage = searchError 
+  ? (typeof searchError === 'string' 
+      ? searchError 
+      : (searchError as any).message || "Search failed")
+  : undefined;
 
     return (
+        <NotificationProvider> {/* ✅ WRAP WITH PROVIDER */}
         <div className="min-h-screen bg-white">
             <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 z-50">
                 <div className="max-w-[1450px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
@@ -156,7 +165,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                                 visible={searchActive}
                                 loading={searchLoading}
                                 results={results}
-                                error={searchError}
+                                error={errorMessage}
                                 onSelect={handleSelectResult}
                                 query={query}
                             />
@@ -173,10 +182,13 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                             <span className="hidden sm:inline">Write</span>
                         </Button>
 
-                        <button className="text-gray-500 hover:text-gray-900 p-2 relative">
+                          {/* ✅ REPLACE with NotificationBell component */}
+                          <NotificationBell />
+
+                        {/* <button className="text-gray-500 hover:text-gray-900 p-2 relative">
                             <Bell size={20} />
                             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                        </button>
+                        </button> */}
 
                         <div className="relative ml-2" ref={dropdownRef}>
                             <button
@@ -249,5 +261,6 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                 {children}
             </main>
         </div>
+        </NotificationProvider>
     );
 };

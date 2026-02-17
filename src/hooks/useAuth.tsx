@@ -6,15 +6,15 @@ import { jwtDecode } from 'jwt-decode';
 interface AuthContextType {
   token: string | null;
   userName: string | null;
-  userId: string | null;        // ← ADD THIS
-  email: string | null;         // ← ADD THIS
-  role: string | null;          // ← ADD THIS
-  hasBlog: boolean;            // ← ADD THIS
-  tenantId: string | null;     // ← ADD THIS
+  userId: string | null;       
+  email: string | null;         
+  role: string | null;         
+  hasBlog: boolean;           
+  tenantId: string | null;    
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
-  login: (token: string) => void; // ← CHANGED - only need token now!
+  login: (token: string) => void;
   logout: () => void;
 }
 
@@ -31,11 +31,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  // ✅ FIXED: Decode token to get user data!
+
   const decodeAndSetUser = (token: string) => {
     try {
       const decoded: any = jwtDecode(token);
-      console.log('✅ Decoded token:', decoded);
+      console.log(' Decoded token:', decoded);
       
       setUserName(decoded.username || decoded.userId || null);
       setUserId(decoded.userId || decoded.sub || null);
@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setHasBlog(decoded.hasBlog || false);
       setTenantId(decoded.tenantId || null);
       
-      // ✅ Also store in localStorage for persistence
+
       localStorage.setItem('userData', JSON.stringify({
         userName: decoded.username,
         userId: decoded.userId,
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         tenantId: decoded.tenantId
       }));
     } catch (error) {
-      console.error('❌ Failed to decode token:', error);
+      console.error(' Failed to decode token:', error);
     }
   };
 
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(storedToken);
       decodeAndSetUser(storedToken);
     } else {
-      // Try to restore from localStorage
+
       const storedUserData = localStorage.getItem('userData');
       if (storedUserData) {
         try {
@@ -88,7 +88,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
-  // ✅ FIXED: Login now only needs token!
   const login = (newToken: string) => {
     setCookieToken(newToken);
     setToken(newToken);
@@ -98,9 +97,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     clearToken();
-    localStorage.removeItem('userData'); // ← Clean up
-    localStorage.removeItem('userName');  // ← Remove old
-    localStorage.removeItem('user');       // ← Remove old
+    localStorage.removeItem('userData');
+    localStorage.removeItem('userName'); 
+    localStorage.removeItem('user');      
     setToken(null);
     setUserName(null);
     setUserId(null);
@@ -114,11 +113,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       token,
       userName,
-      userId,           // ← Now available!
-      email,           // ← Now available!
-      role,           // ← Now available!
-      hasBlog,        // ← Now available!
-      tenantId,       // ← Now available!
+      userId,         
+      email,          
+      role,          
+      hasBlog,       
+      tenantId,    
       isAuthModalOpen,
       openAuthModal,
       closeAuthModal,
