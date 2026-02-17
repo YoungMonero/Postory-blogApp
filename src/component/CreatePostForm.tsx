@@ -235,9 +235,14 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
         finalPublicId = uploadData.data.publicId;
       }
 
+      const categoriesToSave = (formData.categories && formData.categories.length > 0) 
+    ? formData.categories 
+    : ["General"];
+
       const payload: CreatePostDto = { 
         ...formData, 
-        status: publishStatus, 
+        status: publishStatus,
+        categories: categoriesToSave,
         content: latestContent, 
         thumbnail: finalThumbnail, 
         thumbnailPublicId: finalPublicId,

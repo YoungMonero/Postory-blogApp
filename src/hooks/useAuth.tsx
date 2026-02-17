@@ -65,7 +65,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(storedToken);
       decodeAndSetUser(storedToken);
     } else {
-      // Try to restore from localStorage
       const storedUserData = localStorage.getItem('userData');
       if (storedUserData) {
         try {
@@ -88,7 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
-  // ✅ FIXED: Login now only needs token!
   const login = (newToken: string) => {
     setCookieToken(newToken);
     setToken(newToken);
