@@ -10,8 +10,8 @@ interface PostActionsDropdownProps {
   onDownload?: () => void;
   onCopyLink: (postId: string, slug?: string, title?: string) => void;
   currentStatus?: 'published' | 'draft';
-  slug?: string;      
-  title?: string;     
+  slug?: string;     
+  title?: string;    
 }
 
 export default function PostActionsDropdown({
@@ -21,13 +21,14 @@ export default function PostActionsDropdown({
   onDelete,
   onToggleVisibility,
   onDownload,
-  onCopyLink,       
+  onCopyLink,        
   currentStatus = 'published',
-  slug,             
-  title      
+  slug,            
+  title             
 }: PostActionsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -40,12 +41,14 @@ export default function PostActionsDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+ 
   if (!isOwner) {
     return null;
   }
 
   return (
     <div className="relative" ref={dropdownRef}>
+
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
