@@ -156,7 +156,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                                 visible={searchActive}
                                 loading={searchLoading}
                                 results={results}
-                                error={searchError}
+                                error={searchError ?? undefined}
                                 onSelect={handleSelectResult}
                                 query={query}
                             />
