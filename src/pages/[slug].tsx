@@ -70,7 +70,7 @@ export default function BlogChannelView() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { token, userName, userId } = useAuth();
-  const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
+  const [activeTab, setActiveTab] = useState<'posts' | 'draft'>('posts');
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
@@ -157,6 +157,11 @@ export default function BlogChannelView() {
       console.error('Delete failed:', err);
     }
   };
+/* added here */
+
+    const formRef = useRef<any>(null);
+
+/* added here */
 
   const handleToggleVisibility = async (postId: string, currentStatus: string, postTitle: string) => {
     if (!token) return;
@@ -186,8 +191,8 @@ export default function BlogChannelView() {
     URL.revokeObjectURL(url);
   };
 
-  const handleCopyLink = (postId: string, postSlug?: string, postTitle?: string) => {
-    const postUrl = `${window.location.origin}/posts/${postSlug || postId}`;
+  const handleCopyLink = (postId: string, slug?: string, title?: string) => {
+    const postUrl = `${window.location.origin}/posts/${slug || postId}`;
     navigator.clipboard.writeText(postUrl)
       .then(() => alert('Link copied to clipboard!'))
       .catch(() => alert('Failed to copy link.'));
@@ -326,7 +331,7 @@ export default function BlogChannelView() {
 
         <div className="flex items-center justify-between border-b border-gray-100">
           <div className="flex items-center gap-10">
-            {['Home', 'About'].map((tab) => (
+            {['Posts', 'Draft'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab.toLowerCase() as any)}
@@ -342,11 +347,18 @@ export default function BlogChannelView() {
         </div>
 
         <div className="py-12">
-          {activeTab === 'home' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {/* working */}
+        {(activeTab === 'posts' || activeTab === 'draft') && (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+      {posts
+        .filter((post: any) => {
+          if (activeTab === 'posts') {
+            return post.status?.toLowerCase() === 'published';
+          } else {
+            return post.status?.toLowerCase() === 'draft';
+          }
+        })
 
-              {posts.map((post: any) => {
+              .map((post: any) => {
                 const isDraft = post.status?.toLowerCase() === 'draft';
                 const isArchived = post.status?.toLowerCase() === 'archived';
                 const destination = isDraft ? `/dashboard/edit-post/${post._id}` : `/posts/${post.slug || post._id}`;
@@ -358,18 +370,39 @@ export default function BlogChannelView() {
                       key={post._id} 
                       className="col-span-1 md:col-span-2 lg:col-span-3 bg-white rounded-[2rem] shadow-2xl border-2 border-indigo-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 z-40"
                     >
-                      <div className="bg-indigo-600 px-8 py-4 flex justify-between items-center">
-                        <h3 className="text-white font-black uppercase tracking-widest text-sm">WORDoo Editor</h3>
-                        <button 
-                          onClick={() => setEditingPostId(null)}
-                          className="text-white/80 hover:text-white flex items-center gap-2 font-bold text-xs bg-white/10 px-4 py-2 rounded-full transition-all"
-                        >
-                          <X size={16} /> Close & Discard
-                        </button>
-                      </div>
+                     <div className="bg-indigo-600 px-8 py-4 flex justify-between items-center">
+  <h3 className="text-white font-black uppercase tracking-widest text-sm">
+    WORDoo Editor
+  </h3>
+
+  <div className="flex items-center gap-3">
+    <button
+      onClick={() => formRef.current?.submitDraft()}
+      className="bg-white/10 text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-white/20 transition-all"
+    >
+      Save Draft
+    </button>
+
+    <button
+      onClick={() => formRef.current?.submitPublish()}
+      className="bg-white text-indigo-700 px-5 py-2 rounded-full text-xs font-black hover:bg-gray-100 transition-all"
+    >
+      Publish
+    </button>
+
+    <button 
+      onClick={() => setEditingPostId(null)}
+      className="text-white/80 hover:text-white flex items-center gap-2 font-bold text-xs bg-white/10 px-4 py-2 rounded-full transition-all"
+    >
+      <X size={16} />
+    </button>
+  </div>
+</div>
+
                       
                       <div className="p-2">
                          <CreatePostForm 
+                           ref={formRef}
                            token={token}
                            isEditing={true}
                            isInline={true}
@@ -383,7 +416,7 @@ export default function BlogChannelView() {
                     </div>
                   );
                 }
-                /* working */
+      
                 return (
                   <article key={post._id} className="group flex flex-col cursor-pointer relative">
                     {deletingPostId === post._id && (
@@ -395,18 +428,20 @@ export default function BlogChannelView() {
                       </div>
                     )}
 
-                    <div className="absolute top-4 right-4 z-20" onClick={(e) => e.stopPropagation()}>
-                      <PostActionsDropdown
-                        postId={post._id}
-                        isOwner={isOwner}
-                        currentStatus={post.status}
-                        onEdit={() => handleEditPost(post._id)}
-                        onDelete={() => handleDeletePost(post._id)}
-                        onToggleVisibility={() => handleToggleVisibility(post._id, post.status, post.title)}
-                        onDownload={() => handleDownload(post)}
-                        onCopyLink={() => handleCopyLink(post._id, post.slug, post.title)}
-                      />
-                    </div>
+<div className="absolute top-4 right-4 z-20" onClick={(e) => e.stopPropagation()}>
+  <PostActionsDropdown
+    postId={post._id}
+    isOwner={isOwner}
+    onEdit={() => handleEditPost(post._id)}
+    onDelete={() => handleDeletePost(post._id)}
+    onToggleVisibility={() => handleToggleVisibility(post._id, post.status, post.title)}
+    onDownload={() => handleDownload(post)}
+    onCopyLink={(postId, slug, title) => handleCopyLink(postId, slug, title)}
+    currentStatus={post.status}
+    slug={post.slug}
+    title={post.title}
+  />
+</div>
 
                     <div onClick={() => !isArchived && router.push(destination)}>
                       <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-5 bg-gray-50 shadow-sm group-hover:shadow-xl transition-all duration-500">

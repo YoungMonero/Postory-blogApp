@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -16,6 +16,7 @@ import {
 import localforage from 'localforage';
 import { debounce } from 'lodash';
 
+
 interface CreatePostFormProps {
   token: string | null;
   onSuccess?: () => void;
@@ -30,13 +31,13 @@ const draftStorage = localforage.createInstance({
 });
 
 
-const CreatePostForm: React.FC<CreatePostFormProps> = ({ 
+const CreatePostForm = forwardRef<any, CreatePostFormProps>(({
   token, 
   onSuccess, 
   initialData, 
   isEditing = false,
   isInline = false, 
-}) => {
+}, ref) => {
   const queryClient = useQueryClient();
   const { createNewPost, updateExistingPost, loading, error: backendError } = usePosts();
   const [file, setFile] = useState<File | null>(null);
@@ -66,6 +67,11 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
       }, 1000),
     [isEditing]
   );
+
+  useImperativeHandle(ref, () => ({
+    submitDraft: () => handleSubmit('draft'),
+    submitPublish: () => handleSubmit('published'),
+  }));
 
   useEffect(() => {
     return () => {
@@ -238,14 +244,18 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
     ? formData.categories 
     : ["General"];
 
-      const payload: CreatePostDto = { 
-        ...formData, 
-        status: publishStatus,
-        categories: categoriesToSave,
-        content: latestContent, 
-        thumbnail: finalThumbnail, 
-        thumbnailPublicId: finalPublicId,
-      };
+    const payload: CreatePostDto = {
+      title: formData.title,
+      content: latestContent,
+      status: publishStatus,
+      thumbnail: finalThumbnail,
+      thumbnailPublicId: finalPublicId,
+      slug: formData.slug,
+      categories: categoriesToSave,
+      excerpt: formData.excerpt,
+      seoDescription: formData.seoDescription,
+    };
+    
 
       let result;
       if (isEditing && initialData?._id) {
@@ -290,14 +300,32 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
           });
           editor?.commands.setContent('');
         }
-        
-        if (onSuccess) onSuccess();
       
     } catch (err: any) { 
       alert(err.message || "Error processing request"); 
     } finally { 
       setUploading(false); 
     }
+
+    // try {
+    //   // 1. Prepare the base payload
+    //   const payload: any = { 
+    //     title: formData.title,
+    //     content: latestContent,
+    //     status: publishStatus,
+    //     categories: (formData.categories && formData.categories.length > 0) ? formData.categories : ["General"],
+    //     thumbnail: finalThumbnail,
+    //     thumbnailPublicId: finalPublicId,
+    //     slug: formData.slug,
+    //     excerpt: formData.excerpt,
+    //     seoDescription: formData.seoDescription,
+    //   };
+    //   let result;
+    // if (isEditing && initialData?._id) {
+    //   result = await updateExistingPost(initialData._id, payload, token);
+    // } else {
+    //   result = await createNewPost(payload, token);
+    // }
   };
 
   return (
@@ -486,7 +514,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({
       </div>
     </div>
   );
-};
+});
 
 const ToolbarButton = ({ onClick, active, icon }: any) => (
   <button 
