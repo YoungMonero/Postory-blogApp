@@ -22,7 +22,7 @@ export const notificationService = {
 
   // Mark all as read
   async markAllAsRead(): Promise<{ success: boolean }> {
-    const response = await api.post('/notifications/read-all');
+    const response = await api.post('/notifications/read-all', {});
     return response.data;
   },
 
