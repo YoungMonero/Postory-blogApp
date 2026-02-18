@@ -1,5 +1,5 @@
 import api from './api';
-import { Notification, NotificationResponse } from '@/src/types/notification';
+import {  NotificationResponse } from '@/src/types/notification';
 
 export const notificationService = {
   // Get user notifications with pagination
