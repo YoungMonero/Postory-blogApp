@@ -14,6 +14,7 @@ import { format } from 'date-fns';
 import PostActionsDropdown from '@/src/component/PostActionsDropdown';
 import { useDashboardSearch } from '@/src/component/search/DashboardSearchShadow';
 import { SearchSuggestionsDropdown } from '@/src/component/search/SearchSuggestionsDropdown';
+import CreatePostForm from '@/src/component/CreatePostForm';
 
 // --- ADDED HELPERS & SUB-COMPONENT ---
 const getImageUrl = (thumbnail: string | undefined): string => {
@@ -71,6 +72,7 @@ export default function BlogChannelView() {
   const { token, userName, userId } = useAuth();
   const [activeTab, setActiveTab] = useState<'home' | 'about'>('home');
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   const {
     query,
@@ -192,7 +194,7 @@ export default function BlogChannelView() {
   };
 
   const handleEditPost = (postId: string) => {
-    router.push(`/dashboard/edit-post/${postId}`);
+    setEditingPostId(postId);
   };
 
   if (blogLoading || postsLoading || !token) {
@@ -342,12 +344,46 @@ export default function BlogChannelView() {
         <div className="py-12">
           {activeTab === 'home' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {/* working */}
+
               {posts.map((post: any) => {
                 const isDraft = post.status?.toLowerCase() === 'draft';
                 const isArchived = post.status?.toLowerCase() === 'archived';
                 const destination = isDraft ? `/dashboard/edit-post/${post._id}` : `/posts/${post.slug || post._id}`;
                 const isOwner = !!userName && (post.author?.username === userName || blog?.authorName === userName);
 
+                if (editingPostId === post._id) {
+                  return (
+                    <div 
+                      key={post._id} 
+                      className="col-span-1 md:col-span-2 lg:col-span-3 bg-white rounded-[2rem] shadow-2xl border-2 border-indigo-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 z-40"
+                    >
+                      <div className="bg-indigo-600 px-8 py-4 flex justify-between items-center">
+                        <h3 className="text-white font-black uppercase tracking-widest text-sm">WORDoo Editor</h3>
+                        <button 
+                          onClick={() => setEditingPostId(null)}
+                          className="text-white/80 hover:text-white flex items-center gap-2 font-bold text-xs bg-white/10 px-4 py-2 rounded-full transition-all"
+                        >
+                          <X size={16} /> Close & Discard
+                        </button>
+                      </div>
+                      
+                      <div className="p-2">
+                         <CreatePostForm 
+                           token={token}
+                           isEditing={true}
+                           isInline={true}
+                           initialData={post}
+                           onSuccess={() => {
+                             setEditingPostId(null);
+                             queryClient.invalidateQueries({ queryKey: ['user-posts', token] });
+                           }}
+                         />
+                      </div>
+                    </div>
+                  );
+                }
+                /* working */
                 return (
                   <article key={post._id} className="group flex flex-col cursor-pointer relative">
                     {deletingPostId === post._id && (
