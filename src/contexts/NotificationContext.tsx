@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { useNotificationSocket } from '@/src/hooks/useNotificationSocket';
 import { notificationService } from '@/src/services/notification.service';
 import { AppNotification } from '@/src/types/notification';
-import { useAuth } from '@/src/hooks/useAuth'; // ✅ Add this
+import { useAuth } from '@/src/hooks/useAuth'; 
 
 interface NotificationContextType {
   notifications: AppNotification[];
