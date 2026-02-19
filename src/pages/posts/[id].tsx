@@ -8,7 +8,8 @@ import { commentService } from '@/src/services/comment';
 import { useAuth } from '@/src/hooks/useAuth';
 import { Heart, MessageSquare, Share2, ArrowLeft } from 'lucide-react';
 import { api } from '@/src/services/post';
-import Cookies from 'js-cookie'; // 1. Import Cookies
+// import Cookies from 'js-cookie';
+import { toggleLike } from '@/src/services/post';
 
 export default function PostDetailPage({ initialPost }: { initialPost: Post | null }) {
   const router = useRouter();
@@ -56,7 +57,7 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
 
           // Handle Like Status + COOKIE CHECK
           setLikesCount(currentPost.likes || 0);
-          
+
           // 2. Priority: Check Cookie first, then fallback to API/UserName check
           const savedLike = Cookies.get(`liked_${postId}`);
           if (savedLike === 'true') {
@@ -75,26 +76,38 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
     fetchPostDetails();
   }, [id, router.isReady, userName, token]);
 
+  useEffect(() => {
+    if (post) {
+      setIsLiked(post.isLikedByMe || false);
+      setLikesCount(post.likesCount || 0);
+    }
+  }, [post]);
+
+
   const handleLike = async (e: React.MouseEvent) => {
     const targetId = post?._id || post?.id;
+
     if (!targetId || !token) {
       e.preventDefault();
       openAuthModal();
       return;
     }
 
-    try {
-      const result = await commentService.toggleLike(targetId);
-      setLikesCount(result.likes);
-      setIsLiked(result.liked);
+    const previousIsLiked = isLiked;
+    const previousLikesCount = likesCount;
 
-      // 3. Save to cookies so it persists after refresh
-      if (result.liked) {
-        Cookies.set(`liked_${targetId}`, 'true', { expires: 7 });
-      } else {
-        Cookies.remove(`liked_${targetId}`);
-      }
+    setIsLiked(!previousIsLiked);
+    setLikesCount(prev => (previousIsLiked ? Math.max(0, prev - 1) : prev + 1));
+
+
+    try {
+      const result = await toggleLike(targetId);
+
+      setIsLiked(result.liked);
+      setLikesCount(result.likes);
     } catch (err) {
+      setIsLiked(previousIsLiked);
+      setLikesCount(previousLikesCount);
       console.error('Like failed:', err);
     }
   };

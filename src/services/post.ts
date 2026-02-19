@@ -391,12 +391,16 @@ export async function getPostsWithViews(token?: string): Promise<Post[]> {
   }
 }
 
-export async function toggleLike(postId: string): Promise<ApiResponse<any>> {
+export async function toggleLike(postId: string): Promise<{ liked: boolean; likes: number }> {
   try {
-    const response = await api.post<ApiResponse<any>>(`/posts/${postId}/like`);
-    return response.data;
+    const response = await api.post(`/posts/${postId}/like`);
+    
+    return response.data; 
   } catch (error) {
     const axiosError = error as AxiosError<ErrorResponse>;
+    
+    console.error("Like API Error:", axiosError.response?.data || axiosError.message);
+
     throw {
       success: false,
       message: axiosError.response?.data?.message || 'Failed to toggle like',
