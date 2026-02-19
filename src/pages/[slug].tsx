@@ -33,23 +33,15 @@ import BlogSettingsDrawer from "@/src/component/BlogSettingsDrawer";
 import Head from "next/head";
 import ShareDropdown from "@/src/component/ShareDropdown";
 
-const getImageUrl = (thumbnail: unknown): string => {
-  const value = typeof thumbnail === "string" ? thumbnail : "";
-
-  if (value.trim() === "") {
+const getImageUrl = (thumbnail: string | undefined): string => {
+  if (!thumbnail || thumbnail.trim() === "")
     return "https://via.placeholder.com/400x250?text=placeholder";
-  }
-
-  if (value.startsWith("http")) return value;
-
+  if (thumbnail.startsWith("http")) return thumbnail;
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
-  return value.startsWith("/")
-    ? `${apiUrl}${value}`
-    : `${apiUrl}/${value}`;
+  return thumbnail.startsWith("/")
+    ? `${apiUrl}${thumbnail}`
+    : `${apiUrl}/${thumbnail}`;
 };
-
-
 
 const PostThumbnail = ({
   post,

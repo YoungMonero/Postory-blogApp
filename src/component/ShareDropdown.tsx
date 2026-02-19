@@ -200,8 +200,8 @@ export default function ShareDropdown({
               onClick={() => handleShare("instagram")}
               className="flex flex-col items-center p-3 rounded-xl hover:bg-gray-50 transition-colors group"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#833AB4] via-[#FD1D1D] to-[#FCAF45] bg-opacity-5 group-hover:bg-opacity-10 flex items-center justify-center mb-1">
-                <Instagram size={18} className="text-[#E4405F]" />
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#833AB4] to-[#FCAF45] bg-opacity-5 group-hover:bg-opacity-10 flex items-center justify-center mb-1">
+                <Instagram size={18} className="text-[#262222a9]" />
               </div>
               <span className="text-[10px] font-bold text-gray-500">
                 Instagram
