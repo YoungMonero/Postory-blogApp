@@ -14,10 +14,10 @@ import {
   Share2,
   Loader2,
   Heart,
-  MessageSquare,
   Search,
   X,
   ImageIcon,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useDashboardSearch } from "@/src/component/search/DashboardSearchShadow";
@@ -363,7 +363,7 @@ const user = { token, _id: userId, username: userName }; // Create a user object
                     </h4>
                     <div className="flex items-center gap-4 pt-2 text-gray-400">
                       <span className="flex items-center gap-1 text-xs font-bold">
-                        <MessageSquare size={14} /> {post.views || 0}
+                        <Eye size={14} /> {post.views || 0}
                       </span>
                       <span className="flex items-center gap-1 text-xs font-bold">
                         <Heart size={14} /> {post.likes || 0}
