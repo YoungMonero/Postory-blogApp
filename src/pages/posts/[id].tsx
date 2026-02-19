@@ -8,13 +8,13 @@ import { commentService } from '@/src/services/comment';
 import { useAuth } from '@/src/hooks/useAuth';
 import { Heart, MessageSquare, Share2, ArrowLeft } from 'lucide-react';
 import { api } from '@/src/services/post';
+import Cookies from 'js-cookie'; // 1. Import Cookies
 
 export default function PostDetailPage({ initialPost }: { initialPost: Post | null }) {
   const router = useRouter();
   const { id } = router.query;
   const { token, userName, openAuthModal } = useAuth();
 
-  // Initialize state with server-side data (initialPost)
   const [post, setPost] = useState<Post | null>(initialPost);
   const [loading, setLoading] = useState(!initialPost);
   const [likesCount, setLikesCount] = useState(initialPost?.likes || 0);
@@ -23,19 +23,15 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
   const hasIncrementedViews = useRef(false);
   const handleBack = () => router.push('/dashboard');
 
-
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const displayTitle = post?.title || initialPost?.title || "Story";
   const ogImageUrl = `${siteUrl}/api/og?title=${encodeURIComponent(displayTitle)}`;
 
   useEffect(() => {
-    // If we have initialPost, we still want to check for "Liked" status and Views
-    // but we don't necessarily need to fetch the whole post again immediately.
     if (!router.isReady || !id) return;
 
     const fetchPostDetails = async () => {
       try {
-        // If we didn't get data from server, fetch it now
         let currentPost = post;
         if (!currentPost) {
           setLoading(true);
@@ -58,9 +54,14 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
             }
           }
 
-          // Handle Like Status
+          // Handle Like Status + COOKIE CHECK
           setLikesCount(currentPost.likes || 0);
-          if (userName && currentPost.likedBy) {
+          
+          // 2. Priority: Check Cookie first, then fallback to API/UserName check
+          const savedLike = Cookies.get(`liked_${postId}`);
+          if (savedLike === 'true') {
+            setIsLiked(true);
+          } else if (userName && currentPost.likedBy) {
             setIsLiked(currentPost.likedBy.includes(userName));
           }
         }
@@ -86,6 +87,13 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
       const result = await commentService.toggleLike(targetId);
       setLikesCount(result.likes);
       setIsLiked(result.liked);
+
+      // 3. Save to cookies so it persists after refresh
+      if (result.liked) {
+        Cookies.set(`liked_${targetId}`, 'true', { expires: 7 });
+      } else {
+        Cookies.remove(`liked_${targetId}`);
+      }
     } catch (err) {
       console.error('Like failed:', err);
     }
@@ -178,7 +186,6 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
     </main>
   );
 }
-
 
 export async function getServerSideProps(context: any) {
   const { id } = context.query;

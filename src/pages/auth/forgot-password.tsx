@@ -16,12 +16,25 @@ export default function ForgotPasswordPage() {
     setError('');
 
     try {
-      await passwordResetService.forgotPassword(email);
-      setSuccess(true);
-      // Store email for next step
+      console.log("Attempting to send reset code...");
+      const response = await passwordResetService.forgotPassword(email);
+      console.log("Server success:", response.message);
+
+      // 1. Save email immediately
       sessionStorage.setItem('resetEmail', email);
+
+      // 2. Set a 15-minute expiry in storage so the timer starts correctly on next page
+      const expiry = Date.now() + 15 * 60 * 1000;
+      sessionStorage.setItem('resetExpiry', expiry.toString());
+
+      // 3. Short delay to ensure storage is written, then navigate
+      setTimeout(() => {
+        router.push('/auth/verify-reset-code');
+      }, 100);
+
     } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+      console.error("Submission error:", err);
+      setError(err.response?.data?.message || err.message || 'Something went wrong');
     } finally {
       setIsLoading(false);
     }
