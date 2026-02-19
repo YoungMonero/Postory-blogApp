@@ -50,7 +50,7 @@ export default function PostDetailPage({
         if (currentPost) {
           const postId = currentPost._id || currentPost.id;
 
-          // Handle View Increment
+
           if (!hasIncrementedViews.current && postId && token) {
             try {
               const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -61,10 +61,9 @@ export default function PostDetailPage({
             }
           }
 
-          // Handle Like Status + COOKIE CHECK
+  
           setLikesCount(currentPost.likes || 0);
 
-          // 2. Priority: Check Cookie first, then fallback to API/UserName check
           const savedLike = Cookies.get(`liked_${postId}`);
           if (savedLike === "true") {
             setIsLiked(true);
@@ -95,7 +94,7 @@ export default function PostDetailPage({
       setLikesCount(result.likes);
       setIsLiked(result.liked);
 
-      // 3. Save to cookies so it persists after refresh
+      
       if (result.liked) {
         Cookies.set(`liked_${targetId}`, "true", { expires: 7 });
       } else {

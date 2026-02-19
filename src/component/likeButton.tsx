@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 import { commentService } from '@/src/services/comment';
-import Cookies from 'js-cookie'; // Make sure to: npm install js-cookie
+import Cookies from 'js-cookie'; 
 
 interface LikeButtonProps {
   post: any;
@@ -14,7 +14,7 @@ const LikeButton = ({ post, token, openAuthModal }: LikeButtonProps) => {
   const [isLiked, setIsLiked] = useState(post.isLikedByUser || false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // 1. Check cookies on mount to restore the red heart state
+
   useEffect(() => {
     const postId = post?._id || post?.id;
     const savedLike = Cookies.get(`liked_${postId}`);

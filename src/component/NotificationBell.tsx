@@ -7,7 +7,7 @@ import {
   Reply, 
   Circle,
   MoreHorizontal
-} from 'lucide-react'; // Added Twitter/Facebook style icons
+} from 'lucide-react'; 
 import { useNotifications } from '@/src/contexts/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 

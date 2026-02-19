@@ -76,7 +76,6 @@ export default function PostActionsDropdown({
             Edit Post
           </button>
 
-          {/* FIX: Only render the button tag if the status is NOT published */}
           {onToggleVisibility && currentStatus !== 'published' && (
             <button
               onClick={() => {
