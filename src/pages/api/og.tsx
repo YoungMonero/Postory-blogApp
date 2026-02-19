@@ -8,7 +8,11 @@ export const config = {
 export default async function handler(request: NextRequest) {
   try {
     const { searchParams, origin } = new URL(request.url);
-    const title = searchParams.get("title") || "My website";
+
+    const title = searchParams.get("title") || "Untitled Post";
+    const author = searchParams.get("author") || "Wordoo Author";
+    const image = searchParams.get("image");
+
 
     const fontData = await fetch(
       new URL("/fonts/InterDisplay-Bold.ttf", origin)
@@ -19,46 +23,56 @@ export default async function handler(request: NextRequest) {
 
     return new ImageResponse(
       (
-        <div tw="flex flex-col w-full h-full items-center justify-center bg-white">
-          <div tw="bg-gray-50 flex w-full">
-            <div tw="flex flex-col md:flex-row w-full py-12 px-4 md:items-center justify-between p-8">
-              <h2 tw="flex flex-col text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 text-left">
+        <div tw="flex flex-col w-full h-full bg-slate-900 text-white p-12 justify-between">
 
-                <span>{title}</span> 
-                <span tw="text-indigo-600">Read the full story today.</span>
-              </h2>
-              <div tw="mt-8 flex md:mt-0">
-                <div tw="flex rounded-md shadow">
-                  <a tw="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-5 py-3 text-base font-medium text-white">
-                    Read Post 🤘
-                  </a>
-                </div>
+          <div tw="absolute inset-0 opacity-10 flex flex-wrap" style={{ fontSize: '100px', fontWeight: 'bold' }}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <span key={i} tw="mr-10 mb-10">WORDOO</span>
+            ))}
+          </div>
+
+          <div tw="flex flex-col relative z-10">
+
+            <div tw="flex items-center mb-8">
+              <div tw="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center mr-3">
+                <span tw="text-white font-bold">W</span>
               </div>
+              <span tw="text-2xl font-black tracking-tighter">WORD<span tw="text-indigo-500">oo</span></span>
             </div>
+
+
+            <h1 tw="text-7xl font-black leading-tight tracking-tight mb-4">
+              {title}
+            </h1>
+          </div>
+
+          <div tw="flex items-center justify-between relative z-10">
+             <div tw="flex items-center">
+
+                <div tw="flex flex-col">
+                  <span tw="text-indigo-400 text-sm font-bold uppercase tracking-widest">Written By</span>
+                  <span tw="text-2xl font-bold">{author}</span>
+                </div>
+             </div>
+
+             {image && (
+               <img 
+                 src={image} 
+                 tw="w-48 h-32 rounded-2xl object-cover border-4 border-white/10 shadow-2xl" 
+               />
+             )}
           </div>
         </div>
       ),
       {
         width: 1200,
         height: 630,
-        emoji: "noto",
-        fonts: [
-          {
-            name: "Inter",
-            data: fontData,
-            style: "normal",
-            weight: 700,
-          },
-        ],
       }
     );
   } catch (e: any) {
-    console.error(`OG Error: ${e.message}`);
-    return new Response(`Failed to generate the image: ${e.message}`, {
-      status: 500,
-    });
+    return new Response(`Failed to generate the image`, { status: 500 });
   }
-}
+};
 
 
 
