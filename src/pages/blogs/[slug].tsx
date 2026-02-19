@@ -14,15 +14,16 @@ import {
   Share2,
   Loader2,
   Heart,
-  MessageSquare,
   Search,
   X,
   ImageIcon,
+  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useDashboardSearch } from "@/src/component/search/DashboardSearchShadow";
 import { SearchSuggestionsDropdown } from "@/src/component/search/SearchSuggestionsDropdown";
 import { useAuth } from "@/src/hooks/useAuth";
+import ShareDropdown from "@/src/component/ShareDropdown";
 
 // --- HELPERS ---
 const getImageUrl = (thumbnail: string | undefined): string => {
@@ -306,9 +307,11 @@ const user = { token, _id: userId, username: userName }; // Create a user object
                     : "Subscribe"}
                 </button>
 
-                <button className="p-3.5 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
-                  <Share2 size={20} />
-                </button>
+                <ShareDropdown
+  url={typeof window !== 'undefined' ? window.location.href : ''}
+  title="Check out this post"
+  description="Share this content"
+/>
               </div>
             </div>
           </div>
@@ -360,7 +363,7 @@ const user = { token, _id: userId, username: userName }; // Create a user object
                     </h4>
                     <div className="flex items-center gap-4 pt-2 text-gray-400">
                       <span className="flex items-center gap-1 text-xs font-bold">
-                        <MessageSquare size={14} /> {post.views || 0}
+                        <Eye size={14} /> {post.views || 0}
                       </span>
                       <span className="flex items-center gap-1 text-xs font-bold">
                         <Heart size={14} /> {post.likes || 0}

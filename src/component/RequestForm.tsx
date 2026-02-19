@@ -99,7 +99,7 @@ const ResetPasswordForm = () => {
             <input
               type="text"
               name="token"
-              value={formData.token}  // ✅ ADDED value binding
+              value={formData.token}
               onChange={handleChange}
               placeholder="Enter the 6-digit code"
               required

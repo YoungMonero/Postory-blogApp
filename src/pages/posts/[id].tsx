@@ -1,16 +1,21 @@
-import React, { useEffect, useState, useRef } from 'react';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { getPublicPostDetail } from '@/src/services/post';
-import { Post } from '@/src/types/posts';
-import CommentSection from '@/src/component/CommentSection';
-import { commentService } from '@/src/services/comment';
-import { useAuth } from '@/src/hooks/useAuth';
-import { Heart, MessageSquare, Share2, ArrowLeft } from 'lucide-react';
-import { api } from '@/src/services/post';
-import Cookies from 'js-cookie'; // 1. Import Cookies
+import React, { useEffect, useState, useRef } from "react";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import { getPublicPostDetail } from "@/src/services/post";
+import { Post } from "@/src/types/posts";
+import CommentSection from "@/src/component/CommentSection";
+import { commentService } from "@/src/services/comment";
+import { useAuth } from "@/src/hooks/useAuth";
+import { Heart, MessageSquare, Share2, ArrowLeft } from "lucide-react";
+import { api } from "@/src/services/post";
+import Cookies from "js-cookie";
+import ShareDropdown from "@/src/component/ShareDropdown";
 
-export default function PostDetailPage({ initialPost }: { initialPost: Post | null }) {
+export default function PostDetailPage({
+  initialPost,
+}: {
+  initialPost: Post | null;
+}) {
   const router = useRouter();
   const { id } = router.query;
   const { token, userName, openAuthModal } = useAuth();
@@ -21,11 +26,13 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
   const [isLiked, setIsLiked] = useState(false);
 
   const hasIncrementedViews = useRef(false);
-  const handleBack = () => router.push('/dashboard');
+  const handleBack = () => router.push("/dashboard");
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const displayTitle = post?.title || initialPost?.title || "Story";
-  const ogImageUrl = `${siteUrl}/api/og?title=${encodeURIComponent(displayTitle)}`;
+  const ogImageUrl = `${siteUrl}/api/og?title=${encodeURIComponent(
+    displayTitle
+  )}`;
 
   useEffect(() => {
     if (!router.isReady || !id) return;
@@ -50,23 +57,23 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
               await api.post(`/posts/${postId}/view`, {}, config);
               hasIncrementedViews.current = true;
             } catch (viewError) {
-              console.warn('Could not increment view count:', viewError);
+              console.warn("Could not increment view count:", viewError);
             }
           }
 
           // Handle Like Status + COOKIE CHECK
           setLikesCount(currentPost.likes || 0);
-          
+
           // 2. Priority: Check Cookie first, then fallback to API/UserName check
           const savedLike = Cookies.get(`liked_${postId}`);
-          if (savedLike === 'true') {
+          if (savedLike === "true") {
             setIsLiked(true);
           } else if (userName && currentPost.likedBy) {
             setIsLiked(currentPost.likedBy.includes(userName));
           }
         }
       } catch (err) {
-        console.error('Failed to load post content', err);
+        console.error("Failed to load post content", err);
       } finally {
         setLoading(false);
       }
@@ -90,12 +97,12 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
 
       // 3. Save to cookies so it persists after refresh
       if (result.liked) {
-        Cookies.set(`liked_${targetId}`, 'true', { expires: 7 });
+        Cookies.set(`liked_${targetId}`, "true", { expires: 7 });
       } else {
         Cookies.remove(`liked_${targetId}`);
       }
     } catch (err) {
-      console.error('Like failed:', err);
+      console.error("Like failed:", err);
     }
   };
 
@@ -116,7 +123,10 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
       <Head>
         <title>{post.title}</title>
         <meta property="og:title" content={post.title} />
-        <meta property="og:description" content={`Read ${post.title} on My Blog`} />
+        <meta
+          property="og:description"
+          content={`Read ${post.title} on My Blog`}
+        />
         <meta property="og:image" content={ogImageUrl} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
@@ -131,11 +141,17 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
           className="group flex items-center justify-center w-12 h-12 bg-white border border-gray-100 rounded-full shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300"
           title="Back to Dashboard"
         >
-          <ArrowLeft size={20} className="text-gray-400 group-hover:text-indigo-600 transition-colors group-hover:-translate-x-1 duration-300" />
+          <ArrowLeft
+            size={20}
+            className="text-gray-400 group-hover:text-indigo-600 transition-colors group-hover:-translate-x-1 duration-300"
+          />
         </button>
       </nav>
 
-      <button onClick={handleBack} className="lg:hidden flex items-center gap-2 text-gray-400 mb-8 font-bold text-xs uppercase tracking-widest">
+      <button
+        onClick={handleBack}
+        className="lg:hidden flex items-center gap-2 text-gray-400 mb-8 font-bold text-xs uppercase tracking-widest"
+      >
         <ArrowLeft size={14} /> Back to Dashboard
       </button>
 
@@ -145,12 +161,19 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
         </h1>
         <div className="flex items-center gap-4 py-6 border-y border-gray-100">
           <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-lg uppercase">
-            {post.author?.displayName?.charAt(0) || 'U'}
+            {post.author?.displayName?.charAt(0) || "U"}
           </div>
           <div>
-            <div className="text-gray-900 font-semibold">{post.author?.displayName || 'Anonymous'}</div>
+            <div className="text-gray-900 font-semibold">
+              {post.author?.displayName || "Anonymous"}
+            </div>
             <div className="text-gray-500 text-sm">
-              {new Date(post.createdAt).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })} · {Math.ceil(post.content?.length / 1000) || 1} min read
+              {new Date(post.createdAt).toLocaleDateString(undefined, {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}{" "}
+              · {Math.ceil(post.content?.length / 1000) || 1} min read
             </div>
           </div>
         </div>
@@ -158,25 +181,52 @@ export default function PostDetailPage({ initialPost }: { initialPost: Post | nu
 
       {post.thumbnail && (
         <div className="mb-12">
-          <img src={post.thumbnail} className="w-full h-[450px] object-cover rounded-[2rem] shadow-sm" alt={post.title} />
+          <img
+            src={post.thumbnail}
+            className="w-full h-[450px] object-cover rounded-[2rem] shadow-sm"
+            alt={post.title}
+          />
         </div>
       )}
 
-      <article className="prose prose-lg prose-indigo max-w-none text-gray-800 leading-relaxed font-serif" dangerouslySetInnerHTML={{ __html: post.content }} />
+      <article
+        className="prose prose-lg prose-indigo max-w-none text-gray-800 leading-relaxed font-serif"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
 
       <div className="sticky bottom-8 left-0 right-0 flex justify-center z-50 mt-12">
         <div className="flex items-center gap-6 bg-white/80 backdrop-blur-md border border-gray-200 px-6 py-3 rounded-full shadow-xl shadow-gray-200/50">
-          <button onClick={handleLike} className={`flex items-center gap-2 transition-all active:scale-90 ${isLiked ? 'text-red-500' : 'text-gray-500 hover:text-gray-900'}`}>
-            <Heart size={20} fill={isLiked ? 'currentColor' : 'none'} className={isLiked ? 'animate-bounce' : ''} />
+          <button
+            onClick={handleLike}
+            className={`flex items-center gap-2 transition-all active:scale-90 ${
+              isLiked ? "text-red-500" : "text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            <Heart
+              size={20}
+              fill={isLiked ? "currentColor" : "none"}
+              className={isLiked ? "animate-bounce" : ""}
+            />
             <span className="text-sm font-bold">{likesCount}</span>
           </button>
           <div className="w-px h-4 bg-gray-200" />
-          <button onClick={() => document.getElementById('discussion')?.scrollIntoView({ behavior: 'smooth' })} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-all">
+          <button
+            onClick={() =>
+              document
+                .getElementById("discussion")
+                ?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-all"
+          >
             <MessageSquare size={20} />
             <span className="text-sm font-bold">Discuss</span>
           </button>
           <div className="w-px h-4 bg-gray-200" />
-          <button className="text-gray-500 hover:text-gray-900 transition-all"><Share2 size={20} /></button>
+          <ShareDropdown
+  url={typeof window !== 'undefined' ? window.location.href : ''}
+  title="Check out this post"
+  description="Share this content"
+/>
         </div>
       </div>
 

@@ -340,7 +340,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Auth Modal Integration (Correction #3 & #7) */}
       <AuthRequiredModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
