@@ -39,7 +39,7 @@ const LikeButton = ({ post, token, openAuthModal }: LikeButtonProps) => {
     }
 
     setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 500);
+    setTimeout(() => setIsAnimating(false), 100);
 
     try {
       const result = await commentService.toggleLike(targetId);

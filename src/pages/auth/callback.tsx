@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useAuth } from '../../hooks/useAuth'; // Double check this path matches your folder structure
+import { useAuth } from '../../hooks/useAuth'; 
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -14,7 +14,6 @@ export default function AuthCallback() {
 
     if (token && typeof token === 'string') {
       console.log("Authentication successful, initializing session...");
-      
 
       login(token); 
 

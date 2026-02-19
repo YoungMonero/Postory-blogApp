@@ -110,6 +110,7 @@ export default function ShareDropdown({
         console.log("Share cancelled");
       }
     } else {
+     
       if (controlledIsOpen !== undefined) {
         onClose?.();
       } else {
@@ -241,6 +242,8 @@ export default function ShareDropdown({
           </div>
         </div>
       )}
+      
     </div>
+  
   );
 }
