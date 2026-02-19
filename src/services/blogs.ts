@@ -90,6 +90,7 @@ export async function updateMyBlogImages(
   return response.json();
 }
 
+
 export async function getBlogByUserId(userId: string): Promise<Blog> {
   const res = await fetch(`${API_URL}/blogs/user/${userId}`);
   if (!res.ok) throw new Error('Blog not found');
@@ -159,3 +160,35 @@ export async function getPopularBlogs(limit = 10): Promise<Blog[]> {
   if (!res.ok) throw new Error('Failed to fetch popular blogs');
   return res.json();
 }
+
+/* here */
+
+export async function updateMyBlog(
+  data: Partial<CreateBlogDto> & { slug?: string },
+  token: string
+): Promise<Blog> {
+  const response = await fetch(`${API_URL}/blogs/me`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    // Handle specific error cases
+    if (response.status === 409) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Slug already taken');
+    }
+    
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to update blog');
+  }
+
+  return response.json();
+}
+
+
+/* here */
