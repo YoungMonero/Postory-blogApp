@@ -1,6 +1,5 @@
 import React from 'react';
-import { useRouter } from 'next/router';
-import { CheckCircle, XCircle, ArrowRight, Home } from 'lucide-react';
+import { CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 
 interface StatusModalProps {
   isOpen: boolean;
@@ -11,40 +10,32 @@ interface StatusModalProps {
 }
 
 const StatusModal: React.FC<StatusModalProps> = ({ isOpen, onClose, type, title, message }) => {
-  const router = useRouter();
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center transform animate-in zoom-in-95 duration-300">
-        <div className="flex justify-center mb-6">
-          {type === 'success' ? (
-            <div className="bg-green-100 p-4 rounded-full">
-              <CheckCircle size={48} className="text-green-600" />
-            </div>
-          ) : (
-            <div className="bg-red-100 p-4 rounded-full">
-              <XCircle size={48} className="text-red-600" />
-            </div>
-          )}
-        </div>
-        
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
-        <p className="text-gray-600 mb-8 leading-relaxed">{message}</p>
-
-        <div className="space-y-3">
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all active:scale-95"
-          >
-            <Home size={18} /> Go to Dashboard
-          </button>
+    // changed bg-indigo-900/80 to bg-white/30 for the frosted glass look
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/30 backdrop-blur-md">
+      <div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100">
+        <div className="flex flex-col items-center text-center">
+          <div className={`p-4 rounded-full mb-4 ${type === 'success' ? 'bg-green-50' : 'bg-red-50'}`}>
+            {type === 'success' ? (
+              <CheckCircle className="w-12 h-12 text-green-500" />
+            ) : (
+              <AlertCircle className="w-12 h-12 text-red-500" />
+            )}
+          </div>
+          
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
+          <p className="text-gray-500 mb-8 font-medium">{message}</p>
           
           <button
             onClick={onClose}
-            className="w-full text-gray-500 text-sm font-bold hover:text-gray-800 transition-colors py-2"
+            className={`w-full py-3 px-6 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${
+              type === 'success' ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' : 'bg-gray-800 hover:bg-gray-900 shadow-gray-200'
+            }`}
           >
-            Dismiss
+            {type === 'success' ? 'Back to Page' : 'Try Again'}
+            <ArrowRight size={18} />
           </button>
         </div>
       </div>

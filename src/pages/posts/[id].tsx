@@ -81,18 +81,32 @@ export default function PostDetailPage({
     fetchPostDetails();
   }, [id, router.isReady, userName, token]);
 
+  useEffect(() => {
+    if (post) {
+      setIsLiked(post.isLikedByMe || false);
+      setLikesCount(post.likesCount || 0);
+    }
+  }, [post]);
+
+
   const handleLike = async (e: React.MouseEvent) => {
     const targetId = post?._id || post?.id;
+
     if (!targetId || !token) {
       e.preventDefault();
       openAuthModal();
       return;
     }
 
+    const previousIsLiked = isLiked;
+    const previousLikesCount = likesCount;
+
+    setIsLiked(!previousIsLiked);
+    setLikesCount(prev => (previousIsLiked ? Math.max(0, prev - 1) : prev + 1));
+
+
     try {
-      const result = await commentService.toggleLike(targetId);
-      setLikesCount(result.likes);
-      setIsLiked(result.liked);
+      const result = await toggleLike(targetId);
 
       
       if (result.liked) {
