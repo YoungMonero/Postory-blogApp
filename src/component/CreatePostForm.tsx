@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, forwardRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import localforage from 'localforage';
 import { debounce } from 'lodash';
+
 
 interface CreatePostFormProps {
   token: string | null;
@@ -82,6 +83,11 @@ const CreatePostForm = forwardRef<any, CreatePostFormProps>(({
       }, 1000),
     [isEditing]
   );
+
+  useImperativeHandle(ref, () => ({
+    submitDraft: () => handleSubmit('draft'),
+    submitPublish: () => handleSubmit('published'),
+  }));
 
   useEffect(() => {
     return () => {
@@ -256,14 +262,18 @@ const CreatePostForm = forwardRef<any, CreatePostFormProps>(({
         ? formData.categories
         : ["General"];
 
-      const payload: CreatePostDto = {
-        ...formData,
-        content: latestContent,
-        status: publishStatus,
-        thumbnail: finalThumbnail,
-        thumbnailPublicId: finalPublicId,
-        categories: categoriesToSave,
-      };
+    const payload: CreatePostDto = {
+      title: formData.title,
+      content: latestContent,
+      status: publishStatus,
+      thumbnail: finalThumbnail,
+      thumbnailPublicId: finalPublicId,
+      slug: formData.slug,
+      categories: categoriesToSave,
+      excerpt: formData.excerpt,
+      seoDescription: formData.seoDescription,
+    };
+    
 
       let result;
       if (isEditing && initialData?._id) {

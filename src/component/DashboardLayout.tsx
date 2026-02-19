@@ -118,7 +118,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
 
                     {/* 1. Left: Wordoo Branding (ALWAYS VISIBLE) */}
                     <div className="flex items-center gap-8 flex-1">
-                        <Link href="/dashboard" className="flex items-center gap-2 group">
+                        <Link href="/" className="flex items-center gap-2 group">
                             <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
                                 WORD
                                 <span className="relative flex items-center text-indigo-600 ml-0.5">

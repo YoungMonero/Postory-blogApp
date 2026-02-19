@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNotifications } from '@/src/contexts/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
-// Import professional icons
+
 import { 
   Heart, 
   MessageCircle, 
@@ -21,7 +21,7 @@ export default function NotificationsPage() {
     }
   };
 
-  // Professional Lucide icon helper
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'like': 
@@ -74,7 +74,7 @@ export default function NotificationsPage() {
           notifications.map((notification) => (
             <Link
               key={notification._id}
-              // Corrected plural route to prevent "Page Not Found" 
+             
               href={notification.postId ? `/posts/${notification.postId.slug || notification.postId._id}` : '#'}
               onClick={() => handleNotificationClick(notification)}
               className={`block p-5 rounded-2xl border transition-all duration-200 ${
