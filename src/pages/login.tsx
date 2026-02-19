@@ -8,7 +8,7 @@ import { LoginDto } from '../types/auth';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '@/src/component/ui/button';
 
-// ... imports exactly the same ...
+
 
 export default function Login() {
   const router = useRouter();
@@ -48,7 +48,7 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Use your design's mutation error display instead of alert */}
+         
           {mutation.isError && (
             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center border border-red-100">
               {(mutation.error as any)?.message || 'Invalid email or password.'}

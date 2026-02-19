@@ -96,15 +96,13 @@ export async function getBlogByUserId(userId: string): Promise<Blog> {
   if (!res.ok) throw new Error('Blog not found');
   return res.json();
 }
-// Add these to your existing blog.service.ts
 
-// Toggle Subscription (Subscribe/Unsubscribe)
 export async function toggleSubscription(
   blogId: string, 
   token: string, 
   isSubscribed: boolean
 ): Promise<{ subscriberCount: number; isSubscribed: boolean }> {
-  // Using POST for subscribe and DELETE for unsubscribe based on your previous logic
+
   const method = isSubscribed ? 'DELETE' : 'POST';
   
   const res = await fetch(`${API_URL}/blogs/${blogId}/subscribe`, {
@@ -161,8 +159,6 @@ export async function getPopularBlogs(limit = 10): Promise<Blog[]> {
   return res.json();
 }
 
-/* here */
-
 export async function updateMyBlog(
   data: Partial<CreateBlogDto> & { slug?: string },
   token: string
@@ -177,7 +173,7 @@ export async function updateMyBlog(
   });
 
   if (!response.ok) {
-    // Handle specific error cases
+ 
     if (response.status === 409) {
       const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Slug already taken');
@@ -190,5 +186,3 @@ export async function updateMyBlog(
   return response.json();
 }
 
-
-/* here */

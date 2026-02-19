@@ -306,26 +306,6 @@ const CreatePostForm = forwardRef<any, CreatePostFormProps>(({
     } finally { 
       setUploading(false); 
     }
-
-    // try {
-    //   // 1. Prepare the base payload
-    //   const payload: any = { 
-    //     title: formData.title,
-    //     content: latestContent,
-    //     status: publishStatus,
-    //     categories: (formData.categories && formData.categories.length > 0) ? formData.categories : ["General"],
-    //     thumbnail: finalThumbnail,
-    //     thumbnailPublicId: finalPublicId,
-    //     slug: formData.slug,
-    //     excerpt: formData.excerpt,
-    //     seoDescription: formData.seoDescription,
-    //   };
-    //   let result;
-    // if (isEditing && initialData?._id) {
-    //   result = await updateExistingPost(initialData._id, payload, token);
-    // } else {
-    //   result = await createNewPost(payload, token);
-    // }
   };
 
   return (
@@ -340,8 +320,6 @@ const CreatePostForm = forwardRef<any, CreatePostFormProps>(({
         .tiptap-content code { background: #f3f4f6 !important; padding: 0.2rem 0.4rem !important; border-radius: 0.25rem !important; font-family: monospace !important; }
       `}</style>
 
-      {/* Rest of JSX remains exactly the same */}
-{/* working */}
 {!isInline && (
       <header className="sticky top-0 z-30 bg-white border-b border-gray-200 h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
@@ -367,7 +345,7 @@ const CreatePostForm = forwardRef<any, CreatePostFormProps>(({
         </div>
       </header>
       )}
-      {/* working */}
+    
 
       <div className={`flex-1 max-w-[1600px] mx-auto w-full ${isInline ? 'p-2' : 'p-4 sm:p-6 lg:p-8'}`}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">

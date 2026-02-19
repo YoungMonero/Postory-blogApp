@@ -209,11 +209,10 @@ export default function BlogChannelView() {
       console.error("Delete failed:", err);
     }
   };
-  /* added here */
+
 
   const formRef = useRef<any>(null);
 
-  /* added here */
 
   const handleToggleVisibility = async (
     postId: string,
@@ -293,7 +292,6 @@ export default function BlogChannelView() {
 
   return (
     <>
-      {/* let insert out og setting here  */}
       <Head>
         <title>{blog?.title || "Blog Channel"} | Wordoo</title>
         <meta
@@ -301,7 +299,6 @@ export default function BlogChannelView() {
           content={blog?.description || "Blog channel on Wordoo"}
         />
 
-        {/* Dynamic OG Image Construction */}
         {(() => {
           const baseUrl =
             typeof window !== "undefined" ? window.location.origin : "";
@@ -314,7 +311,7 @@ export default function BlogChannelView() {
 
           return (
             <>
-              {/* Open Graph / Facebook */}
+
               <meta property="og:type" content="profile" />
               <meta property="og:url" content={`${baseUrl}${router.asPath}`} />
               <meta
@@ -327,7 +324,7 @@ export default function BlogChannelView() {
               />
               <meta property="og:image" content={dynamicOgUrl} />
 
-              {/* Twitter */}
+
               <meta name="twitter:card" content="summary_large_image" />
               <meta
                 name="twitter:title"
@@ -342,8 +339,6 @@ export default function BlogChannelView() {
           );
         })()}
       </Head>
-
-      {/* end of the og for the copy link on post */}
 
       <div className="min-h-screen bg-white font-sans">
         <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">

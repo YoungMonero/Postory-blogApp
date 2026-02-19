@@ -18,18 +18,18 @@ export const useNotificationSocket = () => {
     });
 
     socketInstance.on('connect', () => {
-      console.log('✅ Connected to notification server');
+      console.log(' Connected to notification server');
       setIsConnected(true);
     });
 
-    // FIX: Ensure the parameter uses your AppNotification type
+
     socketInstance.on('new-notification', (notification: AppNotification) => {
-      console.log('📨 New notification received:', notification);
+      console.log(' New notification received:', notification);
       
-      // Update local state list
+
       setNotifications(prev => [notification, ...prev]);
       
-      // FIX: Use window.Notification to prevent collision with your variable name
+
       if (typeof window !== 'undefined' && window.Notification?.permission === 'granted') {
         new window.Notification('New Blog Activity', {
           body: notification.content,
@@ -39,13 +39,13 @@ export const useNotificationSocket = () => {
     });
 
     socketInstance.on('disconnect', () => {
-      console.log('❌ Disconnected from notification server');
+      console.log(' Disconnected from notification server');
       setIsConnected(false);
     });
 
     setSocket(socketInstance);
 
-    // Request browser permission for popups
+  
     if (typeof window !== 'undefined' && window.Notification?.permission === 'default') {
       window.Notification.requestPermission();
     }

@@ -35,7 +35,7 @@ export default function BlogSettingsDrawer({ open, onClose, blog, token }: Props
   }, [open, blog]);
 
   const handleSave = async () => {
-    // 1. Safety check: stop if no token or no blog data exists yet
+
     if (!token || !blog) {
       console.error("Missing token or blog data");
       return;
@@ -44,11 +44,9 @@ export default function BlogSettingsDrawer({ open, onClose, blog, token }: Props
     setLoading(true);
   
     try {
-      // 2. Prepare the payload
+
       const payload = {
         ...form,
-        // If form.slug is empty, use blog.slug. 
-        // The '??' ensures we don't send 'undefined' to the backend.
         slug: form.slug.trim() || (blog.slug ?? ''), 
       };
   
@@ -68,16 +66,16 @@ export default function BlogSettingsDrawer({ open, onClose, blog, token }: Props
 
   return (
     <div className="fixed inset-0 z-[100] flex justify-end">
-      {/* Backdrop */}
+
       <div 
         className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
         onClick={onClose}
       />
 
-      {/* Drawer */}
+
       <div className="relative w-full max-w-[450px] bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
         
-        {/* Header */}
+
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div>
             <h2 className="text-xl font-black text-gray-900 tracking-tight">Blog Settings</h2>
@@ -91,10 +89,8 @@ export default function BlogSettingsDrawer({ open, onClose, blog, token }: Props
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
-          
-          {/* Blog Title */}
+        
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
               <Type size={16} className="text-indigo-500" /> Blog Title
@@ -107,7 +103,6 @@ export default function BlogSettingsDrawer({ open, onClose, blog, token }: Props
             />
           </div>
 
-          {/* URL Slug */}
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
               <Globe size={16} className="text-indigo-500" /> URL Slug
@@ -123,7 +118,6 @@ export default function BlogSettingsDrawer({ open, onClose, blog, token }: Props
             <p className="text-[10px] text-gray-400 font-medium italic">Careful: Changing this can break existing links.</p>
           </div>
 
-          {/* Description */}
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
               <AlignLeft size={16} className="text-indigo-500" /> Description
@@ -139,7 +133,6 @@ export default function BlogSettingsDrawer({ open, onClose, blog, token }: Props
 
         </div>
 
-        {/* Footer Actions */}
         <div className="p-6 border-t border-gray-100 bg-gray-50/50">
           <button
             onClick={handleSave}

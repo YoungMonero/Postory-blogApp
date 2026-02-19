@@ -9,12 +9,12 @@ export default async function handler(request: NextRequest) {
   try {
     const { searchParams, origin } = new URL(request.url);
     
-    // Extracting params used in your Head component
+
     const title = searchParams.get("title") || "Wordoo Blog";
     const author = searchParams.get("author") || "Wordoo Creator";
     const image = searchParams.get("image");
 
-    // Fallback to a system font if fetch fails, but Inter is preferred for your brand
+
     const fontData = await fetch(
       new URL("/fonts/InterDisplay-Bold.ttf", origin)
     ).then((res) => res.arrayBuffer()).catch(() => null);
@@ -22,19 +22,18 @@ export default async function handler(request: NextRequest) {
     return new ImageResponse(
       (
         <div tw="flex flex-col w-full h-full items-center justify-center bg-white p-20">
-          {/* Subtle Background Decoration */}
+ 
           <div tw="absolute top-0 left-0 w-full h-2 bg-indigo-600 flex" />
           
           <div tw="flex flex-col w-full h-full justify-between">
             <div tw="flex flex-col">
-              {/* Brand Logo */}
+
               <div tw="flex items-center mb-8">
                 <span tw="text-4xl font-black tracking-tighter text-gray-900">
                   WORD<span tw="text-indigo-600">oo</span>
                 </span>
               </div>
 
-              {/* Main Title */}
               <h1 tw="text-7xl font-bold tracking-tight text-gray-900 leading-none mb-4">
                 {title}
               </h1>

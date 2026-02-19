@@ -116,7 +116,6 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
             <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 z-50">
                 <div className="max-w-[1450px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
 
-                    {/* Left: Wordoo Branding */}
                     <div className="flex items-center gap-8 flex-1">
                         <Link href="/" className="flex items-center gap-2 group">
                             <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
@@ -127,7 +126,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                                         o
                                     </span>
 
-                                    {/* Brand accent dot */}
+
                                     <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 
                      bg-indigo-500 rounded-full 
                      opacity-0 group-hover:opacity-100 
@@ -137,7 +136,6 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                             </span>
                         </Link>
 
-                        {/* UPDATED SEARCH BAR WITH FUNCTIONALITY */}
                         <div className="relative max-w-md w-full hidden md:block">
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -160,7 +158,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                                 )}
                             </div>
 
-                            {/* SEARCH SUGGESTIONS DROPDOWN */}
+
                             <SearchSuggestionsDropdown
                                 visible={searchActive}
                                 loading={searchLoading}
@@ -182,13 +180,9 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
                             <span className="hidden sm:inline">Write</span>
                         </Button>
 
-                          {/* ✅ REPLACE with NotificationBell component */}
+
                           <NotificationBell />
 
-                        {/* <button className="text-gray-500 hover:text-gray-900 p-2 relative">
-                            <Bell size={20} />
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                        </button> */}
 
                         <div className="relative ml-2" ref={dropdownRef}>
                             <button
