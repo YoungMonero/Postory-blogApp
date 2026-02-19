@@ -23,6 +23,7 @@ import { format } from "date-fns";
 import { useDashboardSearch } from "@/src/component/search/DashboardSearchShadow";
 import { SearchSuggestionsDropdown } from "@/src/component/search/SearchSuggestionsDropdown";
 import { useAuth } from "@/src/hooks/useAuth";
+import ShareDropdown from "@/src/component/ShareDropdown";
 
 // --- HELPERS ---
 const getImageUrl = (thumbnail: string | undefined): string => {
@@ -306,9 +307,11 @@ const user = { token, _id: userId, username: userName }; // Create a user object
                     : "Subscribe"}
                 </button>
 
-                <button className="p-3.5 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
-                  <Share2 size={20} />
-                </button>
+                <ShareDropdown
+  url={typeof window !== 'undefined' ? window.location.href : ''}
+  title="Check out this post"
+  description="Share this content"
+/>
               </div>
             </div>
           </div>
