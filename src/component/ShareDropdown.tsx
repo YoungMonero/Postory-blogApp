@@ -1,4 +1,3 @@
-// src/component/ShareDropdown.tsx
 import { useState, useRef, useEffect } from "react";
 import {
   Twitter,
