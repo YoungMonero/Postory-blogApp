@@ -36,7 +36,7 @@ export default function ShareDropdown({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  // Use controlled open state if provided
+ 
   const open = controlledIsOpen !== undefined ? controlledIsOpen : isOpen;
 
   useEffect(() => {
