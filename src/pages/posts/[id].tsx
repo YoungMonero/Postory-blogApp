@@ -155,7 +155,7 @@ export default function PostDetailPage({
     property="og:description"
     content={post.excerpt || `Read ${post.title} on My Blog`}
   />
-  {/* Use post thumbnail if available, otherwise use generated OG image */}
+
   <meta property="og:image" content={post.thumbnail || ogImageUrl} />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
