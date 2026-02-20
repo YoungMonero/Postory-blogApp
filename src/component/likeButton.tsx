@@ -10,8 +10,8 @@ interface LikeButtonProps {
 }
 
 const LikeButton = ({ post, token, openAuthModal }: LikeButtonProps) => {
-  const [likesCount, setLikesCount] = useState(post?.likes || post?.likesCount || 0);
-  const [isLiked, setIsLiked] = useState(post?.isLikedByMe || post?.isLikedByUser || false);
+  const [likesCount, setLikesCount] = useState<number>(post?.likes || post?.likesCount || 0);
+  const [isLiked, setIsLiked] = useState<boolean>(post?.isLikedByMe || post?.isLikedByUser || false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
