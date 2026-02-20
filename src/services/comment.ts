@@ -17,6 +17,12 @@ export const commentService = {
     return response.data;
   },
 
+  async deleteComment(postId: string, commentId: string): Promise<{ success: boolean; message: string }> {
+    console.log("Full Request URL:", `${api.defaults.baseURL}/posts/${postId}/comments/${commentId}`);
+    const response = await api.delete(`/posts/${postId}/comments/${commentId}`);
+    return response.data;
+  },
+
   async addReply(postId: string, commentId: string, content: string): Promise<Comment> {
     const response = await api.post(`/posts/${postId}/comments`, { 
       content, 

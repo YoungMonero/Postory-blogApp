@@ -1,47 +1,49 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { commentService } from '@/src/services/comment';
-import { Comment } from '@/src/types/comment';
-import { User, Heart } from 'lucide-react';
-import { format } from 'date-fns';
-import { useAuth } from '@/src/hooks/useAuth';
-import { getToken } from '@/src/services/auth-storage'; 
-import { useNotificationSocket } from '@/src/hooks/useNotificationSocket';
+import React, { useState, useEffect } from "react";
+import { commentService } from "@/src/services/comment";
+import { Comment } from "@/src/types/comment";
+import { User, Heart, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { useAuth } from "@/src/hooks/useAuth";
+import { getToken } from "@/src/services/auth-storage";
+import { useNotificationSocket } from "@/src/hooks/useNotificationSocket";
 
-export default function CommentSection({ postId, token: initialToken }: { postId: string, token: string | null }) {
+export default function CommentSection({
+  postId,
+  token: initialToken,
+}: {
+  postId: string;
+  token: string | null;
+}) {
   const [comments, setComments] = useState<Comment[]>([]);
-  const [text, setText] = useState('');
-  const [replyText, setReplyText] = useState(''); // State for reply input
+  const [text, setText] = useState("");
+  const [replyText, setReplyText] = useState("");
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
-  const { openAuthModal } = useAuth();
-  
+  const { openAuthModal, userId, userName } = useAuth();
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(
+    null
+  );
+  const [expandedComments, setExpandedComments] = useState<string[]>([]);
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+
   const { liveComments } = useNotificationSocket();
+  const getActiveToken = () => getToken() || initialToken;
+
+  
+  const currentUserId = userId;
 
   useEffect(() => {
     if (liveComments[postId]) {
       const newComments = liveComments[postId];
-      setComments(prev => {
-        // Avoid duplicates by checking IDs
-        const existingIds = new Set(prev.map(c => c._id));
-        const uniqueNewComments = newComments.filter((c: any) => !existingIds.has(c._id));
+      setComments((prev) => {
+        const existingIds = new Set(prev.map((c) => c._id));
+        const uniqueNewComments = newComments.filter(
+          (c: any) => !existingIds.has(c._id)
+        );
         return [...uniqueNewComments, ...prev];
       });
     }
   }, [liveComments, postId]);
-
-
-  const getActiveToken = () => getToken() || initialToken;
-
-  const [expandedComments, setExpandedComments] = useState<string[]>([]);
-
-  // Toggle function for replies
-  const toggleReplies = (commentId: string) => {
-    setExpandedComments(prev =>
-      prev.includes(commentId)
-        ? prev.filter(id => id !== commentId)
-        : [...prev, commentId]
-    );
-  };
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -56,6 +58,14 @@ export default function CommentSection({ postId, token: initialToken }: { postId
     fetchComments();
   }, [postId]);
 
+  const toggleReplies = (commentId: string) => {
+    setExpandedComments((prev) =>
+      prev.includes(commentId)
+        ? prev.filter((id) => id !== commentId)
+        : [...prev, commentId]
+    );
+  };
+
   const handlePost = async () => {
     const token = getActiveToken();
     if (!text.trim() || !token) {
@@ -65,55 +75,78 @@ export default function CommentSection({ postId, token: initialToken }: { postId
     try {
       const newComment = await commentService.addComment(postId, text);
       setComments([newComment, ...comments]);
-      setText('');
+      setText("");
     } catch (err) {
       console.error("Comment failed", err);
     }
   };
 
-const handleLikeComment = async (commentId: string) => {
-  const token = getActiveToken();
-  if (!token) {
-    openAuthModal();
-    return;
-  }
+  const handleLikeComment = async (commentId: string) => {
+    const token = getActiveToken();
+    if (!token) {
+      openAuthModal();
+      return;
+    }
 
-  const previousComments = [...comments];
+    const previousComments = [...comments];
 
-  setComments(currentComments =>
-    currentComments.map(c => {
-      if (c._id === commentId) {
-        const currentlyLiked = c.isLikedByMe;
-        return {
-          ...c,
-          isLikedByMe: !currentlyLiked,
-          likesCount: currentlyLiked 
-            ? Math.max(0, (c.likesCount || 1) - 1) 
-            : (c.likesCount || 0) + 1
-        };
-      }
-      return c;
-    })
-  );
-
-  try {
-    const result = await commentService.toggleLikeComment(postId, commentId);
-    
-    setComments(currentComments =>
-      currentComments.map(c =>
-        c._id === commentId 
-          ? { ...c, isLikedByMe: result.liked, likesCount: result.likes } 
-          : c
-      )
+    setComments((currentComments) =>
+      currentComments.map((c) => {
+        if (c._id === commentId) {
+          const currentlyLiked = c.isLikedByMe;
+          return {
+            ...c,
+            isLikedByMe: !currentlyLiked,
+            likesCount: currentlyLiked
+              ? Math.max(0, (c.likesCount || 0) - 1) // Fixed: use 0 instead of 1
+              : (c.likesCount || 0) + 1,
+          };
+        }
+        return c;
+      })
     );
-  } catch (err) {
-    setComments(previousComments);
-    console.error("Like failed, rolling back state", err);
-  }
-};
 
-  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
+    try {
+      const result = await commentService.toggleLikeComment(postId, commentId);
+      setComments((currentComments) =>
+        currentComments.map((c) =>
+          c._id === commentId
+            ? { ...c, isLikedByMe: result.liked, likesCount: result.likes }
+            : c
+        )
+      );
+    } catch (err) {
+      setComments(previousComments);
+      console.error("Like failed, rolling back state", err);
+    }
+  };
 
+  const handleDeleteComment = async (commentId: string) => {
+    const token = getActiveToken();
+    if (!token) {
+      openAuthModal();
+      return;
+    }
+
+    if (!confirm("Are you sure you want to delete this comment?")) {
+      return;
+    }
+
+    setDeletingCommentId(commentId);
+
+    try {
+      const result = await commentService.deleteComment(postId, commentId);
+
+      if (result.success) {
+        setComments((prev) => prev.filter((c) => c._id !== commentId));
+      }
+    } catch (err) {
+      console.error("Delete failed:", err);
+      alert("Failed to delete comment");
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
 
   const handleReplySubmit = async (commentId: string) => {
     const token = getActiveToken();
@@ -122,11 +155,13 @@ const handleLikeComment = async (commentId: string) => {
     setIsSubmittingReply(true);
 
     try {
-      const newReply = await commentService.addReply(postId, commentId, replyText);
-
+      const newReply = await commentService.addReply(
+        postId,
+        commentId,
+        replyText
+      );
       setComments([newReply, ...comments]);
-
-      setReplyText('');
+      setReplyText("");
       setReplyingTo(null);
 
       if (!expandedComments.includes(commentId)) {
@@ -138,6 +173,7 @@ const handleLikeComment = async (commentId: string) => {
       setIsSubmittingReply(false);
     }
   };
+
   return (
     <div className="mt-20 max-w-2xl mx-auto space-y-10 border-t border-gray-100 pt-16">
       <div className="flex items-center justify-between">
@@ -184,18 +220,22 @@ const handleLikeComment = async (commentId: string) => {
         </div>
       )}
 
-      {/* COMMENT FEED */}
       <div className="space-y-10">
         {comments.length === 0 ? (
-          <p className="text-center text-gray-400 text-sm py-10">No responses yet.</p>
+          <p className="text-center text-gray-400 text-sm py-10">
+            No responses yet.
+          </p>
         ) : (
           comments
             .filter((c) => !c.parentCommentId)
             .map((c) => {
-              // Calculate replies for this specific comment
-              const replies = comments.filter((reply) => reply.parentCommentId === c._id);
+              const replies = comments.filter(
+                (reply) => reply.parentCommentId === c._id
+              );
               const hasReplies = replies.length > 0;
               const isExpanded = expandedComments.includes(c._id);
+              const isCommentOwner =
+                currentUserId && c.userId === currentUserId; // 👈 Check if user owns comment
 
               return (
                 <div key={c._id} className="group">
@@ -219,22 +259,41 @@ const handleLikeComment = async (commentId: string) => {
                       <div className="pt-3 flex items-center gap-6">
                         <button
                           onClick={() => handleLikeComment(c._id)}
-                          className={`flex items-center gap-1.5 transition-colors ${c.isLikedByMe ? "text-red-500" : "text-gray-400 hover:text-red-500"
-                            }`}
+                          className={`flex items-center gap-1.5 transition-colors ${
+                            c.isLikedByMe
+                              ? "text-red-500"
+                              : "text-gray-400 hover:text-red-500"
+                          }`}
                         >
                           <Heart
                             size={15}
                             strokeWidth={1.5}
                             fill={c.isLikedByMe ? "currentColor" : "none"}
                           />
-                          <span className="text-[11px] font-medium">{c.likesCount || 0}</span>
+                          <span className="text-[11px] font-medium">
+                            {c.likesCount || 0}
+                          </span>
                         </button>
+
                         <button
-                          onClick={() => setReplyingTo(replyingTo === c._id ? null : c._id)}
+                          onClick={() =>
+                            setReplyingTo(replyingTo === c._id ? null : c._id)
+                          }
                           className="text-[11px] font-medium text-gray-400 hover:text-gray-900"
                         >
                           Reply
                         </button>
+
+                        {/* 👇 DELETE BUTTON - Now properly placed outside like button */}
+                        {isCommentOwner && (
+                          <button
+                            onClick={() => handleDeleteComment(c._id)}
+                            disabled={deletingCommentId === c._id}
+                            className="text-[11px] font-medium text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
 
                       {/* REPLY INPUT AREA */}
@@ -280,7 +339,8 @@ const handleLikeComment = async (commentId: string) => {
                               className="flex items-center gap-2 text-[11px] font-bold text-indigo-600 hover:text-indigo-700"
                             >
                               <span className="w-6 h-[1px] bg-indigo-100"></span>
-                              View {replies.length} {replies.length === 1 ? "reply" : "replies"}
+                              View {replies.length}{" "}
+                              {replies.length === 1 ? "reply" : "replies"}
                             </button>
                           ) : (
                             <div className="space-y-6">
@@ -293,42 +353,75 @@ const handleLikeComment = async (commentId: string) => {
                               </button>
 
                               <div className="space-y-6 pl-10 border-l border-gray-50">
-                                {replies.map((reply) => (
-                                  <div key={reply._id} className="flex gap-3">
-                                    <div className="w-7 h-7 bg-zinc-50 text-zinc-500 rounded-full flex items-center justify-center text-[10px] font-medium shrink-0">
-                                      {reply.authorName?.[0]}
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-0.5">
-                                        <span className="font-medium text-gray-900 text-xs">
-                                          {reply.authorName}
-                                        </span>
-                                        <span className="text-[10px] text-gray-400">
-                                          {format(new Date(reply.createdAt), "MMM d")}
-                                        </span>
-                                      </div>
-                                      <p className="text-gray-600 text-sm font-light leading-snug">
-                                        {reply.content}
-                                      </p>
+                                {replies.map((reply) => {
+                                  const isReplyOwner =
+                                    currentUserId &&
+                                    reply.userId === currentUserId;
 
-                                      <div className="pt-2">
-                                        <button
-                                          onClick={() => handleLikeComment(reply._id)}
-                                          className={`flex items-center gap-1.5 ${reply.isLikedByMe ? "text-red-500" : "text-gray-400"
-                                            }`}
-                                        >
-                                          <Heart
-                                            size={12}
-                                            fill={reply.isLikedByMe ? "currentColor" : "none"}
-                                          />
-                                          <span className="text-[10px]">
-                                            {reply.likesCount || 0}
+                                  return (
+                                    <div key={reply._id} className="flex gap-3">
+                                      <div className="w-7 h-7 bg-zinc-50 text-zinc-500 rounded-full flex items-center justify-center text-[10px] font-medium shrink-0">
+                                        {reply.authorName?.[0]}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                          <span className="font-medium text-gray-900 text-xs">
+                                            {reply.authorName}
                                           </span>
-                                        </button>
+                                          <span className="text-[10px] text-gray-400">
+                                            {format(
+                                              new Date(reply.createdAt),
+                                              "MMM d"
+                                            )}
+                                          </span>
+                                        </div>
+                                        <p className="text-gray-600 text-sm font-light leading-snug">
+                                          {reply.content}
+                                        </p>
+
+                                        <div className="pt-2 flex items-center gap-4">
+                                          <button
+                                            onClick={() =>
+                                              handleLikeComment(reply._id)
+                                            }
+                                            className={`flex items-center gap-1.5 ${
+                                              reply.isLikedByMe
+                                                ? "text-red-500"
+                                                : "text-gray-400 hover:text-red-500"
+                                            }`}
+                                          >
+                                            <Heart
+                                              size={12}
+                                              fill={
+                                                reply.isLikedByMe
+                                                  ? "currentColor"
+                                                  : "none"
+                                              }
+                                            />
+                                            <span className="text-[10px]">
+                                              {reply.likesCount || 0}
+                                            </span>
+                                          </button>
+
+                                          {/* Delete button for replies */}
+                                          {isReplyOwner && (
+                                            <button
+                                              onClick={() =>
+                                                handleDeleteComment(reply._id)
+                                              }
+                                              disabled={
+                                                deletingCommentId === reply._id
+                                              }
+                                              className="text-[10px] font-medium text-gray-400 hover:text-red-500 transition-colors"
+                                            >
+                                              <Trash2 size={12} />
+                                            </button>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
                           )}
