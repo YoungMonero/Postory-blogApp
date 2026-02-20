@@ -9,6 +9,7 @@ import { Heart, MessageSquare, ArrowLeft } from "lucide-react";
 import { api } from "@/src/services/post";
 import Cookies from "js-cookie";
 import ShareDropdown from "@/src/component/ShareDropdown";
+import { useNotificationSocket } from '@/src/hooks/useNotificationSocket';
 
 export default function PostDetailPage({
   initialPost,
@@ -18,6 +19,16 @@ export default function PostDetailPage({
   const router = useRouter();
   const { id } = router.query;
   const { token, userName, openAuthModal } = useAuth();
+   
+  const { 
+    isConnected, 
+    liveLikes, 
+    joinPostRoom, 
+    leavePostRoom,
+    emitLike 
+  } = useNotificationSocket();
+
+  
 
   const [post, setPost] = useState<Post | null>(initialPost);
   const [loading, setLoading] = useState(!initialPost);
@@ -36,91 +47,66 @@ export default function PostDetailPage({
   )}&author=${encodeURIComponent(post?.author?.displayName || "Wordoo Creator")}&image=${encodeURIComponent(post?.thumbnail || '')}`;
   const metaImage = post?.thumbnail || ogImageUrl;
 
+
+    
+
   useEffect(() => {
-    if (!router.isReady || !id) return;
+    const postId = post?._id || post?.id;
+    if (postId && isConnected) {
+      joinPostRoom(postId);
+    }
 
-    const fetchPostDetails = async () => {
-      try {
-        let currentPost = post;
-        if (!currentPost) {
-          setLoading(true);
-          const response = await getPublicPostDetail(id as string);
-          currentPost = response?.data || null;
-          setPost(currentPost);
-          
-          if (currentPost) {
-            setLikeState({
-              isLiked: currentPost.isLikedByMe || false,
-              count: currentPost.likesCount || currentPost.likes || 0
-            });
-          }
-        }
-
-        if (currentPost) {
-          const postId = currentPost._id || currentPost.id;
-
-          if (!hasIncrementedViews.current && postId && token) {
-            try {
-              const config = { headers: { Authorization: `Bearer ${token}` } };
-              await api.post(`/posts/${postId}/view`, {}, config);
-              hasIncrementedViews.current = true;
-            } catch (viewError) {
-              console.warn("Could not increment view count:", viewError);
-            }
-          }
-
-          // Check cookie for like status
-          const savedLike = Cookies.get(`liked_${postId}`);
-          if (savedLike === "true") {
-            setLikeState(prev => ({ ...prev, isLiked: true }));
-          }
-        }
-      } catch (err) {
-        console.error("Failed to load post content", err);
-      } finally {
-        setLoading(false);
+    return () => {
+      if (postId) {
+        leavePostRoom(postId);
       }
     };
+  }, [post?._id, post?.id, isConnected]);
 
-    fetchPostDetails();
-  }, [id, router.isReady, token]);
+  // Sync live likes from socket
+  useEffect(() => {
+    const postId = post?._id || post?.id;
+    if (postId && liveLikes[postId]) {
+      setLikeState({
+        isLiked: liveLikes[postId].isLiked,
+        count: liveLikes[postId].count
+      });
+    }
+  }, [liveLikes, post?._id, post?.id]);
 
+  // Update handleLike to emit socket event
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-  
+
     const targetId = post?._id || post?.id;
-  
+
     if (!targetId || !token) {
       openAuthModal();
       return;
     }
-  
-    // Store previous state for rollback
+
     const previousState = { ...likeState };
-  
-    // Optimistic update
+
     setLikeState({
       isLiked: !previousState.isLiked,
       count: previousState.isLiked 
         ? Math.max(0, previousState.count - 1) 
         : previousState.count + 1
     });
-  
-    try {
 
-      
-   
+    try {
       const result = await toggleLike(targetId);
       
-      console.log(" Like API response:", result);
-      
+      console.log("Like API response:", result);
 
       setLikeState({
         isLiked: result.liked,
         count: result.likes
       });
-  
+
+      // 👇 Emit socket event for real-time updates
+      emitLike(targetId, result.liked, result.likes);
 
       if (result.liked) {
         Cookies.set(`liked_${targetId}`, "true", { expires: 7 });
@@ -128,8 +114,7 @@ export default function PostDetailPage({
         Cookies.remove(`liked_${targetId}`);
       }
     } catch (err) {
-      console.error(" Like failed:", err);
-      // Rollback on error
+      console.error("Like failed:", err);
       setLikeState(previousState);
     }
   };
@@ -155,7 +140,7 @@ export default function PostDetailPage({
     property="og:description"
     content={post.excerpt || `Read ${post.title} on My Blog`}
   />
-  {/* Use post thumbnail if available, otherwise use generated OG image */}
+
   <meta property="og:image" content={post.thumbnail || ogImageUrl} />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
