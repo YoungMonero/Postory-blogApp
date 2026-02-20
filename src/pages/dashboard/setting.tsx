@@ -145,19 +145,23 @@ export default function SettingsPage() {
   const [avatarError, setAvatarError] = useState('');
 
   // Fetch user profile data
-  const { data: userProfile, isLoading: profileLoading } = useQuery({
-    queryKey: ['user-profile', token],
-    queryFn: () => fetchUserProfile(token!),
-    enabled: !!token,
-    onSuccess: (data) => {
-      setFormData({
-        name: data.name || authUser?.name || '',
-        email: data.email || authUser?.email || '',
-        bio: data.bio || '',
-      });
-      setTheme(data.preferences?.theme || 'light');
-    },
-  });
+const { data: userProfile, isLoading: profileLoading } = useQuery({
+  queryKey: ['user-profile', token],
+  queryFn: () => fetchUserProfile(token!),
+  enabled: !!token,
+});
+
+useEffect(() => {
+  if (userProfile) {
+    setFormData({
+      name: userProfile.name || '',
+      email: userProfile.email || '',
+      bio: userProfile.bio || '',
+    });
+
+    setTheme(userProfile.preferences?.theme || 'light');
+  }
+}, [userProfile]);
 
   // Fetch blog data
   const { data: blog, isLoading: blogLoading } = useQuery({

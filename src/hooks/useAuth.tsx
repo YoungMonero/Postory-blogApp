@@ -3,6 +3,13 @@ import { getToken, setToken as setCookieToken, clearToken } from '../services/au
 import AuthRequiredModal from '../component/modals/AuthRequiredModal';
 import { jwtDecode } from 'jwt-decode';
 
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 interface AuthContextType {
   token: string | null;
   userName: string | null;
@@ -10,7 +17,8 @@ interface AuthContextType {
   email: string | null;         
   role: string | null;         
   hasBlog: boolean;           
-  tenantId: string | null;    
+  tenantId: string | null;  
+  user: AuthUser | null;  
   isAuthModalOpen: boolean;
   openAuthModal: () => void;
   closeAuthModal: () => void;
@@ -110,6 +118,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       token,
       userName,
+      user: {
+        id: userId || '',
+        name: userName || '',
+        email: email || ''
+      },
       userId,         
       email,          
       role,          
