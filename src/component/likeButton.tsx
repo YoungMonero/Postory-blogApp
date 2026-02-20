@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
-import { commentService } from '@/src/services/comment';
-import Cookies from 'js-cookie'; 
+import Cookies from 'js-cookie';
+import { toggleLike } from "@/src/services/post"; 
 
 interface LikeButtonProps {
   post: any;
@@ -10,10 +10,10 @@ interface LikeButtonProps {
 }
 
 const LikeButton = ({ post, token, openAuthModal }: LikeButtonProps) => {
-  const [likesCount, setLikesCount] = useState(post.likes || 0);
-  const [isLiked, setIsLiked] = useState(post.isLikedByUser || false);
+  const [likesCount, setLikesCount] = useState<number>(post?.likes || post?.likesCount || 0);
+  const [isLiked, setIsLiked] = useState<boolean>(post?.isLikedByMe || post?.isLikedByUser || false);
   const [isAnimating, setIsAnimating] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const postId = post?._id || post?.id;
@@ -22,9 +22,9 @@ const LikeButton = ({ post, token, openAuthModal }: LikeButtonProps) => {
     if (savedLike === 'true') {
       setIsLiked(true);
     } else {
-      setIsLiked(post.isLikedByUser || false);
+      setIsLiked(post?.isLikedByMe || post?.isLikedByUser || false);
     }
-    setLikesCount(post.likes || 0);
+    setLikesCount(post?.likes || post?.likesCount || 0);
   }, [post]);
 
   const handleLike = async (e: React.MouseEvent) => {
@@ -38,39 +38,56 @@ const LikeButton = ({ post, token, openAuthModal }: LikeButtonProps) => {
       return;
     }
 
+    if (isLoading) return;
+    
+    setIsLoading(true);
     setIsAnimating(true);
-    setTimeout(() => setIsAnimating(false), 100);
+    setTimeout(() => setIsAnimating(false), 300);
+
+    // Store previous state for rollback
+    const previousIsLiked = isLiked;
+    const previousLikesCount = likesCount;
+
+    // Optimistic update
+    setIsLiked(!previousIsLiked);
+    setLikesCount(prev => previousIsLiked ? Math.max(0, prev - 1) : prev + 1);
 
     try {
-      const result = await commentService.toggleLike(targetId);
+      // Use the imported toggleLike function
+      const result = await toggleLike(targetId);
       
-      // 2. Update states
       setLikesCount(result.likes);
       setIsLiked(result.liked);
 
-      // 3. Save to cookies so it persists after refresh
       if (result.liked) {
-        Cookies.set(`liked_${targetId}`, 'true', { expires: 7 }); // Stores for 7 days
+        Cookies.set(`liked_${targetId}`, 'true', { expires: 7 });
       } else {
         Cookies.remove(`liked_${targetId}`);
       }
-      
     } catch (err) {
       console.error('Like failed:', err);
+      // Rollback on error
+      setIsLiked(previousIsLiked);
+      setLikesCount(previousLikesCount);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <button
       onClick={handleLike}
+      disabled={isLoading}
       className={`flex items-center gap-1.5 group/like transition-all active:scale-90 ${
         isLiked ? 'text-red-500' : 'text-gray-500 hover:text-gray-900'
-      }`}
+      } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <Heart
         size={18}
         fill={isLiked ? 'currentColor' : 'none'}
-        className={`${isLiked ? '' : 'group-hover/like:text-red-400'}`}
+        className={`${isLiked ? '' : 'group-hover/like:text-red-400'} ${
+          isAnimating ? 'animate-ping' : ''
+        }`}
       />
       <span className={`text-xs font-bold ${isLiked ? 'text-gray-900' : 'text-gray-500'}`}>
         {likesCount}

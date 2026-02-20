@@ -375,7 +375,7 @@ export default function BlogChannelView() {
                 visible={searchActive}
                 loading={searchLoading}
                 results={results}
-                error={searchError}
+                error={searchError  ?? undefined}
                 onSelect={handleSelectResult}
                 query={query}
               />

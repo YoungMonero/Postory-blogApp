@@ -73,8 +73,8 @@ export default function Register() {
 
       <div className="w-full max-w-[500px] bg-white rounded-2xl shadow-sm border border-gray-100 p-10 z-10">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200 mb-6">
-            B
+        <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-200 mb-6">
+            W
           </div>
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">Create an account</h1>
           <p className="text-gray-500 text-sm">Start your blog journey today</p>
