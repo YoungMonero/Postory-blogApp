@@ -185,8 +185,8 @@ export default function DashboardPage() {
                     setPage(1);
                   }}
                   className={`flex items-center gap-3 p-3 rounded-xl transition-all hover:-translate-y-1 hover:shadow-md border-2 shrink-0 min-w-[150px] ${isActive
-                      ? 'border-indigo-500 bg-white shadow-lg ring-2 ring-indigo-50'
-                      : `border-transparent ${cat.color}`
+                    ? 'border-indigo-500 bg-white shadow-lg ring-2 ring-indigo-50'
+                    : `border-transparent ${cat.color}`
                     }`}
                 >
                   <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-sm">
@@ -326,15 +326,51 @@ export default function DashboardPage() {
           </div>
 
           <div className="lg:col-span-4 space-y-12">
-            <div className="sticky top-6 space-y-12">
+            <div className=" space-y-12">
               <PopularSidebar />
               <EditorsPick />
-              <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100">
-                <h3 className="font-bold text-gray-900 mb-2">Weekly Newsletter</h3>
-                <p className="text-sm text-gray-500 mb-4 leading-relaxed">Get the latest stories and insights delivered straight to your inbox.</p>
-                <input type="email" placeholder="Email address" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm mb-2 focus:ring-1 focus:ring-indigo-500 outline-none" />
-                <button className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">Subscribe</button>
+
+              {/* REPLACE: Weekly Newsletter Section */}
+              <div className="p-6 sticky top-6">
+                <p className="text-gray-400 text-sm font-medium mb-1">Discover by topic</p>
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">Categories</h3>
+
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((cat) => {
+                    const isActive = selectedCategory?.toLowerCase() === cat.name.toLowerCase();
+
+                    // Using your existing category colors or defaults
+                    const catStyle = isActive
+                      ? 'ring-2 ring-indigo-500 ring-offset-1 font-bold'
+                      : 'hover:bg-opacity-80 transition-all';
+
+                    return (
+                      <button
+                        key={cat.name}
+                        onClick={() => {
+                          setSelectedCategory(isActive ? null : cat.name);
+                          setPage(1);
+                        }}
+                        className={`px-5 py-2 rounded-xl text-sm font-medium shadow-sm border border-transparent ${cat.color} ${catStyle}`}
+                      >
+                        {cat.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Optional: Add a clear filter button if one is selected */}
+                {selectedCategory && (
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="mt-6 text-xs text-indigo-600 font-bold hover:underline"
+                  >
+                    View all categories
+                  </button>
+                )}
               </div>
+
+              
             </div>
           </div>
         </div>
