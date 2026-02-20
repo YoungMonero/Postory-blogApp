@@ -5,7 +5,8 @@ import { Comment } from '@/src/types/comment';
 import { User, Heart } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '@/src/hooks/useAuth';
-import { getToken } from '@/src/services/auth-storage'; // Ensure this points to your cookie getter
+import { getToken } from '@/src/services/auth-storage'; 
+import { useNotificationSocket } from '@/src/hooks/useNotificationSocket';
 
 export default function CommentSection({ postId, token: initialToken }: { postId: string, token: string | null }) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -13,8 +14,22 @@ export default function CommentSection({ postId, token: initialToken }: { postId
   const [replyText, setReplyText] = useState(''); // State for reply input
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const { openAuthModal } = useAuth();
+  
+  const { liveComments } = useNotificationSocket();
 
-  // Re-check token from cookies to avoid stale state issues (Item #7)
+  useEffect(() => {
+    if (liveComments[postId]) {
+      const newComments = liveComments[postId];
+      setComments(prev => {
+        // Avoid duplicates by checking IDs
+        const existingIds = new Set(prev.map(c => c._id));
+        const uniqueNewComments = newComments.filter((c: any) => !existingIds.has(c._id));
+        return [...uniqueNewComments, ...prev];
+      });
+    }
+  }, [liveComments, postId]);
+
+
   const getActiveToken = () => getToken() || initialToken;
 
   const [expandedComments, setExpandedComments] = useState<string[]>([]);
