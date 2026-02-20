@@ -33,7 +33,8 @@ export default function PostDetailPage({
   const displayTitle = post?.title || initialPost?.title || "Story";
   const ogImageUrl = `${siteUrl}/api/og?title=${encodeURIComponent(
     displayTitle
-  )}`;
+  )}&author=${encodeURIComponent(post?.author?.displayName || "Wordoo Creator")}&image=${encodeURIComponent(post?.thumbnail || '')}`;
+  const metaImage = post?.thumbnail || ogImageUrl;
 
   useEffect(() => {
     if (!router.isReady || !id) return;
@@ -107,21 +108,20 @@ export default function PostDetailPage({
     });
   
     try {
-      console.log("🔑 Token being used:", token ? "Present" : "Missing");
-      console.log("👍 Toggling like for post:", targetId);
+
       
    
       const result = await toggleLike(targetId);
       
       console.log(" Like API response:", result);
       
-      // Update with server response
+
       setLikeState({
         isLiked: result.liked,
         count: result.likes
       });
   
-      // Update cookie based on server response
+
       if (result.liked) {
         Cookies.set(`liked_${targetId}`, "true", { expires: 7 });
       } else {
@@ -149,19 +149,31 @@ export default function PostDetailPage({
   return (
     <main className="max-w-3xl mx-auto px-6 py-12">
       <Head>
-        <title>{post.title}</title>
-        <meta property="og:title" content={post.title} />
-        <meta
-          property="og:description"
-          content={`Read ${post.title} on My Blog`}
-        />
-        <meta property="og:image" content={ogImageUrl} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={post.title} />
-        <meta name="twitter:image" content={ogImageUrl} />
-      </Head>
+  <title>{post.title}</title>
+  <meta property="og:title" content={post.title} />
+  <meta
+    property="og:description"
+    content={post.excerpt || `Read ${post.title} on My Blog`}
+  />
+  {/* Use post thumbnail if available, otherwise use generated OG image */}
+  <meta property="og:image" content={post.thumbnail || ogImageUrl} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:type" content="article" />
+  <meta property="article:published_time" content={post.createdAt} />
+  <meta property="article:author" content={post.author?.displayName || "Anonymous"} />
+  
+  {/* Twitter Card */}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={post.title} />
+  <meta name="twitter:description" content={post.excerpt || `Read ${post.title} on My Blog`} />
+  <meta name="twitter:image" content={post.thumbnail || ogImageUrl} />
+  
+  {/* Fallback if no image */}
+  {!post.thumbnail && (
+    <meta property="og:image:alt" content={post.title} />
+  )}
+</Head>
 
       <nav className="fixed top-8 left-8 z-50 hidden lg:block">
         <button
