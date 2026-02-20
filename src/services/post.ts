@@ -7,6 +7,7 @@ import {
   ErrorResponse
 } from '@/src/types/posts';
 
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ;
 
 const api = axios.create({
@@ -389,16 +390,25 @@ export async function getPostsWithViews(token?: string): Promise<Post[]> {
   }
 }
 
+
 export async function toggleLike(postId: string): Promise<{ liked: boolean; likes: number }> {
   try {
-    const response = await api.post(`/posts/${postId}/like`);
+    const { getToken } = await import('./auth-storage');
+    const token = getToken();
     
-    return response.data; 
+    const response = await axios.post(
+      `${API_URL}/posts/${postId}/like`,
+      {},
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        withCredentials: true
+      }
+    );
+    
+    return response.data;
   } catch (error) {
     const axiosError = error as AxiosError<ErrorResponse>;
-    
     console.error("Like API Error:", axiosError.response?.data || axiosError.message);
-
     throw {
       success: false,
       message: axiosError.response?.data?.message || 'Failed to toggle like',

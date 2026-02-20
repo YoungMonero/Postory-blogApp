@@ -1,12 +1,11 @@
 import React, { useEffect, useState, useRef } from "react";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { getPublicPostDetail } from "@/src/services/post";
+import { getPublicPostDetail, toggleLike } from "@/src/services/post";
 import { Post } from "@/src/types/posts";
 import CommentSection from "@/src/component/CommentSection";
-import { commentService } from "@/src/services/comment";
 import { useAuth } from "@/src/hooks/useAuth";
-import { Heart, MessageSquare, Share2, ArrowLeft } from "lucide-react";
+import { Heart, MessageSquare, ArrowLeft } from "lucide-react";
 import { api } from "@/src/services/post";
 import Cookies from "js-cookie";
 import ShareDropdown from "@/src/component/ShareDropdown";
@@ -22,8 +21,10 @@ export default function PostDetailPage({
 
   const [post, setPost] = useState<Post | null>(initialPost);
   const [loading, setLoading] = useState(!initialPost);
-  const [likesCount, setLikesCount] = useState(initialPost?.likes || 0);
-  const [isLiked, setIsLiked] = useState(false);
+  const [likeState, setLikeState] = useState({
+    isLiked: initialPost?.isLikedByMe || false,
+    count: initialPost?.likesCount || initialPost?.likes || 0
+  });
 
   const hasIncrementedViews = useRef(false);
   const handleBack = () => router.push("/dashboard");
@@ -45,11 +46,17 @@ export default function PostDetailPage({
           const response = await getPublicPostDetail(id as string);
           currentPost = response?.data || null;
           setPost(currentPost);
+          
+          if (currentPost) {
+            setLikeState({
+              isLiked: currentPost.isLikedByMe || false,
+              count: currentPost.likesCount || currentPost.likes || 0
+            });
+          }
         }
 
         if (currentPost) {
           const postId = currentPost._id || currentPost.id;
-
 
           if (!hasIncrementedViews.current && postId && token) {
             try {
@@ -61,14 +68,10 @@ export default function PostDetailPage({
             }
           }
 
-  
-          setLikesCount(currentPost.likes || 0);
-
+          // Check cookie for like status
           const savedLike = Cookies.get(`liked_${postId}`);
           if (savedLike === "true") {
-            setIsLiked(true);
-          } else if (userName && currentPost.likedBy) {
-            setIsLiked(currentPost.likedBy.includes(userName));
+            setLikeState(prev => ({ ...prev, isLiked: true }));
           }
         }
       } catch (err) {
@@ -79,43 +82,55 @@ export default function PostDetailPage({
     };
 
     fetchPostDetails();
-  }, [id, router.isReady, userName, token]);
-
-  useEffect(() => {
-    if (post) {
-      setIsLiked(post.isLikedByMe || false);
-      setLikesCount(post.likesCount || 0);
-    }
-  }, [post]);
-
+  }, [id, router.isReady, token]);
 
   const handleLike = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  
     const targetId = post?._id || post?.id;
-
+  
     if (!targetId || !token) {
-      e.preventDefault();
       openAuthModal();
       return;
     }
-
-    const previousIsLiked = isLiked;
-    const previousLikesCount = likesCount;
-
-    setIsLiked(!previousIsLiked);
-    setLikesCount(prev => (previousIsLiked ? Math.max(0, prev - 1) : prev + 1));
-
-
+  
+    // Store previous state for rollback
+    const previousState = { ...likeState };
+  
+    // Optimistic update
+    setLikeState({
+      isLiked: !previousState.isLiked,
+      count: previousState.isLiked 
+        ? Math.max(0, previousState.count - 1) 
+        : previousState.count + 1
+    });
+  
     try {
-      const result = await toggleLike(targetId);
-
+      console.log("🔑 Token being used:", token ? "Present" : "Missing");
+      console.log("👍 Toggling like for post:", targetId);
       
+   
+      const result = await toggleLike(targetId);
+      
+      console.log(" Like API response:", result);
+      
+      // Update with server response
+      setLikeState({
+        isLiked: result.liked,
+        count: result.likes
+      });
+  
+      // Update cookie based on server response
       if (result.liked) {
         Cookies.set(`liked_${targetId}`, "true", { expires: 7 });
       } else {
         Cookies.remove(`liked_${targetId}`);
       }
     } catch (err) {
-      console.error("Like failed:", err);
+      console.error(" Like failed:", err);
+      // Rollback on error
+      setLikeState(previousState);
     }
   };
 
@@ -212,15 +227,15 @@ export default function PostDetailPage({
           <button
             onClick={handleLike}
             className={`flex items-center gap-2 transition-all active:scale-90 ${
-              isLiked ? "text-red-500" : "text-gray-500 hover:text-gray-900"
+              likeState.isLiked ? "text-red-500" : "text-gray-500 hover:text-gray-900"
             }`}
           >
             <Heart
               size={20}
-              fill={isLiked ? "currentColor" : "none"}
-              className={isLiked ? "animate-bounce" : ""}
+              fill={likeState.isLiked ? "currentColor" : "none"}
+              className={likeState.isLiked ? "animate-bounce" : ""}
             />
-            <span className="text-sm font-bold">{likesCount}</span>
+            <span className="text-sm font-bold">{likeState.count}</span>
           </button>
           <div className="w-px h-4 bg-gray-200" />
           <button
@@ -236,10 +251,10 @@ export default function PostDetailPage({
           </button>
           <div className="w-px h-4 bg-gray-200" />
           <ShareDropdown
-  url={typeof window !== 'undefined' ? window.location.href : ''}
-  title="Check out this post"
-  description="Share this content"
-/>
+            url={typeof window !== 'undefined' ? window.location.href : ''}
+            title="Check out this post"
+            description="Share this content"
+          />
         </div>
       </div>
 
