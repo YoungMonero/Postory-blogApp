@@ -4,11 +4,11 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { CreatePostDto } from '@/src/types/posts';
 import { usePosts } from '@/src/hooks/usePosts';
-import { useAuth } from '@/src/hooks/useAuth'; // Added import
+import { useAuth } from '@/src/hooks/useAuth'; 
 import { generateSlug } from '@/src/services/post';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
-import StatusModal from '@/src/component/statusModal'; // Added import
+import StatusModal from '@/src/component/statusModal'; 
 import {
   ArrowLeft, Globe, Settings, Image as ImageIcon,
   Tag, CheckCircle, Bold, Italic,

@@ -210,9 +210,7 @@ export default function BlogChannelView() {
     }
   };
 
-
   const formRef = useRef<any>(null);
-
 
   const handleToggleVisibility = async (
     postId: string,
@@ -311,7 +309,6 @@ export default function BlogChannelView() {
 
           return (
             <>
-
               <meta property="og:type" content="profile" />
               <meta property="og:url" content={`${baseUrl}${router.asPath}`} />
               <meta
@@ -323,7 +320,6 @@ export default function BlogChannelView() {
                 content={blog?.description || "Blog channel on Wordoo"}
               />
               <meta property="og:image" content={dynamicOgUrl} />
-
 
               <meta name="twitter:card" content="summary_large_image" />
               <meta
@@ -375,7 +371,7 @@ export default function BlogChannelView() {
                 visible={searchActive}
                 loading={searchLoading}
                 results={results}
-                error={searchError  ?? undefined}
+                error={searchError ?? undefined}
                 onSelect={handleSelectResult}
                 query={query}
               />
@@ -497,9 +493,9 @@ export default function BlogChannelView() {
                     <span>Edit Blog</span>
                   </button>
 
-                  <button
+                  <div
                     title="Share Blog"
-                    className="p-3.5 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+                    className="p-3.5 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer"
                   >
                     <ShareDropdown
                       url={`${
@@ -513,7 +509,7 @@ export default function BlogChannelView() {
                       }
                       image={blog?.profileImage || blog?.coverImage || ""}
                     />
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
