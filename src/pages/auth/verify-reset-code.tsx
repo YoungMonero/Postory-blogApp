@@ -1,6 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { passwordResetService } from '@/src/services/password-reset.service';
+import { Clock, Mail, ArrowLeft, AlertCircle, CheckCircle, RefreshCw, Ban } from 'lucide-react';
+
+
+const ATTEMPT_LIMIT = 3;
+const SHORT_COOLDOWN = 15 * 60 * 1000; // 15 minutes
+const LONG_COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours
+
+interface RateLimitInfo {
+  attempts: number;
+  firstAttemptTime: number;
+  cooldownUntil: number | null;
+  permanentlyLocked: boolean;
+}
 
 export default function VerifyResetCodePage() {
   const router = useRouter();
@@ -12,7 +25,92 @@ export default function VerifyResetCodePage() {
   const [success, setSuccess] = useState(''); 
   const [timeLeft, setTimeLeft] = useState(900);
   const [expiryTime, setExpiryTime] = useState<number | null>(null);
-  const [canResend, setCanResend] = useState(false); 
+  const [canResend, setCanResend] = useState(false);
+  
+  // Rate limit state
+  const [rateLimitInfo, setRateLimitInfo] = useState<RateLimitInfo>(() => {
+    const stored = sessionStorage.getItem('resetRateLimit');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    return {
+      attempts: 0,
+      firstAttemptTime: 0,
+      cooldownUntil: null,
+      permanentlyLocked: false
+    };
+  });
+
+  // Check if user is in cooldown
+  const isInCooldown = () => {
+    if (rateLimitInfo.permanentlyLocked) return true;
+    if (!rateLimitInfo.cooldownUntil) return false;
+    return Date.now() < rateLimitInfo.cooldownUntil;
+  };
+
+  // Get cooldown time remaining
+  const getCooldownRemaining = () => {
+    if (rateLimitInfo.permanentlyLocked) return LONG_COOLDOWN;
+    if (!rateLimitInfo.cooldownUntil) return 0;
+    return Math.max(0, rateLimitInfo.cooldownUntil - Date.now());
+  };
+
+  // Format cooldown time for display
+  const formatCooldown = (ms: number) => {
+    if (ms >= LONG_COOLDOWN) {
+      const hours = Math.floor(ms / (60 * 60 * 1000));
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    }
+    const minutes = Math.ceil(ms / (60 * 1000));
+    return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+  };
+
+  // Track failed attempt
+  const trackFailedAttempt = () => {
+    const now = Date.now();
+    let newRateLimit = { ...rateLimitInfo };
+
+    // Reset attempts if last attempt was more than 24 hours ago
+    if (now - rateLimitInfo.firstAttemptTime > 24 * 60 * 60 * 1000) {
+      newRateLimit = {
+        attempts: 1,
+        firstAttemptTime: now,
+        cooldownUntil: null,
+        permanentlyLocked: false
+      };
+    } else {
+      newRateLimit.attempts += 1;
+      
+      // Check if we need to apply cooldown
+      if (newRateLimit.attempts >= ATTEMPT_LIMIT) {
+        if (newRateLimit.attempts >= ATTEMPT_LIMIT * 2) {
+          // After 6 attempts, lock for 24 hours
+          newRateLimit.permanentlyLocked = true;
+          newRateLimit.cooldownUntil = now + LONG_COOLDOWN;
+          setError(`Too many failed attempts. Please wait 24 hours before trying again.`);
+        } else {
+          // After 3 attempts, lock for 15 minutes
+          newRateLimit.cooldownUntil = now + SHORT_COOLDOWN;
+          setError(`Too many failed attempts. Please wait 15 minutes before trying again.`);
+        }
+      }
+    }
+
+    setRateLimitInfo(newRateLimit);
+    sessionStorage.setItem('resetRateLimit', JSON.stringify(newRateLimit));
+  };
+
+  // Reset rate limit on successful verification
+  const resetRateLimit = () => {
+    const newRateLimit = {
+      attempts: 0,
+      firstAttemptTime: 0,
+      cooldownUntil: null,
+      permanentlyLocked: false
+    };
+    setRateLimitInfo(newRateLimit);
+    sessionStorage.removeItem('resetRateLimit');
+  };
 
   useEffect(() => {
     const storedEmail = sessionStorage.getItem('resetEmail');
@@ -21,6 +119,12 @@ export default function VerifyResetCodePage() {
       return;
     }
     setEmail(storedEmail);
+
+    // Check if we're in cooldown on page load
+    if (isInCooldown()) {
+      const remaining = getCooldownRemaining();
+      setError(`Please wait ${formatCooldown(remaining)} before requesting another code.`);
+    }
 
     const storedExpiry = sessionStorage.getItem('resetExpiry');
     
@@ -37,7 +141,7 @@ export default function VerifyResetCodePage() {
         return;
       }
     } else {
-      const newExpiry = Date.now() + 15 * 60 * 1000;
+      const newExpiry = Date.now() + 5 * 60 * 1000;
       sessionStorage.setItem('resetExpiry', newExpiry.toString());
       setExpiryTime(newExpiry);
     }
@@ -47,8 +151,6 @@ export default function VerifyResetCodePage() {
         if (prev <= 1) {
           clearInterval(timer);
           sessionStorage.removeItem('resetExpiry');
-          sessionStorage.removeItem('resetEmail');
-          setCanResend(true); 
           return 0;
         }
         return prev - 1;
@@ -58,19 +160,19 @@ export default function VerifyResetCodePage() {
     return () => clearInterval(timer);
   }, [router]);
 
-
+  // Check if resend is allowed based on cooldown
   useEffect(() => {
-    if (timeLeft < 840 || timeLeft === 0) { 
-      setCanResend(true);
-    } else {
+    if (isInCooldown()) {
       setCanResend(false);
+    } else {
+      setCanResend(true);
     }
-  }, [timeLeft]);
+  }, [rateLimitInfo]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleCodeChange = (index: number, value: string) => {
@@ -94,8 +196,25 @@ export default function VerifyResetCodePage() {
     }
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    const newCode = [...resetCode];
+    pastedData.split('').forEach((char, index) => {
+      if (index < 6) newCode[index] = char;
+    });
+    setResetCode(newCode);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check if user is in cooldown
+    if (isInCooldown()) {
+      const remaining = getCooldownRemaining();
+      setError(`Please wait ${formatCooldown(remaining)} before trying again.`);
+      return;
+    }
     
     const part1 = resetCode.slice(0, 3).join('');
     const part2 = resetCode.slice(3, 6).join('');
@@ -113,8 +232,10 @@ export default function VerifyResetCodePage() {
       await passwordResetService.verifyResetCode(email, fullCode);
       sessionStorage.setItem('resetCode', fullCode);
       sessionStorage.removeItem('resetExpiry');
+      resetRateLimit(); // Reset rate limit on success
       router.push('/auth/reset-password');
     } catch (err: any) {
+      trackFailedAttempt(); // Track failed attempt
       setError(err.message || 'Invalid or expired code');
     } finally {
       setIsLoading(false);
@@ -122,6 +243,13 @@ export default function VerifyResetCodePage() {
   };
 
   const handleResend = async () => {
+    // Check if user is in cooldown
+    if (isInCooldown()) {
+      const remaining = getCooldownRemaining();
+      setError(`Please wait ${formatCooldown(remaining)} before requesting a new code.`);
+      return;
+    }
+
     setIsResendLoading(true);
     setError('');
     setSuccess('');
@@ -129,114 +257,238 @@ export default function VerifyResetCodePage() {
     try {
       await passwordResetService.resendResetCode(email);
       
-  
-      const newExpiry = Date.now() + 15 * 60 * 1000;
+      const newExpiry = Date.now() + 5 * 60 * 1000;
       sessionStorage.setItem('resetExpiry', newExpiry.toString());
       setExpiryTime(newExpiry);
-      setTimeLeft(900);
+      setTimeLeft(300);
       setResetCode(['', '', '', '', '', '']);
       setSuccess('New code sent successfully!');
-      setCanResend(false);
+      
+      // Don't reset rate limit on resend - it counts as an attempt
+      trackFailedAttempt();
     } catch (err: any) {
+      trackFailedAttempt(); // Track failed attempt
       setError(err.message || 'Failed to resend code. Please try again.');
     } finally {
       setIsResendLoading(false);
     }
   };
 
+
+  const timerProgress = (timeLeft / 300) * 100;
+  const isLowTime = timeLeft < 60;
+
+
+  if (isInCooldown()) {
+    const remaining = getCooldownRemaining();
+    const isPermanent = rateLimitInfo.permanentlyLocked;
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className={`h-2 bg-gradient-to-r ${isPermanent ? 'from-red-600 to-red-400' : 'from-orange-500 to-orange-400'}`}></div>
+          <div className="p-8 text-center">
+            <div className={`w-20 h-20 ${isPermanent ? 'bg-red-100' : 'bg-orange-100'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+              <Ban className={`w-10 h-10 ${isPermanent ? 'text-red-500' : 'text-orange-500'}`} />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">
+              {isPermanent ? 'Account Temporarily Locked' : 'Too Many Attempts'}
+            </h1>
+            <p className="text-gray-500 mb-4 leading-relaxed">
+              {isPermanent 
+                ? 'For security reasons, you\'ve exceeded the maximum number of attempts.'
+                : 'You\'ve made too many failed attempts to verify your code.'}
+            </p>
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <p className="text-sm text-gray-600">
+                Please wait <span className="font-bold text-indigo-600">{formatCooldown(remaining)}</span> before trying again.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/auth/forgot-password')}
+              className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white py-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-indigo-600 transition-all duration-200 shadow-lg shadow-indigo-200"
+            >
+              Start Over
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (timeLeft === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-lg text-center">
-          <h1 className="text-2xl font-bold mb-4 text-red-600">Code Expired</h1>
-          <p className="text-gray-600 mb-6">
-            Your reset code has expired. Please request a new one.
-          </p>
-          <button
-            onClick={() => router.push('/auth/forgot-password')}
-            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700"
-          >
-            Request new code
-          </button>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-red-500 to-red-400"></div>
+          <div className="p-8 text-center">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-red-500" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Code Expired</h1>
+            <p className="text-gray-500 mb-8 leading-relaxed">
+              Your reset code has expired. Please request a new one to continue.
+            </p>
+            <button
+              onClick={() => router.push('/auth/forgot-password')}
+              className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white py-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-indigo-600 transition-all duration-200 shadow-lg shadow-indigo-200"
+            >
+              Request new code
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold mb-2">Enter reset code</h1>
-        <p className="text-gray-600 mb-2">
-          We sent a code to <strong>{email}</strong>
-        </p>
-        <p className="text-sm text-gray-500 mb-6">
-          Code expires in: <span className="font-mono font-bold">{formatTime(timeLeft)}</span>
-          {canResend && timeLeft > 0 && (
-            <span className="ml-2 text-xs text-green-600">(You can request a new code)</span>
-          )}
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+      <div className="max-w-md w-full">
+        {/* Back button */}
+        <button
+          onClick={() => router.push('/auth/forgot-password')}
+          className="flex items-center text-gray-500 hover:text-gray-700 mb-4 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+          Back
+        </button>
 
-        <form onSubmit={handleSubmit}>
-          <div className="flex justify-center gap-2 mb-6">
-            {resetCode.map((digit, index) => (
-              <input
-                key={index}
-                id={`code-${index}`}
-                type="text"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleCodeChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-12 text-center text-2xl font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                disabled={isLoading || isResendLoading}
-              />
-            ))}
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
-              {error}
+        {/* Main card */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-indigo-600 to-indigo-400"></div>
+          
+          <div className="p-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="w-8 h-8 text-indigo-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Enter verification code</h1>
+              <p className="text-gray-500">
+                We've sent a 6-digit code to <span className="font-semibold text-gray-700">{email}</span>
+              </p>
             </div>
-          )}
 
-          {success && (
-            <div className="mb-4 p-3 bg-green-50 text-green-600 rounded-lg text-sm">
-              {success}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading || timeLeft === 0 || isResendLoading}
-            className="w-full bg-indigo-600 text-white py-3 rounded-lg font-medium hover:bg-indigo-700 disabled:bg-indigo-300 mb-3"
-          >
-            {isLoading ? 'Verifying...' : 'Verify code'}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={isResendLoading || (!canResend && timeLeft > 0)}
-            className={`w-full py-2 text-sm rounded-lg transition-colors ${
-              isResendLoading || (!canResend && timeLeft > 0)
-                ? 'text-gray-400 cursor-not-allowed'
-                : 'text-indigo-600 hover:bg-indigo-50 hover:underline'
-            }`}
-          >
-            {isResendLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Sending...
-              </span>
-            ) : (
-              'Resend code'
+            {/* Attempt counter warning */}
+            {rateLimitInfo.attempts > 0 && (
+              <div className="mb-4 p-3 bg-yellow-50 border-2 border-yellow-100 rounded-xl flex items-center">
+                <AlertCircle className="w-4 h-4 text-yellow-500 mr-2 flex-shrink-0" />
+                <p className="text-xs text-yellow-700">
+                  Attempts: {rateLimitInfo.attempts}/{ATTEMPT_LIMIT}. After {ATTEMPT_LIMIT} failed attempts, you'll need to wait 15 minutes.
+                </p>
+              </div>
             )}
-          </button>
-        </form>
+
+            {/* Timer with progress bar */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Clock className="w-4 h-4 mr-1" />
+                  <span>Code expires in</span>
+                </div>
+                <span className={`font-mono font-bold text-lg ${
+                  isLowTime ? 'text-red-500' : 'text-indigo-600'
+                }`}>
+                  {formatTime(timeLeft)}
+                </span>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-1000 rounded-full ${
+                    isLowTime ? 'bg-red-500' : 'bg-indigo-600'
+                  }`}
+                  style={{ width: `${timerProgress}%` }}
+                />
+              </div>
+              {canResend && timeLeft > 0 && (
+                <p className="text-xs text-green-600 mt-2 flex items-center">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  You can request a new code
+                </p>
+              )}
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              {/* Code input boxes */}
+              <div className="flex justify-center gap-3 mb-8">
+                {resetCode.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`code-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleCodeChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    onPaste={index === 0 ? handlePaste : undefined}
+                    className="w-14 h-14 text-center text-2xl font-bold bg-gray-50 border-2 rounded-xl focus:ring-0 outline-none transition-all hover:border-gray-300 focus:border-indigo-600"
+                    disabled={isLoading || isResendLoading}
+                    autoFocus={index === 0}
+                  />
+                ))}
+              </div>
+
+              {/* Messages */}
+              {error && (
+                <div className="mb-4 p-4 bg-red-50 border-2 border-red-100 rounded-xl flex items-start">
+                  <AlertCircle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
+              {success && (
+                <div className="mb-4 p-4 bg-green-50 border-2 border-green-100 rounded-xl flex items-start">
+                  <CheckCircle className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-green-600">{success}</p>
+                </div>
+              )}
+
+              {/* Verify button */}
+              <button
+                type="submit"
+                disabled={isLoading || timeLeft === 0 || isResendLoading}
+                className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white py-4 rounded-xl font-semibold text-[16px] hover:from-indigo-700 hover:to-indigo-600 transition-all duration-200 shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-indigo-600 disabled:shadow-none mb-3"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verifying...
+                  </span>
+                ) : (
+                  'Verify code'
+                )}
+              </button>
+
+              {/* Resend button */}
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={isResendLoading || !canResend}
+                className="w-full py-3 text-sm font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
+              >
+                {isResendLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span className="text-gray-500">Sending...</span>
+                  </>
+                ) : (
+                  <span className={!canResend ? 'text-gray-400' : 'text-indigo-600 hover:text-indigo-700'}>
+                    Didn't receive the code? <span className="font-semibold underline underline-offset-2">Resend</span>
+                  </span>
+                )}
+              </button>
+
+              {/* Helper text */}
+              <p className="text-xs text-gray-400 text-center mt-6">
+                For security reasons, this code will expire in 5 minutes
+              </p>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -31,7 +31,6 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // SEARCH HOOK - Add this here
   const {
     query,
     setQuery,
@@ -42,7 +41,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
     clearSearch,
   } = useDashboardSearch();
 
-  // Fetch blog info to decide between "View" or "Create"
+
   const { data: blog } = useQuery({
     queryKey: ["my-blog-status"],
     queryFn: () => getMyBlog(token as string),
@@ -74,11 +73,9 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
   const handleSelectResult = (result: any) => {
     switch (result.type) {
       case "user":
-        // The backend now sends the correct blog slug in 'data.slug'
         const targetPath = result.data.slug || result.data.username;
 
         if (targetPath) {
-          // This will now correctly hit /blogs/funny-guy
           router.push(`/blogs/${targetPath}`);
         }
         break;
@@ -105,8 +102,6 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // if (!token) return null;
-
   const errorMessage = searchError
     ? typeof searchError === "string"
       ? searchError
@@ -117,7 +112,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen bg-white">
       <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-100 z-50">
         <div className="max-w-[1450px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
-          {/* 1. Left: Wordoo Branding (ALWAYS VISIBLE) */}
+
           <div className="flex items-center gap-8 flex-1">
             <Link href="/" className="flex items-center gap-2 group">
               <span className="text-[26px] font-black tracking-tight text-gray-900 flex items-center group">
@@ -132,7 +127,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
               </span>
             </Link>
 
-            {/* 2. Search Bar (ALWAYS VISIBLE) */}
+      
             <div className="relative max-w-md w-full hidden md:block">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -168,10 +163,10 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </div>
 
-          {/* 3. Right Side: Conditional Auth/User Actions */}
+    
           <div className="flex items-center gap-4">
             {token ? (
-              /* SHOW IF LOGGED IN */
+  
               <>
                 <Button
                   variant="ghost"
@@ -202,7 +197,7 @@ export const DashboardLayout: React.FC<LayoutProps> = ({ children }) => {
 
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                      {/* ... (Your existing Dropdown content with Settings, Logout, etc.) ... */}
+               
                       <div className="px-4 py-3 border-b border-gray-50">
                         <p className="text-sm font-semibold text-gray-900 truncate uppercase tracking-tight">
                           {userName || "Account"}
