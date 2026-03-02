@@ -36,8 +36,8 @@ export default NextAuth({
 
   pages: {
     signIn: '/auth/signin',
-    signUp: '/auth/signup',
-    forgotPassword: '/auth/forgot-password',
-    resetPassword: '/auth/reset-password',
+    error: '/auth/error',
+    verifyRequest: '/auth/verify-request',
+    newUser: '/auth/signup',
   },
 });

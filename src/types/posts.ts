@@ -8,11 +8,13 @@ export interface Post {
   thumbnail?: string;
   thumbnailPublicId?: string;
   excerpt?: string;
-  tags?: string[];
+  categories?: string[];
   seoDescription?: string;
   readingTime?: number;
   likes: number;             
-  likedBy: string[];         
+  likedBy: string[];   
+  isLikedByMe?: boolean;
+  likesCount: number;      
   commentsCount: number;     
   views: number;
   author?: {
@@ -39,7 +41,7 @@ export interface CreatePostDto {
   slug?: string;
   status: 'draft' | 'published';
   thumbnail?: string;
-  tags?: string[];
+  categories?: string[];
   excerpt?: string;
   seoDescription?: string;
   thumbnailPublicId?: string;
